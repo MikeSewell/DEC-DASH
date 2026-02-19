@@ -44,12 +44,30 @@ export type DashboardSectionId =
 
 // Newsletter sections shape
 export interface NewsletterSections {
+  // Welcome & Leadership
+  welcomeMessage?: string;
+  recentMilestones?: string;
+  personalReflections?: string;
+  // Programs
+  programUpdates?: string;
+  programHighlights?: string;
+  participantTestimonials?: string;
+  upcomingEvents?: string;
+  // Dad of the Month
   dadOfMonthName?: string;
   dadOfMonthStory?: string;
-  participantTestimonials?: string;
-  programHighlights?: string;
-  programUpdates?: string;
+  photoLink?: string;
+  // Community & Partnerships
+  communityEvents?: string;
+  partnerships?: string;
+  // Fatherhood Stats & Support
   fatherhoodStat?: string;
+  volunteerNeeds?: string;
+  donationCampaigns?: string;
+  readerSupport?: string;
+  // Stay Connected
+  contactInfo?: string;
+  socialMediaCTA?: string;
   additionalNotes?: string;
 }
 

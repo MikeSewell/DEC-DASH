@@ -54,6 +54,7 @@ export default function NewsletterList({ newsletters }: NewsletterListProps) {
     try {
       const sections: NewsletterSections = JSON.parse(sectionsJson);
       const text =
+        sections.welcomeMessage ||
         sections.dadOfMonthStory ||
         sections.programHighlights ||
         sections.programUpdates ||

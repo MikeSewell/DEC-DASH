@@ -30,7 +30,7 @@ The UI uses a **warm, organic** aesthetic inspired by community and nature — a
 - **Grant & Budget Tracking** — Google Sheets-synced grant status, burn rates, deadlines
 - **Program & Client Management** — Track enrollments, sessions, and client goals
 - **AI Director** — OpenAI-powered assistant with document knowledge base for strategic Q&A
-- **Newsletter Builder** — Draft, review, and publish newsletters via Constant Contact
+- **Newsletter Builder** — Branded HTML email template (DEC teal, logo, footer) with ~20 content sections; OpenAI polishes the template (removes empty sections, adds preheader); send test emails for review before publishing via Constant Contact
 - **AI Expense Categorization** — Pre-scores unclassified QB expenses against grant budgets using pacing, diversification, time urgency, and budget factors; sends to OpenAI for final grant selection; users review/override and submit assignments back to QuickBooks
 - **Expense Recommender** — AI-powered expense optimization suggestions
 - **Role-Based Access** — Admin, manager, staff, and readonly roles

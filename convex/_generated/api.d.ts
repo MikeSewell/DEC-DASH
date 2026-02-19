@@ -34,6 +34,7 @@ import type * as http from "../http.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
 import type * as newsletterActions from "../newsletterActions.js";
+import type * as newsletterTemplate from "../newsletterTemplate.js";
 import type * as newsletters from "../newsletters.js";
 import type * as openaiHelpers from "../openaiHelpers.js";
 import type * as programs from "../programs.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;
   newsletterActions: typeof newsletterActions;
+  newsletterTemplate: typeof newsletterTemplate;
   newsletters: typeof newsletters;
   openaiHelpers: typeof openaiHelpers;
   programs: typeof programs;

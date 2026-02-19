@@ -165,6 +165,7 @@ export default defineSchema({
     sections: v.string(),
     generatedEmailHtml: v.optional(v.string()),
     generatedEmailSubject: v.optional(v.string()),
+    campaignActivityId: v.optional(v.string()),
     publishedAt: v.optional(v.number()),
     createdBy: v.id("users"),
     createdAt: v.number(),

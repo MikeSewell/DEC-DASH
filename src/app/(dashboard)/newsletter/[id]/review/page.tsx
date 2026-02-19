@@ -25,6 +25,7 @@ export default function NewsletterReviewPage() {
   const newsletter = useQuery(api.newsletters.getById, { id });
   const ccConfig = useQuery(api.constantContact.getConfig);
   const sendNewsletter = useAction(api.newsletterActions.sendNewsletter);
+  const sendTestEmail = useAction(api.newsletterActions.sendTestEmail);
   const getContactLists = useAction(api.constantContactActions.getContactLists);
 
   const [contactLists, setContactLists] = useState<ContactList[]>([]);
@@ -32,6 +33,11 @@ export default function NewsletterReviewPage() {
   const [loadingLists, setLoadingLists] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Test email state
+  const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     if (ccConfig && !ccConfig.isExpired) {
@@ -85,6 +91,21 @@ export default function NewsletterReviewPage() {
     }
   }
 
+  async function handleSendTest() {
+    if (!testEmailAddress.trim()) return;
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      await sendTestEmail({ id, testEmail: testEmailAddress.trim() });
+      setTestResult({ success: true, message: `Test email sent to ${testEmailAddress.trim()}` });
+    } catch (err) {
+      console.error("Test send failed:", err);
+      setTestResult({ success: false, message: err instanceof Error ? err.message : "Failed to send test email" });
+    } finally {
+      setSendingTest(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Back navigation */}
@@ -117,8 +138,60 @@ export default function NewsletterReviewPage() {
         </Badge>
       </div>
 
+      {/* Test email section */}
+      <Card title="Send Test Email">
+        <p className="text-sm text-muted mb-4">
+          Send a review copy to check formatting before publishing to your contact list.
+        </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+          <div className="w-full sm:w-80">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={testEmailAddress}
+              onChange={(e) => setTestEmailAddress(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <Button
+            variant="secondary"
+            size="md"
+            loading={sendingTest}
+            disabled={!testEmailAddress.trim() || !newsletter.generatedEmailHtml}
+            onClick={handleSendTest}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            Send Test Email
+          </Button>
+        </div>
+        {!newsletter.generatedEmailHtml && (
+          <p className="text-xs text-warning mt-2">
+            Generate the email HTML first before sending a test.
+          </p>
+        )}
+        {testResult && (
+          <div className={`flex items-center gap-2 mt-3 ${testResult.success ? "text-success" : "text-danger"}`}>
+            {testResult.success ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            )}
+            <span className="text-sm">{testResult.message}</span>
+          </div>
+        )}
+      </Card>
+
       {/* Send controls */}
-      <Card title="Send via Constant Contact">
+      <Card title="Send to Contact List">
         {!ccConfig ? (
           <p className="text-sm text-muted">
             Constant Contact is not connected. Go to Admin &gt; Constant Contact to set it up.
@@ -175,7 +248,7 @@ export default function NewsletterReviewPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
               </svg>
-              Send via Constant Contact
+              Send to Contact List
             </Button>
           </div>
         )}
