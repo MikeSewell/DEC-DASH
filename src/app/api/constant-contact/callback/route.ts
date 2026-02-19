@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../convex/_generated/api";
 
+function getBaseUrl(request: NextRequest) {
+  const proto = request.headers.get("x-forwarded-proto") || "http";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+  return `${proto}://${host}`;
+}
+
 export async function GET(request: NextRequest) {
+  const baseUrl = getBaseUrl(request);
   try {
     const code = request.nextUrl.searchParams.get("code");
     if (!code) {
       return NextResponse.redirect(
-        new URL("/admin?tab=constant-contact&error=no_code", request.url)
+        new URL("/admin?tab=constant-contact&error=no_code", baseUrl)
       );
     }
 
@@ -45,12 +52,12 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(
-      new URL("/admin?tab=constant-contact&connected=true", request.url)
+      new URL("/admin?tab=constant-contact&connected=true", baseUrl)
     );
   } catch (error) {
     console.error("CC Callback error:", error);
     return NextResponse.redirect(
-      new URL("/admin?tab=constant-contact&error=auth_failed", request.url)
+      new URL("/admin?tab=constant-contact&error=auth_failed", baseUrl)
     );
   }
 }

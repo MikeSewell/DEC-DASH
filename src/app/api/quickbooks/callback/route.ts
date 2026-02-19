@@ -12,12 +12,20 @@ function getOAuthClient() {
   });
 }
 
+function getBaseUrl(request: NextRequest) {
+  const proto = request.headers.get("x-forwarded-proto") || "http";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+  return `${proto}://${host}`;
+}
+
 export async function GET(request: NextRequest) {
+  const baseUrl = getBaseUrl(request);
   try {
     const oauthClient = getOAuthClient();
-    const url = request.url;
+    // Reconstruct URL with public host so intuit-oauth validates the redirect_uri correctly
+    const publicUrl = `${baseUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
 
-    const authResponse = await oauthClient.createToken(url);
+    const authResponse = await oauthClient.createToken(publicUrl);
     const token = authResponse.getJson();
 
     // Store tokens in Convex
@@ -31,12 +39,12 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to admin page with success
     return NextResponse.redirect(
-      new URL("/admin?tab=quickbooks&connected=true", request.url)
+      new URL("/admin?tab=quickbooks&connected=true", baseUrl)
     );
   } catch (error) {
     console.error("QB Callback error:", error);
     return NextResponse.redirect(
-      new URL("/admin?tab=quickbooks&error=auth_failed", request.url)
+      new URL("/admin?tab=quickbooks&error=auth_failed", baseUrl)
     );
   }
 }

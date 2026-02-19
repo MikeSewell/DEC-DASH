@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   typescript: {
     // Convex handles its own TypeScript checks; skip during Next.js build
     ignoreBuildErrors: true,
