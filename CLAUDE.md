@@ -25,8 +25,9 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 - OAuth configs (`quickbooksConfig`, `constantContactConfig`) are global singletons queried with `.first()`
 - AI expense categorization: `allocationActions.ts` (core engine), `allocation.ts` (public queries/mutations), `allocationInternal.ts` (internal mutations), `allocationTypes.ts` (shared types/config)
 - Categorization pipeline: pre-score expenses → batch to OpenAI (gpt-4o) → post-validate → persist → user review → submit to QB
-- Newsletter system: `newsletterTemplate.ts` (branded HTML builder), `newsletterActions.ts` (generateEmailHtml + sendTestEmail + sendNewsletter), `newsletters.ts` (CRUD)
-- Newsletter pipeline: inject content into branded HTML template → OpenAI polish (remove empties, fix formatting, add preheader) → save HTML; test email via CC test endpoint → reuse campaign for real send
+- Newsletter system: `newsletterTemplate.ts` (branded HTML builder matching n8n workflow), `newsletterActions.ts` (generateEmailHtml + sendTestEmail + sendNewsletter), `newsletters.ts` (CRUD)
+- Newsletter template matches n8n "New test" node HTML: two-column header (120px logo left, title right), box-shadow container, `border-radius: 8px 8px 0 0` header, Executive Director Kareem Chadly greeting/signature, highlighted milestone boxes (`#f8f9fa` bg, `border-left: 4px solid #7DACC4`), testimonial blocks (`border: 2px solid #7DACC4`, inner `border-left: 3px solid #345c72`), community event table rows, partnerships in `#e8f4f8` box, "Fatherhood by the Numbers" stat block, yellow volunteer request box (`#fff3cd`), flaticon social icons (40x40), footer with phone (833) 873-7329 / admin@dadsevokingchange.org / donate `gofund.me/97bebc4e` / volunteer `forms.gle/qKBeqPhZQVhV6h2X7`
+- Newsletter pipeline: inject content into branded HTML template → OpenAI polish (remove empty placeholder sections like `[RECENT_MILESTONE_2]`, fix formatting, add preheader, no data fabrication) → save HTML; test email via CC test endpoint → reuse campaign for real send
 - Newsletter sections: ~20 fields stored as JSON string in `sections` column; editor groups them into 7 collapsible categories
 - `campaignActivityId` on newsletters table links to Constant Contact campaign for reuse between test and real sends
 

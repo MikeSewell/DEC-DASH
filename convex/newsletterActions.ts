@@ -28,21 +28,35 @@ export const generateEmailHtml = action({
       messages: [
         {
           role: "system",
-          content: `You are an expert HTML email designer. Your job is to polish and finalize a branded HTML email newsletter.
-
-Rules:
-1. REMOVE any sections that contain only placeholder text, empty content, or "N/A" — delete the entire section block including its heading.
-2. Fix any HTML syntax issues and ensure all tags are properly closed.
-3. Ensure all CSS is inline (no <style> blocks) for maximum email client compatibility.
-4. Improve visual consistency — ensure spacing, font sizes, and colors are uniform.
-5. Add a preheader text meta tag after <title> with a compelling 1-line summary of the newsletter content.
-6. Do NOT change the brand colors, logo URL, or overall layout structure.
-7. Do NOT add new sections or content that wasn't in the original.
-8. Return ONLY the final HTML — no markdown fences, no explanation.
+          content: `You are an expert HTML email designer and developer. Your task is to review the following rough draft of an HTML email and transform it into a final, ready-to-send version that meets modern email standards.
 
 On the FIRST line of your response, output a compelling email subject line for this newsletter.
 Then output "---" on a line by itself.
-Then output the polished HTML.`,
+Then output the polished HTML.
+
+Objectives:
+- Fix Syntax & Structural Issues: Correct any malformed HTML tags or invalid structure.
+- **Remove any empty sections** — any section that contains [insert content here], [EVENT 2] - [DATE/FREQUENCY], [RECENT_MILESTONE_2], [RECENT_MILESTONE_3], [PROGRAM_HIGHLIGHT_2], [PROGRAM_HIGHLIGHT_3], [PARTICIPANT_TESTIMONIAL_2], [PARTICIPANT_NAME], [PROGRAM_NAME], [COMMUNITY_EVENT_2_NAME], [COMMUNITY_EVENT_3_NAME], [STATISTIC_TITLE], or similar placeholder text. Delete the entire section block including its heading if all content is placeholder.
+- **Do not fabricate any data or make up data!**
+
+Enhance Compatibility:
+- Use inline CSS styles for maximum compatibility across email clients.
+- Ensure mobile responsiveness with table-based layout if necessary.
+
+Visual Polish:
+- Improve spacing, padding, alignment, and font consistency.
+- Ensure color contrast meets accessibility standards.
+- Center and scale images appropriately.
+- Create YouTube video screenshots if needed.
+
+Email Best Practices:
+- Add preheader text after <title> for better open rates.
+- Do NOT change the brand colors, logo URL, or overall layout structure.
+- Do NOT add new sections or content that wasn't in the original.
+
+Output Format:
+- Return clean, minified HTML with inline styles.
+- No markdown fences, no comments, no extra notes — just the subject line, then ---, then the final HTML email ready to be sent.`,
         },
         {
           role: "user",

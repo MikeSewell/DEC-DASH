@@ -44,13 +44,12 @@ export function buildNewsletterHtml(
   const BG_LIGHT = "#f4f4f4";
   const WHITE = "#ffffff";
   const LOGO_URL =
-    "https://img1.wsimg.com/isteam/ip/0a4f58d6-398a-4973-a498-0771464f243a/DEC%20Logo%20Name%20Below.png/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280";
+    "https://img1.wsimg.com/isteam/ip/79d3269a-c5cf-4ad8-8b38-1cad9786def8/DEC%20logo%20small.jpg/:/rs=w:500,cg:true,m";
 
   let html = "";
 
-  // --- Header ---
-  html += `
-<!DOCTYPE html>
+  // --- Outer wrapper + Main container ---
+  html += `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -58,200 +57,295 @@ export function buildNewsletterHtml(
 <title>${title}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${BG_LIGHT};font-family:Arial,Helvetica,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${BG_LIGHT};">
-<tr><td align="center" style="padding:20px 10px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:${WHITE};border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-
-<!-- Logo Header -->
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="background-color:${BG_LIGHT};margin:0;padding:0;font-family:Arial,sans-serif;">
 <tr>
-<td align="center" style="background-color:${PRIMARY};padding:30px 20px;">
-<img src="${LOGO_URL}" alt="Dads Evoking Change" width="180" style="display:block;max-width:180px;height:auto;">
-<h1 style="color:${WHITE};font-size:24px;margin:16px 0 4px;font-weight:bold;">${title}</h1>
-<p style="color:${PRIMARY_LIGHT};font-size:14px;margin:0;">Empowering Fathers, Strengthening Families</p>
+<td align="center" style="padding:20px 0;">
+
+<!-- Main Container -->
+<table role="presentation" border="0" width="600" cellspacing="0" cellpadding="0" style="background-color:${WHITE};border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);max-width:600px;">
+
+<!-- Header Section -->
+<tr>
+<td style="background-color:${PRIMARY};border-radius:8px 8px 0 0;padding:0;">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<!-- Logo Column -->
+<td width="200" align="center" valign="middle" style="padding:30px 0 30px 30px;">
+<img src="${LOGO_URL}" alt="Dads Evoking Change Logo" style="width:120px;height:auto;display:block;">
+</td>
+<!-- Title Column -->
+<td align="left" valign="middle" style="padding:30px 30px 30px 20px;">
+<h1 style="color:${WHITE};font-size:24px;margin:0 0 5px 0;font-weight:bold;font-family:Arial,sans-serif;line-height:1.2;">${title}</h1>
+<h2 style="color:${WHITE};font-size:18px;margin:0 0 8px 0;font-weight:normal;font-family:Arial,sans-serif;opacity:0.95;">Dads Evoking Change</h2>
+<p style="color:${WHITE};font-size:15px;margin:0;opacity:0.9;font-family:Arial,sans-serif;line-height:1.3;">Empowering Fathers, Strengthening Families</p>
+</td>
+</tr>
+</table>
 </td>
 </tr>`;
 
-  // --- Welcome & Leadership ---
+  // --- Welcome Message Section ---
   if (hasContent(sections.welcomeMessage, sections.recentMilestones, sections.personalReflections)) {
     html += `
+<!-- Welcome Message Focus Section -->
 <tr>
-<td style="padding:30px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Welcome from Leadership</h2>`;
+<td style="padding:40px 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Welcome Message from Executive Director Kareem Chadly</h2>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 15px 0;font-family:Arial,sans-serif;">Dear DEC Community,<br></p>`;
     if (sections.welcomeMessage?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.welcomeMessage.trim())}</p>`;
-    }
-    if (sections.recentMilestones?.trim()) {
-      html += `<p style="color:${TEXT_LIGHT};font-size:14px;line-height:1.6;margin:0 0 12px;"><strong>Recent Milestones:</strong> ${nl2br(sections.recentMilestones.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.welcomeMessage.trim())}</p>`;
     }
     if (sections.personalReflections?.trim()) {
-      html += `<p style="color:${TEXT_LIGHT};font-size:14px;line-height:1.6;margin:0 0 12px;font-style:italic;">${nl2br(sections.personalReflections.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:15px 0 0 0;font-style:italic;font-family:Arial,sans-serif;">${nl2br(sections.personalReflections.trim())}</p>`;
     }
-    html += `</td></tr>`;
+    html += `
+<p style="color:${PRIMARY};font-size:16px;line-height:1.6;margin:15px 0 0 0;font-style:italic;font-family:Arial,sans-serif;">With gratitude and determination,<br><strong>Kareem Chadly</strong><br>Executive Director<br><br></p>`;
+    // Recent Milestones
+    if (sections.recentMilestones?.trim()) {
+      html += `
+<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;border-left:4px solid ${PRIMARY_LIGHT};">
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Recent Milestones</h3>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.recentMilestones.trim())}</p>
+</div>`;
+    }
+    html += `</td>
+</tr>`;
   }
 
-  // --- Program Updates ---
+  // --- Program Updates Section ---
   if (hasContent(sections.programUpdates, sections.programHighlights, sections.participantTestimonials, sections.upcomingEvents)) {
     html += `
+<!-- Program Updates Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Program Updates</h2>`;
+<td style="padding:0 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Program Updates</h2>`;
     if (sections.programUpdates?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.programUpdates.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.programUpdates.trim())}</p>
+<p><br></p>`;
     }
+    // Program Highlights & Outcomes
     if (sections.programHighlights?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Highlights:</strong> ${nl2br(sections.programHighlights.trim())}</p>`;
+      html += `
+<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;border-left:4px solid ${PRIMARY_LIGHT};">
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Program Highlights &amp; Outcomes</h3>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.programHighlights.trim())}</p>
+</div>`;
     }
+    // Participant Testimonials
     if (sections.participantTestimonials?.trim()) {
       html += `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0;">
-<tr><td style="background-color:#f0f7fa;border-left:4px solid ${PRIMARY};padding:16px;border-radius:0 4px 4px 0;">
-<p style="color:${TEXT_DARK};font-size:14px;line-height:1.6;margin:0;font-style:italic;">${nl2br(sections.participantTestimonials.trim())}</p>
-</td></tr></table>`;
+<div style="background-color:${WHITE};padding:20px;border-radius:6px;margin-bottom:20px;border:2px solid ${PRIMARY_LIGHT};">
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Participant Testimonials</h3>
+<div style="background-color:#f8f9fa;padding:15px;border-radius:4px;margin-bottom:15px;border-left:3px solid ${PRIMARY};">
+<p style="color:${TEXT_DARK};font-style:italic;font-size:16px;margin:0 0 10px 0;font-family:Arial,sans-serif;">"${nl2br(sections.participantTestimonials.trim())}"</p>
+<p style="color:${TEXT_LIGHT};font-size:14px;margin:0;font-family:Arial,sans-serif;">- [PARTICIPANT_NAME], [PROGRAM_NAME]</p>
+</div>
+</div>`;
     }
+    // Upcoming Events Next Month
     if (sections.upcomingEvents?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:12px 0 0;"><strong>Upcoming Events:</strong> ${nl2br(sections.upcomingEvents.trim())}</p>`;
+      html += `
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Upcoming Events Next Month</h3>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.8;margin:0 0 10px 0;font-family:Arial,sans-serif;">${nl2br(sections.upcomingEvents.trim())}</p>`;
     }
-    html += `</td></tr>`;
+    html += `</td>
+</tr>`;
   }
 
-  // --- Dad of the Month ---
+  // --- Dad of the Month (not in n8n HTML but fields exist and user wanted it) ---
   if (hasContent(sections.dadOfMonthName, sections.dadOfMonthStory)) {
     html += `
+<!-- Dad of the Month Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Dad of the Month</h2>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f7fa;border-radius:8px;overflow:hidden;">
+<td style="padding:0 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Dad of the Month</h2>
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8f9fa;border-radius:8px;overflow:hidden;">
 <tr><td style="padding:20px;">`;
     if (sections.photoLink?.trim()) {
       html += `<img src="${sections.photoLink.trim()}" alt="${sections.dadOfMonthName?.trim() || "Dad of the Month"}" width="120" style="display:block;border-radius:50%;margin:0 auto 16px;max-width:120px;height:auto;">`;
     }
     if (sections.dadOfMonthName?.trim()) {
-      html += `<h3 style="color:${PRIMARY};font-size:18px;margin:0 0 8px;text-align:center;">${sections.dadOfMonthName.trim()}</h3>`;
+      html += `<h3 style="color:${PRIMARY};font-size:18px;margin:0 0 8px;text-align:center;font-family:Arial,sans-serif;">${sections.dadOfMonthName.trim()}</h3>`;
     }
     if (sections.dadOfMonthStory?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:14px;line-height:1.6;margin:0;">${nl2br(sections.dadOfMonthStory.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.dadOfMonthStory.trim())}</p>`;
     }
     html += `</td></tr></table>
-</td></tr>`;
+</td>
+</tr>`;
   }
 
-  // --- Community & Partnerships ---
+  // --- Community Events & Partnerships Section ---
   if (hasContent(sections.communityEvents, sections.partnerships)) {
     html += `
+<!-- Community Events & Partnerships Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Community &amp; Partnerships</h2>`;
+<td style="padding:0 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Community &amp; Partnerships</h2>`;
+    // Community Events to Feature — table rows
     if (sections.communityEvents?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Community Events:</strong> ${nl2br(sections.communityEvents.trim())}</p>`;
+      html += `
+<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;">
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Community Events to Feature</h3>
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="color:${TEXT_DARK};font-size:16px;padding:12px 0;border-bottom:1px solid #e9ecef;font-family:Arial,sans-serif;">
+<strong style="color:${PRIMARY};">${nl2br(sections.communityEvents.trim())}</strong>
+</td>
+</tr>
+</table>
+</div>`;
     }
+    // New & Active Partnerships
     if (sections.partnerships?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Partnerships:</strong> ${nl2br(sections.partnerships.trim())}</p>`;
+      html += `
+<div style="background-color:#e8f4f8;padding:20px;border-radius:6px;border-left:4px solid ${PRIMARY_LIGHT};">
+<h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">New &amp; Active Partnerships</h3>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 15px 0;font-family:Arial,sans-serif;">${nl2br(sections.partnerships.trim())}</p>
+</div>`;
     }
-    html += `</td></tr>`;
+    html += `</td>
+</tr>`;
   }
 
-  // --- Fatherhood Stats ---
+  // --- Fatherhood by the Numbers Section ---
   if (hasContent(sections.fatherhoodStat)) {
     html += `
+<!-- Fatherhood by the Numbers Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${PRIMARY};border-radius:8px;">
-<tr><td style="padding:24px;text-align:center;">
-<p style="color:${PRIMARY_LIGHT};font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Fatherhood Stat</p>
-<p style="color:${WHITE};font-size:16px;line-height:1.5;margin:0;">${nl2br(sections.fatherhoodStat!.trim())}</p>
-</td></tr></table>
-</td></tr>`;
+<td style="padding:0 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Fatherhood by the Numbers</h2>
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="background-color:${PRIMARY};padding:30px;border-radius:6px;text-align:center;">
+<p style="color:${WHITE};font-size:20px;margin:0 0 15px 0;font-weight:bold;font-family:Arial,sans-serif;">[STATISTIC_TITLE]</p>
+<p style="color:${WHITE};font-size:16px;margin:0 0 20px 0;opacity:0.95;font-family:Arial,sans-serif;line-height:1.5;">${nl2br(sections.fatherhoodStat!.trim())}</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>`;
   }
 
-  // --- Support & Get Involved ---
+  // --- Support DEC & Get Involved Section ---
   if (hasContent(sections.donationCampaigns, sections.volunteerNeeds, sections.readerSupport)) {
     html += `
+<!-- Support & Get Involved Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Support &amp; Get Involved</h2>`;
+<td style="padding:0 30px 30px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Support DEC &amp; Get Involved</h2>
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 20px 0;font-family:Arial,sans-serif;">Your support helps us continue our vital work in strengthening families and empowering fathers. Every contribution makes a direct impact on the lives of fathers and children in our community.</p>`;
     if (sections.donationCampaigns?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.donationCampaigns.trim())}</p>`;
-    }
-    if (sections.volunteerNeeds?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;"><strong>Volunteer Opportunities:</strong> ${nl2br(sections.volunteerNeeds.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 15px 0;font-family:Arial,sans-serif;">${nl2br(sections.donationCampaigns.trim())}</p>`;
     }
     if (sections.readerSupport?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.readerSupport.trim())}</p>`;
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 15px 0;font-family:Arial,sans-serif;">${nl2br(sections.readerSupport.trim())}</p>`;
     }
-    // CTA buttons
+    // Donate Button
     html += `
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
-<td style="padding-right:12px;">
-<a href="https://www.gofundme.com/f/dads-evoking-change" target="_blank" style="display:inline-block;background-color:${PRIMARY};color:${WHITE};text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:bold;">Donate Now</a>
+<td align="center" style="padding:20px 0;">
+<a href="https://gofund.me/97bebc4e" style="background-color:${PRIMARY};color:${WHITE};padding:15px 30px;text-decoration:none;border-radius:5px;font-size:18px;font-weight:bold;display:inline-block;font-family:Arial,sans-serif;">Donate Now</a>
 </td>
-<td>
-<a href="https://www.dadsevokingchange.org/volunteer" target="_blank" style="display:inline-block;background-color:${PRIMARY_LIGHT};color:${WHITE};text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:bold;">Volunteer</a>
+</tr>
+</table>`;
+    // Special Volunteer Request (yellow box)
+    html += `
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="background-color:#fff3cd;padding:20px;border-radius:6px;border-left:4px solid #ffc107;">
+<h3 style="color:#856404;font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Special Volunteer Request</h3>
+<p style="color:#856404;font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">We are seeking pro bono attorneys, mediators, and family therapists to support our fathers. If you're a professional in these fields and want to make a difference, please click the volunteer button below.</p>
 </td>
-</tr></table>`;
-    html += `</td></tr>`;
+</tr>
+</table>`;
+    if (sections.volunteerNeeds?.trim()) {
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:15px 0 0 0;font-family:Arial,sans-serif;">${nl2br(sections.volunteerNeeds.trim())}</p>`;
+    }
+    html += `</td>
+</tr>`;
   }
 
-  // --- Stay Connected ---
-  if (hasContent(sections.socialMediaCTA, sections.contactInfo)) {
-    html += `
+  // --- Stay Connected / Social Media Section ---
+  html += `
+<!-- Social Media & Contact Section -->
 <tr>
-<td style="padding:20px 30px 10px;">
-<h2 style="color:${PRIMARY};font-size:20px;margin:0 0 16px;border-bottom:2px solid ${PRIMARY_LIGHT};padding-bottom:8px;">Stay Connected</h2>`;
-    if (sections.socialMediaCTA?.trim()) {
-      html += `<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.socialMediaCTA.trim())}</p>`;
-    }
-    if (sections.contactInfo?.trim()) {
-      html += `<p style="color:${TEXT_LIGHT};font-size:14px;line-height:1.6;margin:0 0 12px;">${nl2br(sections.contactInfo.trim())}</p>`;
-    }
-    // Social icons
-    html += `
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0;">
+<td style="padding:0 30px 40px 30px;">
+<h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Stay Connected</h2>
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
-<td style="padding-right:16px;">
-<a href="https://www.facebook.com/DadsEvokingChange" target="_blank" style="color:${PRIMARY};font-size:14px;text-decoration:none;font-weight:bold;">Facebook</a>
+<td align="center" style="padding:20px 0;">
+<p style="color:${TEXT_DARK};font-size:16px;margin:0 0 20px 0;font-family:Arial,sans-serif;">Follow our journey on social media:</p>
+<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+<tr>
+<td style="padding:0 10px;">
+<a href="https://www.facebook.com/Decfordads/" style="text-decoration:none;">
+<img src="https://cdn-icons-png.flaticon.com/512/145/145802.png" alt="Facebook" style="width:40px;height:40px;border-radius:50%;display:block;">
+</a>
 </td>
-<td style="padding-right:16px;">
-<a href="https://www.instagram.com/dadsevokingchange/" target="_blank" style="color:${PRIMARY};font-size:14px;text-decoration:none;font-weight:bold;">Instagram</a>
+<td style="padding:0 10px;">
+<a href="https://www.instagram.com/dadsevokingchange" style="text-decoration:none;">
+<img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" style="width:40px;height:40px;border-radius:50%;display:block;">
+</a>
 </td>
-<td>
-<a href="https://www.dadsevokingchange.org" target="_blank" style="color:${PRIMARY};font-size:14px;text-decoration:none;font-weight:bold;">Website</a>
+</tr>
+</table>
 </td>
-</tr></table>`;
-    html += `</td></tr>`;
+</tr>
+</table>`;
+  if (sections.socialMediaCTA?.trim()) {
+    html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.socialMediaCTA.trim())}</p>`;
   }
+  html += `</td>
+</tr>`;
 
   // --- Additional Notes ---
   if (hasContent(sections.additionalNotes)) {
     html += `
 <tr>
-<td style="padding:20px 30px 10px;">
-<p style="color:${TEXT_DARK};font-size:15px;line-height:1.6;margin:0;">${nl2br(sections.additionalNotes!.trim())}</p>
-</td></tr>`;
+<td style="padding:0 30px 30px 30px;">
+<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.additionalNotes!.trim())}</p>
+</td>
+</tr>`;
   }
 
-  // --- Footer ---
+  // --- Footer Section ---
   html += `
+<!-- Footer Section -->
 <tr>
-<td style="background-color:${FOOTER_BG};padding:30px;text-align:center;">
-<p style="color:${PRIMARY_LIGHT};font-size:13px;margin:0 0 8px;">Dads Evoking Change</p>
-<p style="color:#a0b8c8;font-size:12px;margin:0 0 16px;">Empowering Fathers, Strengthening Families</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+<td style="background-color:${FOOTER_BG};padding:30px;border-radius:0 0 8px 8px;">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
-<td style="padding-right:12px;">
-<a href="https://www.gofundme.com/f/dads-evoking-change" target="_blank" style="display:inline-block;background-color:${PRIMARY_LIGHT};color:${WHITE};text-decoration:none;padding:10px 20px;border-radius:4px;font-size:13px;font-weight:bold;">Donate</a>
+<td align="center">
+<p style="color:${WHITE};font-size:16px;margin:0 0 15px 0;font-weight:bold;font-family:Arial,sans-serif;">Dads Evoking Change</p>
+<p style="color:${WHITE};font-size:14px;margin:0 0 10px 0;font-family:Arial,sans-serif;">Phone: (833) 873-7329 | Email: admin@dadsevokingchange.org</p>
+<p style="color:${WHITE};font-size:14px;margin:0 0 20px 0;font-family:Arial,sans-serif;">Visit us: <a href="https://dadsevokingchange.org" style="color:${PRIMARY_LIGHT};text-decoration:none;">www.dadsevokingchange.org</a></p>
+
+<!-- Action Buttons -->
+<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin:0 auto;">
+<tr>
+<td style="padding:0 10px;">
+<a href="https://gofund.me/97bebc4e" style="background-color:${PRIMARY};color:${WHITE};padding:10px 20px;text-decoration:none;border-radius:5px;font-size:14px;display:inline-block;font-family:Arial,sans-serif;">Donate</a>
 </td>
-<td>
-<a href="https://www.dadsevokingchange.org/volunteer" target="_blank" style="display:inline-block;border:1px solid ${PRIMARY_LIGHT};color:${PRIMARY_LIGHT};text-decoration:none;padding:10px 20px;border-radius:4px;font-size:13px;font-weight:bold;">Volunteer</a>
+<td style="padding:0 10px;">
+<a href="https://forms.gle/qKBeqPhZQVhV6h2X7" style="background-color:transparent;color:${WHITE};padding:10px 20px;text-decoration:none;border:2px solid ${WHITE};border-radius:5px;font-size:14px;display:inline-block;font-family:Arial,sans-serif;">Volunteer</a>
 </td>
-</tr></table>
-<p style="color:#a0b8c8;font-size:11px;margin:0;">info@dadsevokingchange.org | www.dadsevokingchange.org</p>
-<p style="color:#7a9ab0;font-size:10px;margin:8px 0 0;">&copy; ${new Date().getFullYear()} Dads Evoking Change. All rights reserved.</p>
+</tr>
+</table>
+
+<p style="color:#cccccc;font-size:12px;margin:20px 0 0 0;font-family:Arial,sans-serif;">&copy; ${new Date().getFullYear()} Dads Evoking Change. All rights reserved.<br><a href="#" style="color:${PRIMARY_LIGHT};text-decoration:none;">Privacy Policy</a></p>
+</td>
+</tr>
+</table>
 </td>
 </tr>
 
 </table>
-</td></tr></table>
+
+</td>
+</tr>
+</table>
 </body>
 </html>`;
 
