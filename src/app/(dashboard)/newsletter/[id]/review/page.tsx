@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useAction } from "convex/react";
+import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import Card from "@/components/ui/Card";
@@ -27,6 +27,7 @@ export default function NewsletterReviewPage() {
   const sendNewsletter = useAction(api.newsletterActions.sendNewsletter);
   const sendTestEmail = useAction(api.newsletterActions.sendTestEmail);
   const getContactLists = useAction(api.constantContactActions.getContactLists);
+  const updateNewsletter = useMutation(api.newsletters.update);
 
   const [contactLists, setContactLists] = useState<ContactList[]>([]);
   const [selectedList, setSelectedList] = useState("");
@@ -76,6 +77,10 @@ export default function NewsletterReviewPage() {
         </Button>
       </div>
     );
+  }
+
+  async function handleSaveHtml(newHtml: string) {
+    await updateNewsletter({ id, generatedEmailHtml: newHtml });
   }
 
   async function handleSend() {
@@ -255,7 +260,7 @@ export default function NewsletterReviewPage() {
       </Card>
 
       {/* Preview */}
-      <NewsletterPreview html={newsletter.generatedEmailHtml} />
+      <NewsletterPreview html={newsletter.generatedEmailHtml} editable onSave={handleSaveHtml} />
     </div>
   );
 }

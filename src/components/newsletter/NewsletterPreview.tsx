@@ -1,17 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 
 interface NewsletterPreviewProps {
   html: string | null | undefined;
+  editable?: boolean;
+  onSave?: (html: string) => void;
 }
 
 type PreviewMode = "desktop" | "mobile";
 
-export default function NewsletterPreview({ html }: NewsletterPreviewProps) {
+export default function NewsletterPreview({ html, editable, onSave }: NewsletterPreviewProps) {
   const [mode, setMode] = useState<PreviewMode>("desktop");
+  const [isEditing, setIsEditing] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleIframeLoad = useCallback(() => {
+    if (!isEditing) return;
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    doc.body.contentEditable = "true";
+    // Inject hover outline style for visual feedback
+    const style = doc.createElement("style");
+    style.textContent = `
+      [contenteditable="true"] *:hover {
+        outline: 2px dashed rgba(52,92,114,0.3);
+        outline-offset: 2px;
+      }
+      [contenteditable="true"] *:focus {
+        outline: 2px solid rgba(52,92,114,0.5);
+        outline-offset: 2px;
+      }
+    `;
+    doc.head.appendChild(style);
+  }, [isEditing]);
+
+  const handleSave = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc || !onSave) return;
+    const fullHtml = "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
+    onSave(fullHtml);
+    setIsEditing(false);
+  }, [onSave]);
+
+  const handleCancel = useCallback(() => {
+    setIsEditing(false);
+    setIframeKey((k) => k + 1);
+  }, []);
 
   if (!html) {
     return (
@@ -44,12 +82,14 @@ export default function NewsletterPreview({ html }: NewsletterPreviewProps) {
 
   return (
     <div className="space-y-4">
-      {/* Preview mode toggle */}
+      {/* Toolbar */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => setMode("desktop")}
+          disabled={isEditing}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors",
+            isEditing && "opacity-50 cursor-not-allowed",
             mode === "desktop"
               ? "bg-primary text-white"
               : "bg-surface text-muted hover:text-foreground border border-border"
@@ -62,8 +102,10 @@ export default function NewsletterPreview({ html }: NewsletterPreviewProps) {
         </button>
         <button
           onClick={() => setMode("mobile")}
+          disabled={isEditing}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors",
+            isEditing && "opacity-50 cursor-not-allowed",
             mode === "mobile"
               ? "bg-primary text-white"
               : "bg-surface text-muted hover:text-foreground border border-border"
@@ -74,7 +116,42 @@ export default function NewsletterPreview({ html }: NewsletterPreviewProps) {
           </svg>
           Mobile
         </button>
+
+        {editable && html && !isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-surface text-muted hover:text-foreground border border-border transition-colors ml-auto"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+            </svg>
+            Edit Preview
+          </button>
+        )}
       </div>
+
+      {/* Editing banner + save/cancel */}
+      {isEditing && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-800">
+            Editing — click on text to modify or delete
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleCancel}
+              className="px-3 py-1.5 text-sm rounded-md bg-white text-foreground border border-border hover:bg-surface transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-3 py-1.5 text-sm rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Preview iframe */}
       <div className="flex justify-center">
@@ -85,11 +162,14 @@ export default function NewsletterPreview({ html }: NewsletterPreviewProps) {
           )}
         >
           <iframe
+            key={iframeKey}
+            ref={iframeRef}
             srcDoc={html}
             title="Newsletter Preview"
             className="w-full border-0"
             style={{ height: mode === "desktop" ? 700 : 600 }}
-            sandbox="allow-same-origin"
+            sandbox={isEditing ? "allow-same-origin allow-scripts" : "allow-same-origin"}
+            onLoad={handleIframeLoad}
           />
         </div>
       </div>
