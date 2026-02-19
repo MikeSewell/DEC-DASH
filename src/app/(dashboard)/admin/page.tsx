@@ -9,6 +9,7 @@ import UserManagement from "@/components/admin/UserManagement";
 import QuickBooksConnect from "@/components/admin/QuickBooksConnect";
 import ConstantContactConnect from "@/components/admin/ConstantContactConnect";
 import GoogleSheetsConfig from "@/components/admin/GoogleSheetsConfig";
+import KnowledgeBaseManager from "@/components/ai-director/KnowledgeBaseManager";
 import AuditLog from "@/components/admin/AuditLog";
 
 type AdminTab =
@@ -16,6 +17,7 @@ type AdminTab =
   | "quickbooks"
   | "constant-contact"
   | "google-sheets"
+  | "knowledge-base"
   | "audit-log"
   | "settings";
 
@@ -57,6 +59,15 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    id: "knowledge-base",
+    label: "Knowledge Base",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+      </svg>
+    ),
+  },
+  {
     id: "audit-log",
     label: "Audit Log",
     icon: (
@@ -80,6 +91,7 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
 export default function AdminPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const currentUser = useQuery(api.users.getCurrentUser);
 
   const tabParam = searchParams.get("tab") as AdminTab | null;
   const [activeTab, setActiveTab] = useState<AdminTab>(tabParam || "users");
@@ -105,6 +117,19 @@ export default function AdminPage() {
         return <ConstantContactConnect />;
       case "google-sheets":
         return <GoogleSheetsConfig />;
+      case "knowledge-base":
+        return (
+          <div className="space-y-4">
+            <div className="bg-surface rounded-xl border border-border p-4">
+              <p className="text-sm text-muted">
+                Upload documents to the knowledge base. Uploaded files are available to AI Director and Expense Recommender.
+              </p>
+            </div>
+            {currentUser?._id ? (
+              <KnowledgeBaseManager userId={currentUser._id} />
+            ) : null}
+          </div>
+        );
       case "audit-log":
         return <AuditLog />;
       case "settings":

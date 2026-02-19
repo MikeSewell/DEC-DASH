@@ -80,7 +80,7 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
         <input
           type="file"
           onChange={handleFileUpload}
-          accept=".pdf,.doc,.docx,.txt,.md,.csv"
+          accept=".pdf,.docx,.txt,.md,.csv,.pptx,.html,.json"
           className="hidden"
           disabled={uploading}
         />
