@@ -46,7 +46,7 @@ export const syncGrantTracker = internalAction({
         endDate: row[5] || "",
         status: normalizeStatus(row[6]),
         restrictions: row[7] || undefined,
-        deadlines: row[8] || undefined,
+        deadlines: row[8] ? JSON.stringify(row[8].split(",").map((s: string) => s.trim()).filter(Boolean)) : undefined,
         notes: row[9] || undefined,
         lastSyncAt: Date.now(),
       };

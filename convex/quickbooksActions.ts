@@ -243,6 +243,179 @@ export const fetchBalanceSheet = internalAction({
   },
 });
 
+// Fetch active budgets
+export const fetchBudgets = internalAction({
+  handler: async (ctx) => {
+    const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
+    const baseUrl = getBaseUrl();
+
+    const query = "SELECT * FROM Budget WHERE Active = true MAXRESULTS 1000";
+    const response = await fetch(
+      `${baseUrl}/v3/company/${realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error(`QB API error: ${response.status}`);
+    const data = await response.json();
+
+    await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
+      reportType: "budgets",
+      data: JSON.stringify(data),
+    });
+  },
+});
+
+// Fetch Budget vs Actuals reports for each budget+class combination
+export const fetchBudgetVsActuals = internalAction({
+  handler: async (ctx) => {
+    const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
+    const baseUrl = getBaseUrl();
+
+    // Read cached budgets and classes
+    const budgetsCache = await ctx.runQuery(internal.quickbooksInternal.getCachedData, { reportType: "budgets" });
+    const classesCache = await ctx.runQuery(internal.quickbooksInternal.getCachedData, { reportType: "classes" });
+
+    const budgets: any[] = budgetsCache ? JSON.parse(budgetsCache).QueryResponse?.Budget ?? [] : [];
+    const classes: any[] = classesCache ? JSON.parse(classesCache).QueryResponse?.Class ?? [] : [];
+
+    if (budgets.length === 0) {
+      console.log("No active budgets found, skipping BvA fetch");
+      await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
+        reportType: "budget_vs_actuals",
+        data: JSON.stringify([]),
+      });
+      return;
+    }
+
+    // Build budget-class combinations from BudgetDetail ClassRef values
+    const combinations: { budgetId: string; budgetName: string; classId: string; className: string }[] = [];
+
+    for (const budget of budgets) {
+      const budgetId = budget.Id;
+      const budgetName = budget.Name ?? `Budget ${budgetId}`;
+      const details: any[] = budget.BudgetDetail ?? [];
+
+      // Collect unique class IDs referenced in this budget
+      const classIds = new Set<string>();
+      for (const detail of details) {
+        const classRef = detail.ClassRef;
+        if (classRef?.value) {
+          classIds.add(classRef.value);
+        }
+      }
+
+      if (classIds.size === 0) {
+        // Budget has no class breakdown — fetch without class filter
+        combinations.push({ budgetId, budgetName, classId: "", className: "All" });
+      } else {
+        for (const classId of classIds) {
+          const cls = classes.find((c: any) => c.Id === classId);
+          const className = cls?.Name ?? `Class ${classId}`;
+          combinations.push({ budgetId, budgetName, classId, className });
+        }
+      }
+    }
+
+    const startDate = getFirstDayOfYear();
+    const endDate = getToday();
+    const results: any[] = [];
+
+    for (const combo of combinations) {
+      try {
+        let url = `${baseUrl}/v3/company/${realmId}/reports/BudgetVsActuals?start_date=${startDate}&end_date=${endDate}&budget=${combo.budgetId}&minorversion=65`;
+        if (combo.classId) {
+          url += `&class=${combo.classId}`;
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          console.error(`BvA fetch failed for budget=${combo.budgetId} class=${combo.classId}: ${response.status}`);
+          continue;
+        }
+
+        const report = await response.json();
+        const parsed = parseBudgetVsActualsReport(report, combo.budgetName, combo.className);
+        results.push(parsed);
+      } catch (err) {
+        console.error(`BvA error for ${combo.budgetName}/${combo.className}:`, err);
+      }
+    }
+
+    await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
+      reportType: "budget_vs_actuals",
+      data: JSON.stringify(results),
+      periodStart: startDate,
+      periodEnd: endDate,
+    });
+  },
+});
+
+// Parse a single BudgetVsActuals report response
+function parseBudgetVsActualsReport(report: any, budgetName: string, className: string) {
+  const rows: any[] = report?.Rows?.Row ?? [];
+  const result: any = {
+    budgetName,
+    className,
+    revenue: { actual: 0, budget: 0, variance: 0, percentUsed: 0 },
+    expenses: { actual: 0, budget: 0, variance: 0, percentUsed: 0 },
+    net: { actual: 0, budget: 0, variance: 0, percentUsed: 0 },
+    lineItems: [] as { category: string; group: string; actual: number; budget: number; variance: number }[],
+  };
+
+  for (const row of rows) {
+    const group = row.group ?? "";
+    const summary = row.Summary?.ColData ?? [];
+    // BvA report columns: [Name, Budget, Actual, Over Budget, % of Budget]
+    const budgetVal = parseFloat(summary[1]?.value ?? "0");
+    const actualVal = parseFloat(summary[2]?.value ?? "0");
+    const varianceVal = parseFloat(summary[3]?.value ?? "0");
+    const pctVal = parseFloat(summary[4]?.value ?? "0");
+
+    if (group === "Income") {
+      result.revenue = { actual: actualVal, budget: budgetVal, variance: varianceVal, percentUsed: pctVal };
+      extractLineItems(row, "Income", result.lineItems);
+    } else if (group === "Expenses") {
+      result.expenses = { actual: Math.abs(actualVal), budget: Math.abs(budgetVal), variance: varianceVal, percentUsed: pctVal };
+      extractLineItems(row, "Expenses", result.lineItems);
+    } else if (group === "NetIncome") {
+      result.net = { actual: actualVal, budget: budgetVal, variance: varianceVal, percentUsed: pctVal };
+    }
+  }
+
+  return result;
+}
+
+function extractLineItems(
+  sectionRow: any,
+  group: string,
+  lineItems: { category: string; group: string; actual: number; budget: number; variance: number }[]
+) {
+  const subRows: any[] = sectionRow.Rows?.Row ?? [];
+  for (const sub of subRows) {
+    if (sub.type === "Data" && sub.ColData) {
+      const category = sub.ColData[0]?.value ?? "Other";
+      const budget = parseFloat(sub.ColData[1]?.value ?? "0");
+      const actual = parseFloat(sub.ColData[2]?.value ?? "0");
+      const variance = parseFloat(sub.ColData[3]?.value ?? "0");
+      lineItems.push({ category, group, actual: Math.abs(actual), budget: Math.abs(budget), variance });
+    } else if (sub.type === "Section" && sub.Rows) {
+      // Recurse into sub-sections
+      extractLineItems(sub, group, lineItems);
+    }
+  }
+}
+
 // Sync all data
 export const syncAllData = internalAction({
   handler: async (ctx) => {
@@ -254,6 +427,9 @@ export const syncAllData = internalAction({
       await ctx.runAction(internal.quickbooksActions.fetchClasses, {});
       await ctx.runAction(internal.quickbooksActions.fetchCashFlow, {});
       await ctx.runAction(internal.quickbooksActions.fetchBalanceSheet, {});
+      // Budgets must be fetched before BvA since BvA reads cached budgets + classes
+      await ctx.runAction(internal.quickbooksActions.fetchBudgets, {});
+      await ctx.runAction(internal.quickbooksActions.fetchBudgetVsActuals, {});
     } catch (error) {
       console.error("QB sync error:", error);
       throw error;

@@ -22,5 +22,5 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
 });
 
 export const config = {
-  matcher: ["/api/auth", "/((?!_next|favicon.ico|.*\\..*).*)"],
+  matcher: ["/api/auth", "/((?!_next|favicon.ico|api/quickbooks|api/constant-contact|.*\\..*).*)"],
 };

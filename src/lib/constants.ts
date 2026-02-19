@@ -65,12 +65,12 @@ export const QB_SYNC_INTERVAL_MS = 15 * 60 * 1000;
 // Sheets sync interval in ms (30 minutes)
 export const SHEETS_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 
-// Theme
+// Theme — earthy green palette matching DEC logo
 export const BRAND_COLORS = {
-  primary: "#1B4D3E",      // DEC dark green
-  primaryLight: "#2D7A5F", // lighter green
-  accent: "#D4A843",       // gold
-  accentLight: "#E8C96A",  // light gold
-  dark: "#0F2A1F",         // very dark green
-  light: "#F5F7F5",        // off-white green tint
+  primary: "#2D6A4F",      // earthy forest green
+  primaryLight: "#52B788", // medium vibrant green
+  accent: "#8CC63F",       // lime green
+  accentLight: "#6BBF59",  // medium green
+  dark: "#1B4332",         // deep dark forest
+  light: "#F5F7F3",        // warm off-white
 };

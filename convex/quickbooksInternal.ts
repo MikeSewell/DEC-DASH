@@ -25,6 +25,18 @@ export const updateTokens = internalMutation({
   },
 });
 
+// Get cached data string by report type (for use in actions)
+export const getCachedData = internalQuery({
+  args: { reportType: v.string() },
+  handler: async (ctx, args) => {
+    const cached = await ctx.db
+      .query("quickbooksCache")
+      .withIndex("by_reportType", (q) => q.eq("reportType", args.reportType))
+      .first();
+    return cached?.data ?? null;
+  },
+});
+
 // Cache a report
 export const cacheReport = internalMutation({
   args: {

@@ -35,6 +35,10 @@ export function useBalanceSheet() {
   return useQuery(api.quickbooks.getBalanceSheet);
 }
 
+export function useBudgetVsActuals() {
+  return useQuery(api.quickbooks.getBudgetVsActuals);
+}
+
 export function useDonations() {
   return useQuery(api.quickbooks.getDonations);
 }
