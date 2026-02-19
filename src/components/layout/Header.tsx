@@ -15,7 +15,7 @@ const pathTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/expenses": "Expenses",
   "/newsletter": "Newsletter",
-  "/iceberg": "Iceberg AI",
+  "/ai-director": "AI Director",
   "/programs": "Programs",
   "/admin": "Admin",
 };

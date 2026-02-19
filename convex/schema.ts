@@ -35,7 +35,7 @@ export default defineSchema({
     tokenExpiry: v.number(),
     companyName: v.optional(v.string()),
     connectedAt: v.number(),
-    connectedBy: v.id("users"),
+    connectedBy: v.optional(v.id("users")),
   }),
 
   quickbooksCache: defineTable({
@@ -61,7 +61,7 @@ export default defineSchema({
     refreshToken: v.string(),
     tokenExpiry: v.number(),
     connectedAt: v.number(),
-    connectedBy: v.id("users"),
+    connectedBy: v.optional(v.id("users")),
   }),
 
   grantsCache: defineTable({
@@ -151,7 +151,7 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_status", ["status"]),
 
-  icebergMessages: defineTable({
+  aiDirectorMessages: defineTable({
     sessionId: v.string(),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
@@ -159,7 +159,7 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_sessionId", ["sessionId"]),
 
-  icebergConfig: defineTable({
+  aiDirectorConfig: defineTable({
     assistantId: v.string(),
     vectorStoreId: v.string(),
     systemInstructions: v.string(),

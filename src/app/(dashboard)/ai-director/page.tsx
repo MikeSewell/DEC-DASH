@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { timeAgo, truncate } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
-import ChatInterface from "@/components/iceberg/ChatInterface";
+import ChatInterface from "@/components/ai-director/ChatInterface";
 
 function generateUUID(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -18,24 +18,24 @@ function generateUUID(): string {
   });
 }
 
-export default function IcebergPage() {
+export default function AIDirectorPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const [sessionId, setSessionId] = useState<string>(() => generateUUID());
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const messages = useQuery(
-    api.iceberg.getMessages,
+    api.aiDirector.getMessages,
     sessionId ? { sessionId } : "skip"
   );
 
   const sessions = useQuery(
-    api.iceberg.getSessions,
+    api.aiDirector.getSessions,
     currentUser?._id ? { userId: currentUser._id } : "skip"
   );
 
-  const sendMessage = useAction(api.icebergActions.sendMessage);
-  const deleteSession = useMutation(api.iceberg.deleteSession);
+  const sendMessage = useAction(api.aiDirectorActions.sendMessage);
+  const deleteSession = useMutation(api.aiDirector.deleteSession);
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -191,7 +191,7 @@ export default function IcebergPage() {
               </svg>
             </button>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Iceberg AI</h2>
+              <h2 className="text-sm font-semibold text-foreground">AI Director</h2>
               <p className="text-xs text-muted">DEC Knowledge Assistant</p>
             </div>
           </div>

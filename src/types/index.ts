@@ -18,7 +18,7 @@ export type GoalStatus = "in_progress" | "completed" | "not_started";
 // Newsletter status
 export type NewsletterStatus = "draft" | "review" | "published";
 
-// Iceberg message role
+// AI Director message role
 export type MessageRole = "user" | "assistant";
 
 // QB report types

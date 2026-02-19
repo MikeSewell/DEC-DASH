@@ -89,7 +89,7 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
       <div className="space-y-2">
         {files.length === 0 ? (
           <p className="text-sm text-muted py-4 text-center">
-            No files uploaded yet. Upload documents to give Iceberg context about your organization.
+            No files uploaded yet. Upload documents to give AI Director context about your organization.
           </p>
         ) : (
           files.map((file) => (

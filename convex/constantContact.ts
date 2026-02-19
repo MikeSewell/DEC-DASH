@@ -32,7 +32,6 @@ export const saveTokens = mutation({
       refreshToken: args.refreshToken,
       tokenExpiry: args.tokenExpiry,
       connectedAt: Date.now(),
-      connectedBy: "" as any,
     });
   },
 });

@@ -3,13 +3,15 @@
 import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
+import { getOpenAIApiKey } from "./openaiHelpers";
 
 // Generate email HTML from newsletter sections using OpenAI
 export const generateEmailHtml = action({
   args: { id: v.id("newsletters") },
   handler: async (ctx, args) => {
     const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = await getOpenAIApiKey(ctx);
+    const openai = new OpenAI({ apiKey });
 
     const newsletter = await ctx.runQuery(api.newsletters.getById, { id: args.id });
     if (!newsletter) throw new Error("Newsletter not found");

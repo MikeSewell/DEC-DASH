@@ -6,7 +6,7 @@ export const getMessages = query({
   args: { sessionId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("icebergMessages")
+      .query("aiDirectorMessages")
       .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
       .collect();
   },
@@ -16,7 +16,7 @@ export const getMessages = query({
 export const getSessions = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const messages = await ctx.db.query("icebergMessages").collect();
+    const messages = await ctx.db.query("aiDirectorMessages").collect();
 
     // Group by sessionId, filter by userId, get first message as preview
     const sessionMap = new Map<
@@ -58,7 +58,7 @@ export const saveMessage = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("icebergMessages", {
+    return await ctx.db.insert("aiDirectorMessages", {
       ...args,
       createdAt: Date.now(),
     });
@@ -70,7 +70,7 @@ export const deleteSession = mutation({
   args: { sessionId: v.string() },
   handler: async (ctx, args) => {
     const messages = await ctx.db
-      .query("icebergMessages")
+      .query("aiDirectorMessages")
       .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
       .collect();
 
@@ -80,9 +80,9 @@ export const deleteSession = mutation({
   },
 });
 
-// Get Iceberg config
+// Get AI Director config
 export const getConfig = query({
   handler: async (ctx) => {
-    return await ctx.db.query("icebergConfig").first();
+    return await ctx.db.query("aiDirectorConfig").first();
   },
 });

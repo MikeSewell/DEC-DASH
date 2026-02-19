@@ -150,7 +150,6 @@ export const saveTokens = mutation({
       realmId: args.realmId,
       tokenExpiry: args.tokenExpiry,
       connectedAt: Date.now(),
-      connectedBy: "" as any,
     });
   },
 });

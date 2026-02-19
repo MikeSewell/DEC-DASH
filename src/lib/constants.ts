@@ -51,7 +51,7 @@ export const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { label: "Expenses", href: "/expenses", icon: "Receipt" },
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
-  { label: "Iceberg AI", href: "/iceberg", icon: "MessageSquare" },
+  { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },
   { label: "Programs", href: "/programs", icon: "Users" },
   { label: "Admin", href: "/admin", icon: "Settings" },
 ] as const;

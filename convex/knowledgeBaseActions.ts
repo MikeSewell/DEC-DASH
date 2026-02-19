@@ -3,6 +3,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { getOpenAIApiKey } from "./openaiHelpers";
 
 // Upload file to OpenAI vector store
 export const uploadToOpenAI = action({
@@ -15,7 +16,8 @@ export const uploadToOpenAI = action({
   },
   handler: async (ctx, args) => {
     const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = await getOpenAIApiKey(ctx);
+    const openai = new OpenAI({ apiKey });
 
     // Get the file from Convex storage
     const fileUrl = await ctx.storage.getUrl(args.storageId);
@@ -33,10 +35,10 @@ export const uploadToOpenAI = action({
     });
 
     // Get config for vector store ID
-    const config = await ctx.runQuery(api.iceberg.getConfig);
+    const config = await ctx.runQuery(api.aiDirector.getConfig);
     if (config?.vectorStoreId) {
       // Add file to vector store
-      await (openai.beta as any).vectorStores.files.create(config.vectorStoreId, {
+      await openai.vectorStores.files.create(config.vectorStoreId, {
         file_id: openaiFile.id,
       });
     }
@@ -60,7 +62,8 @@ export const removeFromOpenAI = action({
   args: { id: v.id("knowledgeBase") },
   handler: async (ctx, args) => {
     const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = await getOpenAIApiKey(ctx);
+    const openai = new OpenAI({ apiKey });
 
     // Get file record
     const files = await ctx.runQuery(api.knowledgeBase.listFiles);
@@ -68,10 +71,10 @@ export const removeFromOpenAI = action({
     if (!file) throw new Error("File not found");
 
     // Remove from OpenAI vector store
-    const config = await ctx.runQuery(api.iceberg.getConfig);
+    const config = await ctx.runQuery(api.aiDirector.getConfig);
     if (config?.vectorStoreId) {
       try {
-        await (openai.beta as any).vectorStores.files.del(
+        await openai.vectorStores.files.delete(
           config.vectorStoreId,
           file.openaiFileId
         );
@@ -82,7 +85,7 @@ export const removeFromOpenAI = action({
 
     // Delete the OpenAI file
     try {
-      await (openai.files as any).del(file.openaiFileId);
+      await openai.files.delete(file.openaiFileId);
     } catch {
       // File may already be removed
     }

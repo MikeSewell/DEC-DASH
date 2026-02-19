@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as aiDirector from "../aiDirector.js";
+import type * as aiDirectorActions from "../aiDirectorActions.js";
+import type * as aiDirectorInternal from "../aiDirectorInternal.js";
 import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as clientGoals from "../clientGoals.js";
@@ -18,18 +21,17 @@ import type * as constantContactInternal from "../constantContactInternal.js";
 import type * as crons from "../crons.js";
 import type * as dashboardPrefs from "../dashboardPrefs.js";
 import type * as debug from "../debug.js";
+import type * as expenseActions from "../expenseActions.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as googleSheetsActions from "../googleSheetsActions.js";
 import type * as googleSheetsInternal from "../googleSheetsInternal.js";
 import type * as googleSheetsSync from "../googleSheetsSync.js";
 import type * as http from "../http.js";
-import type * as iceberg from "../iceberg.js";
-import type * as icebergActions from "../icebergActions.js";
-import type * as icebergInternal from "../icebergInternal.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
 import type * as newsletterActions from "../newsletterActions.js";
 import type * as newsletters from "../newsletters.js";
+import type * as openaiHelpers from "../openaiHelpers.js";
 import type * as programs from "../programs.js";
 import type * as quickbooks from "../quickbooks.js";
 import type * as quickbooksActions from "../quickbooksActions.js";
@@ -46,6 +48,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiDirector: typeof aiDirector;
+  aiDirectorActions: typeof aiDirectorActions;
+  aiDirectorInternal: typeof aiDirectorInternal;
   auditLog: typeof auditLog;
   auth: typeof auth;
   clientGoals: typeof clientGoals;
@@ -56,18 +61,17 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboardPrefs: typeof dashboardPrefs;
   debug: typeof debug;
+  expenseActions: typeof expenseActions;
   googleSheets: typeof googleSheets;
   googleSheetsActions: typeof googleSheetsActions;
   googleSheetsInternal: typeof googleSheetsInternal;
   googleSheetsSync: typeof googleSheetsSync;
   http: typeof http;
-  iceberg: typeof iceberg;
-  icebergActions: typeof icebergActions;
-  icebergInternal: typeof icebergInternal;
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;
   newsletterActions: typeof newsletterActions;
   newsletters: typeof newsletters;
+  openaiHelpers: typeof openaiHelpers;
   programs: typeof programs;
   quickbooks: typeof quickbooks;
   quickbooksActions: typeof quickbooksActions;

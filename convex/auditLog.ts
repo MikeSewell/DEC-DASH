@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * Internal mutation to insert an audit log entry.
@@ -38,14 +39,9 @@ export const getLogs = query({
   },
   handler: async (ctx, args) => {
     // Check admin role
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-    const email = identity.email;
-    if (!email) throw new Error("No email in identity");
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", email))
-      .first();
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const currentUser = await ctx.db.get(userId);
     if (!currentUser) throw new Error("User not found");
     if (currentUser.role !== "admin") throw new Error("Insufficient permissions");
 

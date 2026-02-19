@@ -3,6 +3,7 @@
 import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
+import { getOpenAIApiKey } from "./openaiHelpers";
 
 // Send message to OpenAI Assistants API and save response
 export const sendMessage = action({
@@ -13,10 +14,11 @@ export const sendMessage = action({
   },
   handler: async (ctx, args) => {
     const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = await getOpenAIApiKey(ctx);
+    const openai = new OpenAI({ apiKey });
 
     // Save user message
-    await ctx.runMutation(api.iceberg.saveMessage, {
+    await ctx.runMutation(api.aiDirector.saveMessage, {
       sessionId: args.sessionId,
       role: "user",
       content: args.content,
@@ -24,24 +26,27 @@ export const sendMessage = action({
     });
 
     // Get or create assistant config
-    let config = await ctx.runQuery(api.iceberg.getConfig);
+    let config = await ctx.runQuery(api.aiDirector.getConfig);
 
     if (!config) {
       // Set up the assistant if not configured
-      const result = await ctx.runAction(internal.icebergActions.setupAssistant, {});
+      const result = await ctx.runAction(internal.aiDirectorActions.setupAssistant, {});
       config = result;
     }
 
     // Get chat history for context
-    const messages = await ctx.runQuery(api.iceberg.getMessages, {
+    const messages = await ctx.runQuery(api.aiDirector.getMessages, {
       sessionId: args.sessionId,
     });
+
+    // Check for custom system prompt in appSettings (admin-configurable)
+    const customPrompt = await ctx.runQuery(api.settings.get, { key: "ai_director_system_prompt" });
 
     // Build messages array for chat completion
     const chatMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: config.systemInstructions || getDefaultInstructions(),
+        content: customPrompt?.value || config.systemInstructions || getDefaultInstructions(),
       },
     ];
 
@@ -89,7 +94,7 @@ export const sendMessage = action({
             : "I apologize, but I couldn't generate a response.";
 
         // Save assistant response
-        await ctx.runMutation(api.iceberg.saveMessage, {
+        await ctx.runMutation(api.aiDirector.saveMessage, {
           sessionId: args.sessionId,
           role: "assistant",
           content: responseText,
@@ -113,7 +118,7 @@ export const sendMessage = action({
       "I apologize, but I couldn't generate a response.";
 
     // Save assistant response
-    await ctx.runMutation(api.iceberg.saveMessage, {
+    await ctx.runMutation(api.aiDirector.saveMessage, {
       sessionId: args.sessionId,
       role: "assistant",
       content: responseText,
@@ -128,16 +133,17 @@ export const sendMessage = action({
 export const setupAssistant = internalAction({
   handler: async (ctx) => {
     const OpenAI = (await import("openai")).default;
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = await getOpenAIApiKey(ctx);
+    const openai = new OpenAI({ apiKey });
 
     // Create vector store
-    const vectorStore = await (openai.beta as any).vectorStores.create({
+    const vectorStore = await openai.vectorStores.create({
       name: "DEC Knowledge Base",
     });
 
     // Create assistant
     const assistant = await openai.beta.assistants.create({
-      name: "Iceberg - DEC Assistant",
+      name: "AI Director - DEC Assistant",
       instructions: getDefaultInstructions(),
       model: "gpt-4o",
       tools: [{ type: "file_search" }],
@@ -153,14 +159,14 @@ export const setupAssistant = internalAction({
       updatedAt: Date.now(),
     };
 
-    await ctx.runMutation(internal.icebergInternal.saveConfig, config);
+    await ctx.runMutation(internal.aiDirectorInternal.saveConfig, config);
 
     return config;
   },
 });
 
 function getDefaultInstructions(): string {
-  return `You are Iceberg, the AI assistant for Dads Evoking Change (DEC), a nonprofit organization focused on fatherhood programs and family services.
+  return `You are AI Director, the AI assistant for Dads Evoking Change (DEC), a nonprofit organization focused on fatherhood programs and family services.
 
 You help staff with:
 - Organization policies and procedures

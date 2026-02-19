@@ -9,17 +9,19 @@ import ExpenseTable from "@/components/expenses/ExpenseTable";
 import ExpenseByVendor from "@/components/expenses/ExpenseByVendor";
 import ExpenseByAccount from "@/components/expenses/ExpenseByAccount";
 import BudgetComparison from "@/components/expenses/BudgetComparison";
+import ExpenseRecommender from "@/components/expenses/ExpenseRecommender";
 import { useExpenses } from "@/hooks/useQuickBooks";
 import { cn } from "@/lib/utils";
 import { formatCurrencyExact } from "@/lib/utils";
 import type { ExpenseItem } from "@/types";
 
-type TabId = "vendor" | "account" | "class";
+type TabId = "vendor" | "account" | "class" | "ai-insights";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "vendor", label: "By Vendor" },
   { id: "account", label: "By Account" },
   { id: "class", label: "By Class" },
+  { id: "ai-insights", label: "AI Insights" },
 ];
 
 export default function ExpensesPage() {
@@ -243,6 +245,10 @@ export default function ExpensesPage() {
 
       {activeTab === "class" && (
         <BudgetComparison />
+      )}
+
+      {activeTab === "ai-insights" && (
+        <ExpenseRecommender data={filteredExpenses} />
       )}
     </div>
   );
