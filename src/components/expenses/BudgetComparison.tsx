@@ -109,7 +109,7 @@ export default function BudgetComparison() {
         backgroundColor: "rgba(156, 163, 175, 0.5)",
         borderColor: "rgba(156, 163, 175, 1)",
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 8,
       },
       {
         label: "Actual",
@@ -125,7 +125,7 @@ export default function BudgetComparison() {
             : "rgba(239, 68, 68, 1)"
         ),
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 8,
       },
     ],
   };
@@ -137,8 +137,16 @@ export default function BudgetComparison() {
     plugins: {
       legend: {
         position: "top" as const,
+        labels: {
+          font: { family: "'Nunito', sans-serif" },
+        },
       },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { dataset: { label?: string }; parsed: { x: number | null } }) =>
             `${ctx.dataset.label}: $${(ctx.parsed.x ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,

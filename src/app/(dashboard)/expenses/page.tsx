@@ -142,7 +142,7 @@ export default function ExpensesPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Expense Management</h1>
+          <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">Expense Management</h1>
           <p className="text-sm text-muted mt-1">
             {filteredExpenses.length} expenses | Total:{" "}
             {formatCurrencyExact(filteredExpenses.reduce((s, e) => s + e.amount, 0))}
@@ -212,10 +212,10 @@ export default function ExpensesPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+                "px-4 py-3 text-sm font-semibold border-b-2 rounded-t-lg transition-colors",
                 activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted hover:text-foreground hover:border-border"
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-surface-hover/50"
               )}
             >
               {tab.label}

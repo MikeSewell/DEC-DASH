@@ -166,7 +166,7 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
           files.map((file) => (
             <div
               key={file._id}
-              className="flex items-center justify-between p-3 rounded-lg bg-background border border-border"
+              className="flex items-center justify-between p-3 rounded-lg bg-background border border-border shadow-[var(--warm-shadow-sm)]"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">

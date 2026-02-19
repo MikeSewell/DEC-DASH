@@ -120,7 +120,7 @@ export default function AdminPage() {
       case "knowledge-base":
         return (
           <div className="space-y-4">
-            <div className="bg-surface rounded-xl border border-border p-4">
+            <div className="bg-surface rounded-2xl border border-border p-4 shadow-[var(--warm-shadow-sm)]">
               <p className="text-sm text-muted">
                 Upload documents to the knowledge base. Uploaded files are available to AI Director and Expense Recommender.
               </p>
@@ -143,7 +143,7 @@ export default function AdminPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Admin</h1>
+        <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">Admin</h1>
         <p className="text-sm text-muted mt-1">
           Manage users, integrations, and system settings
         </p>
@@ -157,10 +157,10 @@ export default function AdminPage() {
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                "flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 rounded-t-lg transition-colors whitespace-nowrap",
                 activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted hover:text-foreground hover:border-border"
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-surface-hover/50"
               )}
             >
               {tab.icon}
@@ -239,7 +239,7 @@ function SettingsPanel() {
   return (
     <div className="space-y-6">
       {/* OpenAI API Key */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
         <div className="flex items-center gap-3 mb-4">
           <h3 className="text-base font-semibold text-foreground">
             OpenAI API Key
@@ -323,7 +323,7 @@ function SettingsPanel() {
       </div>
 
       {/* AI Director System Prompt */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
         <h3 className="text-base font-semibold text-foreground mb-1">
           AI Director — System Prompt
         </h3>
@@ -365,7 +365,7 @@ function SettingsPanel() {
       </div>
 
       {/* Static app info */}
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Application Settings
         </h3>
@@ -389,7 +389,7 @@ function SettingsPanel() {
         </div>
       </div>
 
-      <div className="bg-surface rounded-xl border border-border p-6">
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
         <h3 className="text-base font-semibold text-foreground mb-4">
           Theme
         </h3>

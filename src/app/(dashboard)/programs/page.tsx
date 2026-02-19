@@ -189,7 +189,7 @@ export default function ProgramsPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Programs</h1>
+          <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">Programs</h1>
           <p className="text-sm text-muted mt-1">
             Manage program enrollment and client data
           </p>
@@ -209,7 +209,7 @@ export default function ProgramsPage() {
           return (
             <Card key={card.key}>
               <div className="flex items-center gap-4">
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-white", card.color)}>
+                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-white", card.color)}>
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                   </svg>
@@ -237,10 +237,10 @@ export default function ProgramsPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+                "px-4 py-3 text-sm font-semibold border-b-2 rounded-t-lg transition-colors",
                 activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted hover:text-foreground hover:border-border"
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-surface-hover/50"
               )}
             >
               {tab.label}
@@ -299,7 +299,7 @@ export default function ProgramsPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, programId: e.target.value }))
               }
-              className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             >
               <option value="">Select a program...</option>
               {programs.map((p) => (
@@ -322,7 +322,7 @@ export default function ProgramsPage() {
                   status: e.target.value as ClientStatus,
                 }))
               }
-              className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             >
               <option value="active">Active</option>
               <option value="completed">Completed</option>
@@ -348,7 +348,7 @@ export default function ProgramsPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, ageGroup: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               >
                 <option value="">Select...</option>
                 <option value="18-24">18-24</option>
@@ -369,7 +369,7 @@ export default function ProgramsPage() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, ethnicity: e.target.value }))
               }
-              className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             >
               <option value="">Select...</option>
               <option value="Black/African American">Black/African American</option>

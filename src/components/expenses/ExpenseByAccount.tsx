@@ -26,16 +26,16 @@ interface AccountGroup {
 }
 
 const CHART_COLORS = [
-  "rgba(27, 77, 62, 0.8)",
-  "rgba(212, 168, 67, 0.8)",
-  "rgba(45, 122, 95, 0.8)",
-  "rgba(232, 201, 106, 0.8)",
-  "rgba(15, 42, 31, 0.8)",
-  "rgba(99, 164, 139, 0.8)",
-  "rgba(180, 140, 50, 0.8)",
-  "rgba(60, 150, 110, 0.8)",
-  "rgba(140, 180, 160, 0.8)",
-  "rgba(200, 170, 80, 0.8)",
+  "rgba(27, 67, 50, 0.6)",
+  "rgba(45, 106, 79, 0.6)",
+  "rgba(64, 145, 108, 0.6)",
+  "rgba(82, 183, 136, 0.6)",
+  "rgba(107, 191, 89, 0.6)",
+  "rgba(140, 198, 63, 0.6)",
+  "rgba(116, 198, 157, 0.6)",
+  "rgba(149, 213, 178, 0.6)",
+  "rgba(61, 122, 82, 0.6)",
+  "rgba(163, 214, 90, 0.6)",
 ];
 
 export default function ExpenseByAccount({ data }: ExpenseByAccountProps) {
@@ -71,7 +71,7 @@ export default function ExpenseByAccount({ data }: ExpenseByAccountProps) {
           (_, i) => CHART_COLORS[i % CHART_COLORS.length]
         ),
         borderColor: accountGroups.map(
-          (_, i) => CHART_COLORS[i % CHART_COLORS.length].replace("0.8", "1")
+          (_, i) => CHART_COLORS[i % CHART_COLORS.length].replace("0.6", "1")
         ),
         borderWidth: 2,
       },
@@ -87,10 +87,15 @@ export default function ExpenseByAccount({ data }: ExpenseByAccountProps) {
         labels: {
           boxWidth: 12,
           padding: 12,
-          font: { size: 11 },
+          font: { size: 11, family: "'Nunito', sans-serif" },
         },
       },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { label: string; parsed: number; dataset: { data: number[] } }) => {
             const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);

@@ -89,7 +89,7 @@ function ToastItem({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 w-80 p-4 rounded-lg border shadow-lg transition-all duration-200",
+        "flex items-start gap-3 w-80 p-4 rounded-2xl border shadow-[var(--warm-shadow-lg)] transition-all duration-300",
         variantStyles[t.variant],
         show
           ? "opacity-100 translate-x-0"

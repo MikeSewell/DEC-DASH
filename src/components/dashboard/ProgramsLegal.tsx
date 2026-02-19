@@ -16,14 +16,14 @@ import { formatDate } from "@/lib/utils";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const AGE_COLORS = [
-  "#3B82F6",
-  "#1B4D3E",
-  "#D4A843",
-  "#8B5CF6",
-  "#EC4899",
-  "#F97316",
-  "#14B8A6",
-  "#2D7A5F",
+  "#2D6A4F",
+  "#52B788",
+  "#6BBF59",
+  "#8CC63F",
+  "#1B4332",
+  "#74C69D",
+  "#40916C",
+  "#95D5B2",
 ];
 
 export default function ProgramsLegal() {
@@ -79,7 +79,7 @@ export default function ProgramsLegal() {
         data: ageEntries.map(([, count]) => count),
         backgroundColor: ageEntries.map((_, i) => AGE_COLORS[i % AGE_COLORS.length]),
         borderWidth: 2,
-        borderColor: "rgba(255,255,255,0.8)",
+        borderColor: "rgba(255,254,249,0.9)",
       },
     ],
   };
@@ -94,8 +94,15 @@ export default function ProgramsLegal() {
           usePointStyle: true,
           pointStyle: "circle" as const,
           padding: 12,
-          font: { size: 11 },
+          font: { size: 11, family: "'Nunito', sans-serif" },
         },
+      },
+      tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
       },
     },
   };
@@ -110,19 +117,19 @@ export default function ProgramsLegal() {
     <div className="space-y-6">
       {/* Stat row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-lg border border-border bg-surface p-3 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-foreground">{totalEnrolled}</p>
           <p className="text-xs text-muted">Total Enrolled</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-3 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-primary">{activeClients}</p>
           <p className="text-xs text-muted">Active</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-3 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-success">{completedClients}</p>
           <p className="text-xs text-muted">Completed</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-3 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-accent">{avgSessions}</p>
           <p className="text-xs text-muted">Avg Sessions</p>
         </div>

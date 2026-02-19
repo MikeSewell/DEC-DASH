@@ -24,11 +24,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full px-3 py-2 rounded-lg text-sm",
+            "w-full px-4 py-2.5 rounded-xl text-sm",
             "bg-surface border border-border text-foreground placeholder:text-muted",
-            "focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary",
+            "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:shadow-[var(--warm-shadow-sm)]",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            "transition-colors duration-150",
+            "transition-all duration-150",
             error && "border-danger focus:ring-danger",
             className
           )}

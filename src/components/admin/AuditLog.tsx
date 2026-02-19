@@ -76,7 +76,7 @@ export default function AuditLog() {
               setFilterUser(e.target.value);
               setPage(0);
             }}
-            className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">All Users</option>
             {users.map((u) => (
@@ -95,7 +95,7 @@ export default function AuditLog() {
               setFilterEntity(e.target.value);
               setPage(0);
             }}
-            className="w-full px-3 py-2 rounded-lg text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">All Types</option>
             {entityTypes.map((type) => (

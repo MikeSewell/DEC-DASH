@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/lib/constants";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Badge from "@/components/ui/Badge";
 
 interface SidebarProps {
@@ -89,7 +90,7 @@ export default function Sidebar({
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -98,16 +99,23 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full bg-surface border-r border-border flex flex-col",
+          "fixed top-0 left-0 z-50 h-full flex flex-col",
+          "bg-gradient-to-b from-primary-dark to-[#0D2216] text-white",
           "w-[var(--sidebar-width)] transition-transform duration-200 ease-in-out",
           "lg:translate-x-0 lg:static lg:z-auto",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-6 h-[var(--header-height)] border-b border-border shrink-0">
-          <span className="text-2xl font-bold text-accent tracking-tight">DEC</span>
-          <span className="text-lg font-medium text-primary">Dashboard</span>
+        <div className="flex items-center justify-center px-6 py-4 border-b border-white/10 shrink-0">
+          <Image
+            src="/dec-logo.png"
+            alt="Dads Evoking Change"
+            width={200}
+            height={200}
+            className="w-36 h-auto object-contain brightness-110"
+            priority
+          />
         </div>
 
         {/* Navigation */}
@@ -126,15 +134,15 @@ export default function Sidebar({
                   if (window.innerWidth < 1024) onClose();
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
                   isActive
-                    ? "bg-primary text-white"
-                    : "text-foreground hover:bg-surface-hover"
+                    ? "bg-white/15 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
                 )}
               >
                 <NavIcon
                   name={item.icon}
-                  className={isActive ? "text-white" : "text-muted"}
+                  className={isActive ? "text-white" : "text-white/50"}
                 />
                 <span>{item.label}</span>
               </Link>
@@ -143,9 +151,9 @@ export default function Sidebar({
         </nav>
 
         {/* User section */}
-        <div className="px-4 py-4 border-t border-border shrink-0">
+        <div className="px-4 py-4 border-t border-white/10 shrink-0">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center text-white text-sm font-semibold shrink-0">
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-semibold shrink-0">
               {userName
                 .split(" ")
                 .map((n) => n[0])
@@ -154,7 +162,7 @@ export default function Sidebar({
                 .slice(0, 2)}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {userName}
               </p>
               <Badge variant={roleBadgeVariant(userRole)}>
@@ -166,7 +174,7 @@ export default function Sidebar({
           {onLogout && (
             <button
               onClick={onLogout}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted hover:text-danger hover:bg-danger-light rounded-lg transition-colors duration-150"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white/50 hover:text-red-300 hover:bg-white/5 rounded-xl transition-colors duration-150"
             >
               <svg
                 className="w-4 h-4"

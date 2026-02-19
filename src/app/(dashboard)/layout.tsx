@@ -46,7 +46,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <div className="h-screen bg-background flex overflow-hidden">
+      <div className="h-screen bg-warm-gradient flex overflow-hidden">
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}

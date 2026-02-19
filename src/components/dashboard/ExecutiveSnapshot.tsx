@@ -18,8 +18,8 @@ interface StatCardProps {
 
 function StatCard({ icon, value, label, trend, loading, accentColor = "text-primary" }: StatCardProps) {
   return (
-    <div className="flex items-start gap-4 rounded-lg border border-border bg-surface p-4">
-      <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10", accentColor)}>
+    <div className="flex items-start gap-4 rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)] hover-lift">
+      <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10", accentColor)}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
@@ -70,7 +70,7 @@ export default function ExecutiveSnapshot() {
   const servicesStatus = isQBLoading ? "--" : qbConnected ? "Connected" : "Disconnected";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
       <StatCard
         icon={
           <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

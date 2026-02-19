@@ -12,6 +12,17 @@ Executive dashboard for the **Dads' Education Center (DEC)**, a nonprofit suppor
 - **Constant Contact API** — Newsletter management
 - **Chart.js** — Data visualizations
 
+## Design System
+
+The UI uses a **warm, organic** aesthetic inspired by community and nature — avoiding the generic SaaS look.
+
+- **Typography**: [Nunito](https://fonts.google.com/specimen/Nunito) (body) + [Fraunces](https://fonts.google.com/specimen/Fraunces) (display headings) + Geist Mono (code)
+- **Color palette**: Teal primary (`#1B5E6B`), green accent (`#6BBF59`), warm cream background (`#F7F5F0`), dark forest mode (`#141F16`)
+- **Shadows**: Green-tinted warm shadows (`--warm-shadow-sm` through `--warm-shadow-xl`)
+- **Shapes**: Pill-shaped buttons (`rounded-full`), large card radii (`rounded-2xl`), organic blob decorations
+- **Motion**: Fade-up and scale-in entrance animations, hover-lift micro-interactions, staggered children reveals
+- **Textures**: Subtle CSS noise grain overlay, frosted glass header, gradient sidebar
+
 ## Features
 
 - **Executive Snapshot** — Revenue, expenses, cash flow, grant utilization at a glance

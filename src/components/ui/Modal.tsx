@@ -75,7 +75,7 @@ export default function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -83,7 +83,7 @@ export default function Modal({
       {/* Modal panel */}
       <div
         className={cn(
-          "relative w-full bg-surface rounded-xl border border-border shadow-xl",
+          "relative w-full bg-surface rounded-2xl border border-border shadow-[var(--warm-shadow-xl)]",
           "transform transition-all duration-200",
           visible ? "scale-100 translate-y-0" : "scale-95 translate-y-2",
           sizeStyles[size]
@@ -96,13 +96,13 @@ export default function Modal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2
             id="modal-title"
-            className="text-lg font-semibold text-foreground"
+            className="text-lg font-semibold text-foreground font-[family-name:var(--font-fraunces)]"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+            className="p-1 rounded-full text-muted hover:text-foreground hover:bg-surface-hover transition-colors"
             aria-label="Close modal"
           >
             <svg

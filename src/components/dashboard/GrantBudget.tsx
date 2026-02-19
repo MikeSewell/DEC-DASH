@@ -11,7 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { useGrants } from "@/hooks/useGrantTracker";
-import { useQuickBooksConfig } from "@/hooks/useQuickBooks";
+import { useQuickBooksConfig, useBudgetVsActuals } from "@/hooks/useQuickBooks";
 import Spinner from "@/components/ui/Spinner";
 import { formatCurrency } from "@/lib/utils";
 
@@ -25,9 +25,27 @@ function getBudgetColor(spent: number, total: number): string {
   return "#22c55e"; // green -- under budget
 }
 
+// Fuzzy match grant names to QB class names (lowercased, trimmed comparison)
+function matchGrantToClass(
+  grantName: string,
+  bvaData: any[]
+): { actual: number; budget: number } | null {
+  const grantLower = grantName.toLowerCase().trim();
+  for (const entry of bvaData) {
+    const classLower = (entry.className ?? "").toLowerCase().trim();
+    if (!classLower || classLower === "all") continue;
+    // Match if either contains the other (handles "LISC Grant" matching "LISC" class)
+    if (grantLower.includes(classLower) || classLower.includes(grantLower)) {
+      return { actual: entry.expenses?.actual ?? 0, budget: entry.expenses?.budget ?? 0 };
+    }
+  }
+  return null;
+}
+
 export default function GrantBudget() {
   const grants = useGrants();
   const qbConfig = useQuickBooksConfig();
+  const bva = useBudgetVsActuals();
 
   if (grants === undefined) {
     return (
@@ -53,19 +71,27 @@ export default function GrantBudget() {
     (g) => g.status === "active" || g.status === "pending"
   );
 
+  const qbConnected = qbConfig !== undefined && qbConfig !== null && !qbConfig.isExpired;
+  const bvaData: any[] = (qbConnected && bva?.data) ? bva.data : [];
+
+  // For each grant, prefer QB actual spending when available, fall back to Sheets amountSpent
+  const grantSpending = activeGrants.map((g) => {
+    const qbMatch = bvaData.length > 0 ? matchGrantToClass(g.grantName, bvaData) : null;
+    const spent = qbMatch ? qbMatch.actual : (g.amountSpent ?? 0);
+    return { spent, source: qbMatch ? "qb" as const : "sheets" as const };
+  });
+
   const labels = activeGrants.map((g) =>
     g.grantName.length > 25 ? g.grantName.slice(0, 22) + "..." : g.grantName
   );
   const budgetAmounts = activeGrants.map((g) => g.totalAmount);
-  const spentAmounts = activeGrants.map((g) => g.amountSpent ?? 0);
+  const spentAmounts = grantSpending.map((gs) => gs.spent);
   const remainingAmounts = activeGrants.map(
-    (g) => Math.max(0, g.totalAmount - (g.amountSpent ?? 0))
+    (g, i) => Math.max(0, g.totalAmount - grantSpending[i].spent)
   );
-  const spentColors = activeGrants.map((g) =>
-    getBudgetColor(g.amountSpent ?? 0, g.totalAmount)
+  const spentColors = activeGrants.map((g, i) =>
+    getBudgetColor(grantSpending[i].spent, g.totalAmount)
   );
-
-  const qbConnected = qbConfig !== undefined && qbConfig !== null && !qbConfig.isExpired;
 
   const chartData = {
     labels,
@@ -74,14 +100,14 @@ export default function GrantBudget() {
         label: "Spent",
         data: spentAmounts,
         backgroundColor: spentColors,
-        borderRadius: 4,
+        borderRadius: 8,
         barPercentage: 0.7,
       },
       {
         label: "Remaining",
         data: remainingAmounts,
         backgroundColor: "rgba(107, 114, 128, 0.15)",
-        borderRadius: 4,
+        borderRadius: 8,
         barPercentage: 0.7,
       },
     ],
@@ -98,10 +124,15 @@ export default function GrantBudget() {
           usePointStyle: true,
           pointStyle: "rectRounded" as const,
           padding: 16,
-          font: { size: 12 },
+          font: { size: 12, family: "'Nunito', sans-serif" },
         },
       },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { dataset: { label?: string }; raw: unknown }) => {
             const label = ctx.dataset.label ?? "";
@@ -118,7 +149,7 @@ export default function GrantBudget() {
           callback: (value: string | number) => formatCurrency(Number(value)),
         },
         grid: {
-          color: "rgba(0,0,0,0.05)",
+          color: "rgba(45,106,79,0.06)",
         },
       },
       y: {
@@ -140,6 +171,14 @@ export default function GrantBudget() {
           QuickBooks not connected. Spent amounts are from Google Sheets data only.
         </p>
       )}
+      {qbConnected && bvaData.length > 0 && (
+        <p className="text-xs text-success mb-3 flex items-center gap-1.5">
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Actual spending from QuickBooks Budget vs Actuals reports.
+        </p>
+      )}
 
       <div style={{ height: Math.max(200, activeGrants.length * 60) }}>
         <Bar data={chartData} options={options} />
@@ -149,7 +188,7 @@ export default function GrantBudget() {
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-muted">
+            <tr className="border-b-2 border-border/60 text-muted">
               <th className="text-left py-2 font-medium">Grant</th>
               <th className="text-right py-2 font-medium">Budget</th>
               <th className="text-right py-2 font-medium">Spent</th>
@@ -158,15 +197,20 @@ export default function GrantBudget() {
             </tr>
           </thead>
           <tbody>
-            {activeGrants.map((grant) => {
-              const spent = grant.amountSpent ?? 0;
+            {activeGrants.map((grant, i) => {
+              const spent = grantSpending[i].spent;
               const remaining = Math.max(0, grant.totalAmount - spent);
               const pct = grant.totalAmount > 0 ? (spent / grant.totalAmount) * 100 : 0;
               return (
                 <tr key={grant.sheetRowId} className="border-b border-border/50">
                   <td className="py-2 text-foreground font-medium">{grant.grantName}</td>
                   <td className="py-2 text-right text-muted">{formatCurrency(grant.totalAmount)}</td>
-                  <td className="py-2 text-right text-foreground">{formatCurrency(spent)}</td>
+                  <td className="py-2 text-right text-foreground">
+                    {formatCurrency(spent)}
+                    {grantSpending[i].source === "qb" && (
+                      <span className="ml-1 text-[10px] text-success" title="From QuickBooks">QB</span>
+                    )}
+                  </td>
                   <td className="py-2 text-right text-foreground">{formatCurrency(remaining)}</td>
                   <td className="py-2 text-right">
                     <span

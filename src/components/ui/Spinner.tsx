@@ -30,6 +30,7 @@ export default function Spinner({ size = "md", className }: SpinnerProps) {
         r="10"
         stroke="currentColor"
         strokeWidth="4"
+        strokeLinecap="round"
       />
       <path
         className="opacity-75"

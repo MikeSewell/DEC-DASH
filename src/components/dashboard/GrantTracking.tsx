@@ -105,7 +105,7 @@ export default function GrantTracking() {
             {upcomingDeadlines.map((dl, idx) => (
               <div
                 key={`${dl.grantId}-${dl.deadline}-${idx}`}
-                className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-2.5 bg-surface"
+                className="flex items-center justify-between rounded-xl border border-border/50 px-4 py-3 bg-surface shadow-[var(--warm-shadow-sm)] hover-lift"
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">{dl.grantName}</p>

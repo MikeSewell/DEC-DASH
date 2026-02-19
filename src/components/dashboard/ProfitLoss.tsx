@@ -16,16 +16,16 @@ import type { ProfitLossData } from "@/types";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const EXPENSE_COLORS = [
-  "#1B4D3E",
-  "#2D7A5F",
-  "#D4A843",
-  "#E8C96A",
-  "#3B82F6",
-  "#8B5CF6",
-  "#EC4899",
-  "#F97316",
-  "#14B8A6",
-  "#6366F1",
+  "#1B4332",
+  "#2D6A4F",
+  "#40916C",
+  "#52B788",
+  "#6BBF59",
+  "#8CC63F",
+  "#74C69D",
+  "#95D5B2",
+  "#3D7A52",
+  "#A3D65A",
 ];
 
 export default function ProfitLoss() {
@@ -75,7 +75,7 @@ export default function ProfitLoss() {
         data: categories.map(([, val]) => val),
         backgroundColor: categories.map((_, i) => EXPENSE_COLORS[i % EXPENSE_COLORS.length]),
         borderWidth: 2,
-        borderColor: "rgba(255,255,255,0.8)",
+        borderColor: "rgba(255,254,249,0.9)",
         hoverOffset: 6,
       },
     ],
@@ -84,7 +84,7 @@ export default function ProfitLoss() {
   const donutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: "60%",
+    cutout: "65%",
     plugins: {
       legend: {
         position: "right" as const,
@@ -92,7 +92,7 @@ export default function ProfitLoss() {
           usePointStyle: true,
           pointStyle: "circle" as const,
           padding: 12,
-          font: { size: 11 },
+          font: { size: 11, family: "'Nunito', sans-serif" },
           generateLabels: (chart: ChartJS) => {
             const dataset = chart.data.datasets[0];
             const labels = chart.data.labels as string[];
@@ -110,6 +110,11 @@ export default function ProfitLoss() {
         },
       },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { label: string; raw: unknown }) => {
             const val = ctx.raw as number;
@@ -126,15 +131,15 @@ export default function ProfitLoss() {
     <div className="space-y-6">
       {/* Three stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Revenue</p>
           <p className="text-2xl font-bold text-success">{formatCurrency(totalRevenue)}</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Expenses</p>
           <p className="text-2xl font-bold text-danger">{formatCurrency(totalExpenses)}</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Net Income</p>
           <p className={cn("text-2xl font-bold", isPositive ? "text-success" : "text-danger")}>
             {formatCurrency(netIncome)}

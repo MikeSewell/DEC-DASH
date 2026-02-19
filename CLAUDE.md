@@ -28,8 +28,20 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 
 - App Router with `(dashboard)` route group for authenticated pages
 - Tailwind CSS v4 — uses `@theme` inline block, not `tailwind.config.js`
-- Theme colors: `--primary: #1B4D3E` (green), `--accent: #D4A843` (gold)
+- Theme colors: `--primary: #1B5E6B` (teal), `--accent: #6BBF59` (green) — matches DEC logo
 - Charts use `react-chartjs-2` / `chart.js`
+
+### Design System
+
+- **Fonts**: Nunito (body, `--font-nunito`), Fraunces (display headings, `--font-fraunces`), Geist Mono (code, `--font-geist-mono`)
+- **Warm palette**: Light — cream `#F7F5F0` bg, warm white `#FFFEF9` surfaces, warm borders `#D6D0B8`, dark forest foreground `#2C3E2D`. Dark — `#141F16` bg, `#1A2E1E` surface, `#334D38` border, sage `#E2E8D4` foreground
+- **Shadows**: Green-tinted warm shadows via CSS variables (`--warm-shadow-sm/md/lg/xl`), registered in `@theme inline`
+- **Utility classes** (in `globals.css`): `.noise-texture`, `.animate-fade-up`, `.animate-scale-in`, `.stagger-children`, `.hover-lift`, `.bg-warm-gradient`, `.organic-blob`
+- **Sidebar**: Dark gradient (`from-primary-dark to-[#0D2216]`) with white-on-dark text
+- **Header**: Frosted glass (`bg-surface/80 backdrop-blur-md`)
+- **Buttons**: Pill-shaped (`rounded-full`) with hover lift
+- **Cards**: `rounded-2xl` with `shadow-[var(--warm-shadow-sm)]` and `hover-lift`
+- **Charts**: Warm green grid lines (`rgba(45,106,79,0.06)`), dark green tooltips, `borderRadius: 8` on bars, Nunito font family
 
 ## Key Patterns
 

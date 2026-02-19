@@ -17,7 +17,7 @@ export default function ThemeToggle() {
     <button
       onClick={cycleTheme}
       className={cn(
-        "p-2 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover transition-colors",
+        "p-2 rounded-full text-muted hover:text-foreground hover:bg-surface-hover hover:shadow-[var(--warm-shadow-sm)] transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       )}
       aria-label={`Current theme: ${theme}. Click to change.`}

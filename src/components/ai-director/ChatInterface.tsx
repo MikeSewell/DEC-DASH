@@ -87,10 +87,10 @@ export default function ChatInterface({
           >
             <div
               className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-[var(--warm-shadow-sm)]",
                 msg.role === "user"
-                  ? "bg-primary text-white rounded-br-md"
-                  : "bg-surface border border-border text-foreground rounded-bl-md"
+                  ? "bg-primary text-white rounded-br-lg"
+                  : "bg-surface border border-border text-foreground rounded-bl-lg"
               )}
             >
               {msg.role === "assistant" ? renderContent(msg.content) : msg.content}
@@ -122,13 +122,13 @@ export default function ChatInterface({
             onKeyDown={handleKeyDown}
             placeholder="Ask AI Director a question..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="flex-shrink-0 rounded-xl bg-primary px-4 py-3 text-white hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-shrink-0 rounded-2xl bg-primary px-4 py-3 text-white hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             aria-label="Send message"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

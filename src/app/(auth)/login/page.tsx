@@ -65,9 +65,9 @@ export default function LoginPage() {
             setError("");
           }}
           className={cn(
-            "flex-1 py-2.5 text-sm font-medium text-center transition-colors border-b-2 -mb-px",
+            "flex-1 py-2.5 text-sm font-semibold text-center transition-colors border-b-2 rounded-t-lg -mb-px",
             tab === "login"
-              ? "text-primary border-primary"
+              ? "text-primary border-primary bg-primary/5"
               : "text-muted border-transparent hover:text-foreground"
           )}
         >
@@ -80,9 +80,9 @@ export default function LoginPage() {
             setError("");
           }}
           className={cn(
-            "flex-1 py-2.5 text-sm font-medium text-center transition-colors border-b-2 -mb-px",
+            "flex-1 py-2.5 text-sm font-semibold text-center transition-colors border-b-2 rounded-t-lg -mb-px",
             tab === "register"
-              ? "text-primary border-primary"
+              ? "text-primary border-primary bg-primary/5"
               : "text-muted border-transparent hover:text-foreground"
           )}
         >

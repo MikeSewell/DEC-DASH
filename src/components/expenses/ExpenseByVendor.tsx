@@ -60,10 +60,10 @@ export default function ExpenseByVendor({ data }: ExpenseByVendorProps) {
       {
         label: "Total Spend",
         data: top10.map((g) => g.total),
-        backgroundColor: "rgba(27, 77, 62, 0.7)",
-        borderColor: "rgba(27, 77, 62, 1)",
+        backgroundColor: "rgba(45, 106, 79, 0.6)",
+        borderColor: "rgba(27, 67, 50, 1)",
         borderWidth: 1,
-        borderRadius: 4,
+        borderRadius: 8,
       },
     ],
   };
@@ -75,6 +75,11 @@ export default function ExpenseByVendor({ data }: ExpenseByVendorProps) {
     plugins: {
       legend: { display: false },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { parsed: { x: number | null } }) =>
             `$${(ctx.parsed.x ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,

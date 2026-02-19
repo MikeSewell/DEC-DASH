@@ -97,13 +97,15 @@ export default function DonationPerformance() {
       {
         label: "Monthly Donations",
         data: recentMonths.map((m) => monthlyTotals[m] ?? 0),
-        borderColor: "#1B4D3E",
-        backgroundColor: "rgba(27, 77, 62, 0.1)",
+        borderColor: "#2D6A4F",
+        backgroundColor: "rgba(45, 106, 79, 0.1)",
         fill: true,
         tension: 0.3,
         pointRadius: 4,
         pointHoverRadius: 6,
-        pointBackgroundColor: "#1B4D3E",
+        pointBackgroundColor: "#1B4332",
+        pointBorderColor: "#FFFEF9",
+        pointBorderWidth: 2,
       },
     ],
   };
@@ -116,6 +118,11 @@ export default function DonationPerformance() {
         display: false,
       },
       tooltip: {
+        backgroundColor: "rgba(27,67,50,0.9)",
+        cornerRadius: 12,
+        padding: 12,
+        titleFont: { family: "'Nunito', sans-serif" },
+        bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
           label: (ctx: { raw: unknown }) => formatCurrency(ctx.raw as number),
         },
@@ -128,7 +135,7 @@ export default function DonationPerformance() {
           callback: (value: string | number) => formatCurrency(Number(value)),
         },
         grid: {
-          color: "rgba(0,0,0,0.05)",
+          color: "rgba(45,106,79,0.06)",
         },
       },
       x: {
@@ -143,15 +150,15 @@ export default function DonationPerformance() {
     <div className="space-y-6">
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-lg border border-border bg-surface p-4 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-foreground">{formatCurrency(totalDonations)}</p>
           <p className="text-xs text-muted mt-1">Total Donations</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-foreground">{formatCurrency(avgDonation)}</p>
           <p className="text-xs text-muted mt-1">Avg Donation</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4 text-center">
+        <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-foreground">{donorCount}</p>
           <p className="text-xs text-muted mt-1">Total Donors</p>
         </div>
@@ -166,9 +173,9 @@ export default function DonationPerformance() {
               {formatCurrency(totalDonations)} / {formatCurrency(fundingGoal)}
             </p>
           </div>
-          <div className="w-full h-3 rounded-full bg-surface-hover overflow-hidden">
+          <div className="w-full h-3.5 rounded-full bg-surface-hover overflow-hidden">
             <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-light transition-all duration-500"
               style={{ width: `${Math.min(100, fundingProgress)}%` }}
             />
           </div>

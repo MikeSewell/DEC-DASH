@@ -33,7 +33,7 @@ export default function DashboardSection({
       title={undefined}
     >
       {/* Section Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border bg-gradient-to-r from-surface to-surface-hover/30">
         <button
           onClick={() => setCollapsed((prev) => !prev)}
           className="flex items-center gap-2 text-left group"
@@ -52,7 +52,7 @@ export default function DashboardSection({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors font-[family-name:var(--font-fraunces)]">
             {title}
           </h3>
         </button>

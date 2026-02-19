@@ -23,10 +23,10 @@ export default function Table<T extends Record<string, unknown>>({
   className,
 }: TableProps<T>) {
   return (
-    <div className={cn("w-full overflow-x-auto", className)}>
+    <div className={cn("w-full overflow-x-auto rounded-xl", className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border">
+          <tr className="border-b-2 border-border/60">
             {columns.map((col) => (
               <th
                 key={col.key}
@@ -54,7 +54,7 @@ export default function Table<T extends Record<string, unknown>>({
                 onClick={onRowClick ? () => onRowClick(item, rowIndex) : undefined}
                 className={cn(
                   "transition-colors duration-100",
-                  rowIndex % 2 === 1 && "bg-surface-hover/50",
+                  rowIndex % 2 === 1 && "bg-surface-hover/30",
                   onRowClick &&
                     "cursor-pointer hover:bg-surface-hover"
                 )}

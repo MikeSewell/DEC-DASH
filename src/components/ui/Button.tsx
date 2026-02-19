@@ -15,19 +15,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-white hover:bg-primary-light active:bg-primary-dark shadow-sm",
+    "bg-primary text-white hover:bg-primary-light hover:-translate-y-0.5 active:bg-primary-dark shadow-[var(--warm-shadow-sm)]",
   secondary:
-    "bg-surface text-foreground border border-border hover:bg-surface-hover active:bg-border",
+    "bg-surface text-foreground border border-border hover:bg-surface-hover hover:-translate-y-0.5 active:bg-border shadow-[var(--warm-shadow-sm)]",
   danger:
-    "bg-danger text-white hover:bg-red-700 active:bg-red-800 shadow-sm",
+    "bg-danger text-white hover:bg-red-700 active:bg-red-800 shadow-[var(--warm-shadow-sm)]",
   ghost:
     "bg-transparent text-foreground hover:bg-surface-hover active:bg-border",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-sm rounded-md gap-1.5",
-  md: "px-4 py-2 text-sm rounded-lg gap-2",
-  lg: "px-6 py-3 text-base rounded-lg gap-2.5",
+  sm: "px-4 py-1.5 text-sm rounded-full gap-1.5",
+  md: "px-5 py-2.5 text-sm rounded-full gap-2",
+  lg: "px-7 py-3 text-base rounded-full gap-2.5",
 };
 
 export default function Button({
@@ -45,9 +45,9 @@ export default function Button({
     <button
       disabled={isDisabled}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-colors duration-150",
+        "inline-flex items-center justify-center font-semibold transition-all duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0",
         variantStyles[variant],
         sizeStyles[size],
         className

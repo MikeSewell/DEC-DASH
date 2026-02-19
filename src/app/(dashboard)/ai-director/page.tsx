@@ -87,7 +87,7 @@ export default function AIDirectorPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] rounded-xl border border-border overflow-hidden bg-surface">
+    <div className="flex h-[calc(100vh-8rem)] rounded-2xl border border-border overflow-hidden bg-surface shadow-[var(--warm-shadow-md)]">
       {/* Left sidebar - Sessions */}
       <div
         className={cn(
@@ -191,7 +191,7 @@ export default function AIDirectorPage() {
               </svg>
             </button>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">AI Director</h2>
+              <h2 className="text-sm font-semibold text-foreground font-[family-name:var(--font-fraunces)]">AI Director</h2>
               <p className="text-xs text-muted">DEC Knowledge Assistant</p>
             </div>
           </div>
