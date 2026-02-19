@@ -23,6 +23,8 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 - RBAC: `requireRole()` helper in `convex/users.ts` — roles are `admin`, `manager`, `staff`, `readonly`
 - QB/Sheets data cached in Convex tables, synced via crons (QB: 15min, Sheets: 30min)
 - OAuth configs (`quickbooksConfig`, `constantContactConfig`) are global singletons queried with `.first()`
+- AI expense categorization: `allocationActions.ts` (core engine), `allocation.ts` (public queries/mutations), `allocationInternal.ts` (internal mutations), `allocationTypes.ts` (shared types/config)
+- Categorization pipeline: pre-score expenses → batch to OpenAI (gpt-4o) → post-validate → persist → user review → submit to QB
 
 ### Frontend (Next.js)
 
@@ -49,6 +51,49 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 - OAuth callbacks are Next.js API routes at `src/app/api/{provider}/callback/route.ts`
 - OAuth callbacks use `ConvexHttpClient` (not React hooks) since they run server-side
 - `intuit-oauth` has no `@types` package — custom type declarations at `src/types/intuit-oauth.d.ts`
+- Allocation scoring factors: s1_pacing (0-40), s2_time (0-25), s3_diversification (0-25), s4_budget (0-10)
+- `allocationActions.ts` duplicates `getAuthenticatedConfig` helper from `quickbooksActions.ts` (not exported there)
+
+## Production Deployment
+
+### Server
+- **Host:** Hostinger VPS at `187.77.19.63`
+- **User:** `root`
+- **Password:** `mnkC93'ksa5'HRikz2W@`
+- **Stack:** Ubuntu, Nginx, Node.js 22, PM2
+- **Webapp path:** `/var/www/webapp/`
+- **PM2 app name:** `dec-dash` (port 3000)
+
+### Deploy Steps
+
+Next.js uses `output: "standalone"` — build locally, rsync to server, restart PM2:
+
+```bash
+# 1. Build locally
+npm run build
+
+# 2. Rsync standalone build (preserves .env.local and ecosystem.config.cjs on server)
+export SSHPASS="mnkC93'ksa5'HRikz2W@"
+sshpass -e rsync -avz --delete \
+  ".next/standalone/" root@187.77.19.63:/var/www/webapp/ \
+  --exclude='.env.local' --exclude='ecosystem.config.cjs' \
+  -e "ssh -o StrictHostKeyChecking=no"
+
+# 3. Rsync static assets and public dir
+sshpass -e rsync -avz ".next/static/" root@187.77.19.63:/var/www/webapp/.next/static/ \
+  -e "ssh -o StrictHostKeyChecking=no"
+sshpass -e rsync -avz "public/" root@187.77.19.63:/var/www/webapp/public/ \
+  -e "ssh -o StrictHostKeyChecking=no"
+
+# 4. Restart PM2
+sshpass -e ssh -o StrictHostKeyChecking=no root@187.77.19.63 "pm2 restart dec-dash"
+```
+
+### Convex Production
+- **Dev deployment:** `aware-finch-86` (set in `CONVEX_DEPLOYMENT`)
+- **Prod deployment:** `zany-condor-488`
+- Deploy to prod: `npx convex deploy --yes`
+- Deploy to dev: `npx convex dev --once`
 
 ## Gotchas
 

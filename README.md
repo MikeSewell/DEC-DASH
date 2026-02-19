@@ -31,6 +31,7 @@ The UI uses a **warm, organic** aesthetic inspired by community and nature — a
 - **Program & Client Management** — Track enrollments, sessions, and client goals
 - **AI Director** — OpenAI-powered assistant with document knowledge base for strategic Q&A
 - **Newsletter Builder** — Draft, review, and publish newsletters via Constant Contact
+- **AI Expense Categorization** — Pre-scores unclassified QB expenses against grant budgets using pacing, diversification, time urgency, and budget factors; sends to OpenAI for final grant selection; users review/override and submit assignments back to QuickBooks
 - **Expense Recommender** — AI-powered expense optimization suggestions
 - **Role-Based Access** — Admin, manager, staff, and readonly roles
 - **Customizable Dashboard** — Reorderable and hideable sections per user
@@ -73,7 +74,7 @@ Create a `.env.local` for Next.js and set Convex environment variables via the C
 ```
 convex/               # Backend — schema, queries, mutations, actions, crons
 src/
-  app/(dashboard)/    # Dashboard pages (admin, expenses, grants, programs, etc.)
+  app/(dashboard)/    # Dashboard pages (admin, expenses, categorize, programs, etc.)
   app/api/            # Next.js API routes (OAuth callbacks)
   components/         # React components organized by feature
   lib/                # Shared utilities and constants
