@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Spinner from "@/components/ui/Spinner";
 import { formatDate } from "@/lib/utils";
+
+const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".html", ".json"];
+const ACCEPT_STRING = ACCEPTED_EXTENSIONS.join(",");
 
 interface KnowledgeBaseManagerProps {
   userId: Id<"users">;
@@ -20,14 +22,23 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
   const removeFromOpenAI = useAction(api.knowledgeBaseActions.removeFromOpenAI);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function isAcceptedFile(file: File): boolean {
+    const name = file.name.toLowerCase();
+    return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+  }
+
+  async function uploadFile(file: File) {
+    if (!isAcceptedFile(file)) {
+      console.error(`Unsupported file type: ${file.name}`);
+      return;
+    }
 
     setUploading(true);
     try {
-      // Upload to Convex storage
       const uploadUrl = await getUploadUrl();
       const result = await fetch(uploadUrl, {
         method: "POST",
@@ -36,7 +47,6 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
       });
       const { storageId } = await result.json();
 
-      // Upload to OpenAI vector store
       await uploadToOpenAI({
         storageId,
         fileName: file.name,
@@ -48,9 +58,43 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
       console.error("Upload failed:", error);
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
   }
+
+  function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+    e.target.value = "";
+  }
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    dragCounter.current = 0;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && !uploading) uploadFile(file);
+  }, [uploading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleDelete(fileId: Id<"knowledgeBase">) {
     setDeleting(fileId);
@@ -73,19 +117,46 @@ export default function KnowledgeBaseManager({ userId }: KnowledgeBaseManagerPro
 
   return (
     <Card title="Knowledge Base" action={
-      <label className="cursor-pointer">
-        <Button variant="primary" size="sm" loading={uploading} disabled={uploading}>
-          {uploading ? "Uploading..." : "Upload File"}
-        </Button>
+      <label className={`cursor-pointer inline-flex items-center justify-center font-medium transition-colors duration-150 px-3 py-1.5 text-sm rounded-md gap-1.5 bg-primary text-white hover:bg-primary-light active:bg-primary-dark shadow-sm ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}>
+        {uploading ? "Uploading..." : "Upload File"}
         <input
+          ref={fileInputRef}
           type="file"
-          onChange={handleFileUpload}
-          accept=".pdf,.docx,.txt,.md,.csv,.pptx,.html,.json"
+          onChange={handleFileInputChange}
+          accept={ACCEPT_STRING}
           className="hidden"
           disabled={uploading}
         />
       </label>
     }>
+      {/* Drop zone */}
+      <div
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className={`rounded-lg border-2 border-dashed transition-colors p-6 text-center mb-4 ${
+          dragging
+            ? "border-primary bg-primary/5"
+            : "border-border"
+        }`}
+      >
+        <svg className="w-8 h-8 mx-auto text-muted mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        <p className="text-sm text-muted">
+          {uploading
+            ? "Uploading..."
+            : dragging
+              ? "Drop file here"
+              : "Drag and drop a file here"}
+        </p>
+        <p className="text-xs text-muted mt-1">
+          PDF, DOCX, TXT, MD, CSV, PPTX, HTML, JSON
+        </p>
+      </div>
+
+      {/* File list */}
       <div className="space-y-2">
         {files.length === 0 ? (
           <p className="text-sm text-muted py-4 text-center">
