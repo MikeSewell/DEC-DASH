@@ -11,6 +11,10 @@
 import type * as aiDirector from "../aiDirector.js";
 import type * as aiDirectorActions from "../aiDirectorActions.js";
 import type * as aiDirectorInternal from "../aiDirectorInternal.js";
+import type * as allocation from "../allocation.js";
+import type * as allocationActions from "../allocationActions.js";
+import type * as allocationInternal from "../allocationInternal.js";
+import type * as allocationTypes from "../allocationTypes.js";
 import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as clientGoals from "../clientGoals.js";
@@ -51,6 +55,10 @@ declare const fullApi: ApiFromModules<{
   aiDirector: typeof aiDirector;
   aiDirectorActions: typeof aiDirectorActions;
   aiDirectorInternal: typeof aiDirectorInternal;
+  allocation: typeof allocation;
+  allocationActions: typeof allocationActions;
+  allocationInternal: typeof allocationInternal;
+  allocationTypes: typeof allocationTypes;
   auditLog: typeof auditLog;
   auth: typeof auth;
   clientGoals: typeof clientGoals;

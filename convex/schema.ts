@@ -212,4 +212,44 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_createdAt", ["createdAt"]),
+
+  allocationRuns: defineTable({
+    status: v.union(v.literal("running"), v.literal("completed"), v.literal("failed")),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    startedBy: v.id("users"),
+    totalExpenses: v.number(),
+    totalProcessed: v.number(),
+    totalSubmitted: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+  }).index("by_startedAt", ["startedAt"]),
+
+  expenseAllocations: defineTable({
+    runId: v.id("allocationRuns"),
+    purchaseId: v.string(),
+    lineId: v.string(),
+    syncToken: v.string(),
+    vendorName: v.string(),
+    accountName: v.string(),
+    amount: v.number(),
+    txnDate: v.string(),
+    memo: v.optional(v.string()),
+    suggestedClassId: v.optional(v.string()),
+    suggestedClassName: v.optional(v.string()),
+    suggestedScore: v.optional(v.number()),
+    confidence: v.string(),
+    explanation: v.string(),
+    scoringDetail: v.optional(v.string()),
+    runnerUpClassName: v.optional(v.string()),
+    runnerUpScore: v.optional(v.number()),
+    qualifyingGrants: v.optional(v.string()),
+    finalClassId: v.optional(v.string()),
+    finalClassName: v.optional(v.string()),
+    action: v.string(),
+    status: v.string(),
+    errorMessage: v.optional(v.string()),
+    submittedAt: v.optional(v.number()),
+  }).index("by_runId", ["runId"])
+    .index("by_status", ["status"])
+    .index("by_purchaseId", ["purchaseId"]),
 });
