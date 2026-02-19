@@ -41,11 +41,13 @@ export default function LoginPage() {
         });
       }
       router.push("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Auth error:", err);
+      const message = err?.message || String(err);
       if (tab === "login") {
         setError("Invalid email or password. Please try again.");
       } else {
-        setError("Could not create account. The email may already be in use.");
+        setError(`Could not create account: ${message}`);
       }
     } finally {
       setLoading(false);

@@ -17,6 +17,7 @@ import type * as constantContactActions from "../constantContactActions.js";
 import type * as constantContactInternal from "../constantContactInternal.js";
 import type * as crons from "../crons.js";
 import type * as dashboardPrefs from "../dashboardPrefs.js";
+import type * as debug from "../debug.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as googleSheetsActions from "../googleSheetsActions.js";
 import type * as googleSheetsInternal from "../googleSheetsInternal.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   constantContactInternal: typeof constantContactInternal;
   crons: typeof crons;
   dashboardPrefs: typeof dashboardPrefs;
+  debug: typeof debug;
   googleSheets: typeof googleSheets;
   googleSheetsActions: typeof googleSheetsActions;
   googleSheetsInternal: typeof googleSheetsInternal;

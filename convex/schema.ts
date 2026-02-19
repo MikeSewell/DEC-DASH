@@ -6,17 +6,21 @@ export default defineSchema({
   ...authTables,
 
   users: defineTable({
-    email: v.string(),
-    name: v.string(),
-    role: v.union(
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    isAnonymous: v.optional(v.boolean()),
+    role: v.optional(v.union(
       v.literal("admin"),
       v.literal("manager"),
       v.literal("staff"),
       v.literal("readonly")
-    ),
-    mustChangePassword: v.boolean(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
+    )),
+    mustChangePassword: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
 
   appSettings: defineTable({
