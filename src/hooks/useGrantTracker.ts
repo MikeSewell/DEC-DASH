@@ -19,6 +19,10 @@ export function useSheetsConfig() {
   return useQuery(api.googleSheets.getConfig);
 }
 
+export function useProgramDemographics(programType: string) {
+  return useQuery(api.googleSheets.getProgramDemographics, { programType });
+}
+
 export function useSheetsSync() {
   const triggerSync = useAction(api.googleSheetsActions.triggerSync);
   return { triggerSync };

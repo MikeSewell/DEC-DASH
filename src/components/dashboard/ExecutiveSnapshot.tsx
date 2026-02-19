@@ -1,9 +1,7 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { useActiveGrants } from "@/hooks/useGrantTracker";
-import { useQuickBooksConfig } from "@/hooks/useQuickBooks";
+import { useGrants, useActiveGrants } from "@/hooks/useGrantTracker";
+import { useAccounts, useProfitAndLoss } from "@/hooks/useQuickBooks";
 import Spinner from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils";
 
@@ -50,79 +48,91 @@ function StatCard({ icon, value, label, trend, loading, accentColor = "text-prim
   );
 }
 
+function formatDollars(amount: number): string {
+  if (amount >= 1_000_000) {
+    return `$${(amount / 1_000_000).toFixed(1)}M`;
+  }
+  if (amount >= 1_000) {
+    return `$${(amount / 1_000).toFixed(0)}K`;
+  }
+  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export default function ExecutiveSnapshot() {
-  const clients = useQuery(api.clients.list, {});
-  const programs = useQuery(api.programs.list);
+  const allGrants = useGrants();
   const activeGrants = useActiveGrants();
-  const qbConfig = useQuickBooksConfig();
+  const accounts = useAccounts();
+  const pnl = useProfitAndLoss();
 
-  const isClientsLoading = clients === undefined;
-  const isProgramsLoading = programs === undefined;
-  const isGrantsLoading = activeGrants === undefined;
-  const isQBLoading = qbConfig === undefined;
+  const isGrantsLoading = allGrants === undefined;
+  const isActiveGrantsLoading = activeGrants === undefined;
+  const isAccountsLoading = accounts === undefined;
+  const isPnlLoading = pnl === undefined;
 
-  const totalClients = clients ? clients.length : "--";
-  const activePrograms = programs ? programs.filter((p) => p.isActive).length : "--";
-  const activeGrantCount = activeGrants ? activeGrants.length : "--";
+  const activeGrantsDollar = activeGrants
+    ? formatDollars(activeGrants.reduce((sum, g) => sum + g.totalAmount, 0))
+    : "--";
 
-  // Determine service connection status
-  const qbConnected = qbConfig !== undefined && qbConfig !== null && !qbConfig.isExpired;
-  const servicesStatus = isQBLoading ? "--" : qbConnected ? "Connected" : "Disconnected";
+  const totalFundsRaised = allGrants
+    ? formatDollars(allGrants.reduce((sum, g) => sum + g.totalAmount, 0))
+    : "--";
+
+  const cashOnHand = accounts?.data?.totalCash != null
+    ? formatDollars(accounts.data.totalCash)
+    : "--";
+
+  const revenueYTD = pnl?.data?.totalRevenue != null
+    ? formatDollars(pnl.data.totalRevenue)
+    : "--";
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
       <StatCard
         icon={
           <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         }
-        value={totalClients}
-        label="Total Clients"
-        loading={isClientsLoading}
+        value={activeGrantsDollar}
+        label="Active Grants"
+        loading={isActiveGrantsLoading}
         accentColor="text-primary"
       />
 
       <StatCard
         icon={
           <svg className="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
           </svg>
         }
-        value={activePrograms}
-        label="Active Programs"
-        loading={isProgramsLoading}
+        value={totalFundsRaised}
+        label="Total Funds Raised"
+        loading={isGrantsLoading}
         accentColor="text-accent"
       />
 
       <StatCard
         icon={
           <svg className="h-5 w-5 text-primary-light" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
           </svg>
         }
-        value={activeGrantCount}
-        label="Active Grants"
-        loading={isGrantsLoading}
+        value={cashOnHand}
+        label="Cash on Hand"
+        loading={isAccountsLoading}
         accentColor="text-primary-light"
       />
 
       <StatCard
         icon={
-          <svg
-            className={cn("h-5 w-5", qbConnected ? "text-success" : "text-warning")}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
           </svg>
         }
-        value={servicesStatus}
-        label="QuickBooks Status"
-        loading={isQBLoading}
-        accentColor={qbConnected ? "text-success" : "text-warning"}
+        value={revenueYTD}
+        label="Revenue YTD"
+        loading={isPnlLoading}
+        accentColor="text-success"
       />
     </div>
   );

@@ -13,9 +13,21 @@ export const runSync = internalAction({
 
     try {
       await ctx.runAction(internal.googleSheetsActions.syncGrantTracker, {});
-      console.log("Google Sheets sync completed successfully");
+      console.log("Google Sheets grant sync completed");
     } catch (error) {
-      console.error("Google Sheets sync failed:", error);
+      console.error("Google Sheets grant sync failed:", error);
+    }
+
+    try {
+      await ctx.runAction(internal.googleSheetsActions.syncProgramData, {
+        programType: "coparent",
+      });
+      await ctx.runAction(internal.googleSheetsActions.syncProgramData, {
+        programType: "legal",
+      });
+      console.log("Google Sheets program sync completed");
+    } catch (error) {
+      console.error("Google Sheets program sync failed:", error);
     }
   },
 });

@@ -43,6 +43,50 @@ export const upsertGrant = internalMutation({
   },
 });
 
+// Get Sheets config by purpose
+export const getConfigByPurpose = internalQuery({
+  args: { purpose: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("googleSheetsConfig")
+      .withIndex("by_purpose", (q) => q.eq("purpose", args.purpose))
+      .first();
+  },
+});
+
+// Upsert a program participant from Sheets data
+export const upsertProgramParticipant = internalMutation({
+  args: {
+    sheetRowId: v.string(),
+    programType: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    gender: v.optional(v.string()),
+    ageGroup: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
+    zipCode: v.optional(v.string()),
+    enrollmentDate: v.optional(v.string()),
+    status: v.optional(v.string()),
+    referralSource: v.optional(v.string()),
+    reasonForVisit: v.optional(v.string()),
+    programOutcome: v.optional(v.string()),
+    sessionCount: v.optional(v.number()),
+    lastSyncAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("programDataCache")
+      .withIndex("by_sheetRowId", (q) => q.eq("sheetRowId", args.sheetRowId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, args);
+    } else {
+      await ctx.db.insert("programDataCache", args);
+    }
+  },
+});
+
 // Update last sync timestamp
 export const updateLastSync = internalMutation({
   args: { configId: v.id("googleSheetsConfig") },

@@ -81,6 +81,60 @@ export const getGrantById = query({
   },
 });
 
+// Get program demographics from cache
+export const getProgramDemographics = query({
+  args: { programType: v.string() },
+  handler: async (ctx, args) => {
+    const participants = await ctx.db
+      .query("programDataCache")
+      .withIndex("by_programType", (q) => q.eq("programType", args.programType))
+      .collect();
+
+    const total = participants.length;
+    const active = participants.filter((p) => p.status?.toLowerCase() === "active").length;
+    const completed = participants.filter((p) => p.status?.toLowerCase() === "completed").length;
+
+    const sessionCounts = participants
+      .map((p) => p.sessionCount)
+      .filter((s): s is number => s !== undefined);
+    const avgSessions =
+      sessionCounts.length > 0
+        ? sessionCounts.reduce((a, b) => a + b, 0) / sessionCounts.length
+        : 0;
+
+    const toSortedDistribution = (field: (p: typeof participants[0]) => string | undefined) => {
+      const map: Record<string, number> = {};
+      for (const p of participants) {
+        const val = field(p) || "Unknown";
+        map[val] = (map[val] ?? 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    };
+
+    const genderDistribution = toSortedDistribution((p) => p.gender);
+    const ethnicityDistribution = toSortedDistribution((p) => p.ethnicity);
+    const ageDistribution = toSortedDistribution((p) => p.ageGroup);
+    const outcomeDistribution = toSortedDistribution((p) => p.programOutcome);
+    const reasonForVisit = toSortedDistribution((p) => p.reasonForVisit).slice(0, 10);
+    const referralSource = toSortedDistribution((p) => p.referralSource).slice(0, 10);
+
+    return {
+      total,
+      active,
+      completed,
+      avgSessions: Math.round(avgSessions * 10) / 10,
+      genderDistribution,
+      ethnicityDistribution,
+      ageDistribution,
+      outcomeDistribution,
+      reasonForVisit,
+      referralSource,
+    };
+  },
+});
+
 // Save Sheets config
 export const saveConfig = mutation({
   args: {

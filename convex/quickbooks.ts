@@ -53,18 +53,18 @@ export const getProfitAndLoss = query({
     const expensesByCategory: Record<string, number> = {};
 
     for (const row of rows) {
-      const group = row.group ?? row.Header?.ColData?.[0]?.value ?? "";
+      const group = (row.group ?? row.Header?.ColData?.[0]?.value ?? "").toLowerCase();
       const summaryValue = parseFloat(row.Summary?.ColData?.[1]?.value ?? "0");
 
-      if (group === "Income") {
-        totalRevenue = summaryValue;
+      if (group.includes("income") && !group.includes("netincome") && !group.includes("net income")) {
+        totalRevenue += summaryValue;
         extractCategories(row, revenueByCategory);
-      } else if (group === "Expenses") {
-        totalExpenses = summaryValue;
+      } else if (group.includes("expense") || group.includes("cost of goods")) {
+        totalExpenses += summaryValue;
         extractCategories(row, expensesByCategory);
-      } else if (group === "GrossProfit") {
+      } else if (group.includes("grossprofit") || group.includes("gross profit")) {
         // Gross profit row — informational, revenue - COGS
-      } else if (group === "NetIncome") {
+      } else if (group.includes("netincome") || group.includes("net income")) {
         netIncome = summaryValue;
       }
     }

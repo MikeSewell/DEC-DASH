@@ -54,7 +54,8 @@ export default defineSchema({
     serviceAccountEmail: v.string(),
     lastSyncAt: v.optional(v.number()),
     configuredBy: v.id("users"),
-  }),
+    purpose: v.optional(v.string()),
+  }).index("by_purpose", ["purpose"]),
 
   constantContactConfig: defineTable({
     accessToken: v.string(),
@@ -83,6 +84,25 @@ export default defineSchema({
     notes: v.optional(v.string()),
     lastSyncAt: v.number(),
   }).index("by_sheetRowId", ["sheetRowId"]),
+
+  programDataCache: defineTable({
+    sheetRowId: v.string(),
+    programType: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    gender: v.optional(v.string()),
+    ageGroup: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
+    zipCode: v.optional(v.string()),
+    enrollmentDate: v.optional(v.string()),
+    status: v.optional(v.string()),
+    referralSource: v.optional(v.string()),
+    reasonForVisit: v.optional(v.string()),
+    programOutcome: v.optional(v.string()),
+    sessionCount: v.optional(v.number()),
+    lastSyncAt: v.number(),
+  }).index("by_sheetRowId", ["sheetRowId"])
+    .index("by_programType", ["programType"]),
 
   programs: defineTable({
     name: v.string(),
