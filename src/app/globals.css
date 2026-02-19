@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F5F7F5;
+  --foreground: #1a1a1a;
+  --primary: #1B4D3E;
+  --primary-light: #2D7A5F;
+  --primary-dark: #0F2A1F;
+  --accent: #D4A843;
+  --accent-light: #E8C96A;
+  --surface: #ffffff;
+  --surface-hover: #f0f2f0;
+  --border: #e2e5e2;
+  --muted: #6b7280;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --success: #16a34a;
+  --success-light: #f0fdf4;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
+.dark {
+  --background: #0F1A14;
+  --foreground: #e5e7e5;
+  --primary: #2D7A5F;
+  --primary-light: #3D9A7F;
+  --primary-dark: #0A1F15;
+  --accent: #E8C96A;
+  --accent-light: #F0D98A;
+  --surface: #1A2B22;
+  --surface-hover: #243830;
+  --border: #2D3D34;
+  --muted: #9ca3af;
+  --danger: #ef4444;
+  --danger-light: #3b1111;
+  --success: #22c55e;
+  --success-light: #0a2614;
+  --warning: #f59e0b;
+  --warning-light: #2a1f05;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
+  --color-danger-light: var(--danger-light);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

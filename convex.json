@@ -1,0 +1,8 @@
+{
+  "node": {
+    "externalPackages": [
+      "@convex-dev/auth",
+      "@auth/core"
+    ]
+  }
+}

@@ -1,0 +1,191 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
+
+export default defineSchema({
+  ...authTables,
+
+  users: defineTable({
+    email: v.string(),
+    name: v.string(),
+    role: v.union(
+      v.literal("admin"),
+      v.literal("manager"),
+      v.literal("staff"),
+      v.literal("readonly")
+    ),
+    mustChangePassword: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_email", ["email"]),
+
+  appSettings: defineTable({
+    key: v.string(),
+    value: v.string(),
+  }).index("by_key", ["key"]),
+
+  quickbooksConfig: defineTable({
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    realmId: v.string(),
+    tokenExpiry: v.number(),
+    companyName: v.optional(v.string()),
+    connectedAt: v.number(),
+    connectedBy: v.id("users"),
+  }),
+
+  quickbooksCache: defineTable({
+    reportType: v.string(),
+    data: v.string(),
+    fetchedAt: v.number(),
+    periodStart: v.optional(v.string()),
+    periodEnd: v.optional(v.string()),
+  })
+    .index("by_reportType", ["reportType"])
+    .index("by_fetchedAt", ["fetchedAt"]),
+
+  googleSheetsConfig: defineTable({
+    spreadsheetId: v.string(),
+    sheetName: v.string(),
+    serviceAccountEmail: v.string(),
+    lastSyncAt: v.optional(v.number()),
+    configuredBy: v.id("users"),
+  }),
+
+  constantContactConfig: defineTable({
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    tokenExpiry: v.number(),
+    connectedAt: v.number(),
+    connectedBy: v.id("users"),
+  }),
+
+  grantsCache: defineTable({
+    sheetRowId: v.string(),
+    grantName: v.string(),
+    funder: v.string(),
+    totalAmount: v.number(),
+    amountSpent: v.optional(v.number()),
+    startDate: v.string(),
+    endDate: v.string(),
+    status: v.union(
+      v.literal("active"),
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("cultivating")
+    ),
+    restrictions: v.optional(v.string()),
+    deadlines: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    lastSyncAt: v.number(),
+  }).index("by_sheetRowId", ["sheetRowId"]),
+
+  programs: defineTable({
+    name: v.string(),
+    type: v.union(
+      v.literal("coparent"),
+      v.literal("legal"),
+      v.literal("fatherhood"),
+      v.literal("other")
+    ),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  }),
+
+  clients: defineTable({
+    firstName: v.string(),
+    lastName: v.string(),
+    programId: v.optional(v.id("programs")),
+    enrollmentDate: v.optional(v.number()),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("withdrawn")
+    ),
+    zipCode: v.optional(v.string()),
+    ageGroup: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_programId", ["programId"]),
+
+  sessions: defineTable({
+    clientId: v.id("clients"),
+    programId: v.optional(v.id("programs")),
+    sessionDate: v.number(),
+    sessionType: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdBy: v.optional(v.id("users")),
+  }).index("by_clientId", ["clientId"]),
+
+  clientGoals: defineTable({
+    clientId: v.id("clients"),
+    goalDescription: v.string(),
+    status: v.union(
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("not_started")
+    ),
+    targetDate: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+  }).index("by_clientId", ["clientId"]),
+
+  newsletters: defineTable({
+    title: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("review"),
+      v.literal("published")
+    ),
+    sections: v.string(),
+    generatedEmailHtml: v.optional(v.string()),
+    generatedEmailSubject: v.optional(v.string()),
+    publishedAt: v.optional(v.number()),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_status", ["status"]),
+
+  icebergMessages: defineTable({
+    sessionId: v.string(),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_sessionId", ["sessionId"]),
+
+  icebergConfig: defineTable({
+    assistantId: v.string(),
+    vectorStoreId: v.string(),
+    systemInstructions: v.string(),
+    updatedAt: v.number(),
+  }),
+
+  knowledgeBase: defineTable({
+    fileName: v.string(),
+    fileType: v.string(),
+    storageId: v.id("_storage"),
+    openaiFileId: v.string(),
+    uploadedBy: v.id("users"),
+    uploadedAt: v.number(),
+    sizeBytes: v.number(),
+  }),
+
+  dashboardPrefs: defineTable({
+    userId: v.id("users"),
+    sectionOrder: v.array(v.string()),
+    hiddenSections: v.array(v.string()),
+  }).index("by_userId", ["userId"]),
+
+  auditLogs: defineTable({
+    userId: v.id("users"),
+    action: v.string(),
+    entityType: v.string(),
+    entityId: v.optional(v.string()),
+    details: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_createdAt", ["createdAt"]),
+});
