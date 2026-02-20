@@ -50,7 +50,6 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
 export const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { label: "Expenses", href: "/expenses", icon: "Receipt" },
-  { label: "Categorize", href: "/categorize", icon: "Tag" },
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
   { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },
   { label: "Clients", href: "/clients", icon: "Users" },

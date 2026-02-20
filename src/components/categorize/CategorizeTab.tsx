@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
@@ -30,7 +30,7 @@ import {
 
 type ConfidenceLevel = "all" | "high" | "medium" | "low";
 
-export default function CategorizePage() {
+export default function CategorizeTab() {
   const currentUser = useQuery(api.users.getCurrentUser);
   const latestRun = useLatestRun();
   const allocations = useAllocations(latestRun?._id);
@@ -227,9 +227,9 @@ export default function CategorizePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">
+          <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-fraunces)]">
             Expense Categorization
-          </h1>
+          </h2>
           <p className="text-sm text-muted mt-1">
             AI-powered grant allocation with pacing & diversification
           </p>
@@ -315,7 +315,7 @@ export default function CategorizePage() {
             </svg>
             <h3 className="text-lg font-semibold text-foreground mb-2 font-[family-name:var(--font-fraunces)]">No Categorization Runs Yet</h3>
             <p className="text-sm text-muted mb-4">
-              Click "Run AI" to analyze unclassified expenses and get grant assignment suggestions.
+              Click &quot;Run AI&quot; to analyze unclassified expenses and get grant assignment suggestions.
             </p>
           </div>
         </Card>

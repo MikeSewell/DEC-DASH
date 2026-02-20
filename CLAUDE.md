@@ -36,6 +36,8 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 - Co-parent intake system: `coparentIntake.ts` (CRUD + `getByClientId` + bulk import); `coparentIntakeForms` table with 22 fields + `clientId` link, indexes `by_clientId`, `by_createdAt`
 - Programs table: `programs.ts` has `list`, `getById`, `create`, `update`, `remove` (blocks if clients linked), `seed` (internal, for CLI), `getStats`
 - Seed script: `convex/seedPrograms.ts` — internal mutation that creates Legal + Co-Parent programs and migrates existing legal intakes to client records. Run via `npx convex run seedPrograms`
+- Expense page tabs: By Vendor, By Account, By Class, AI Insights, Categorize — the Categorize tab (`CategorizeTab.tsx`) was merged from the former standalone `/categorize` route into the `/expenses` page
+- Admin page tabs: Users, QuickBooks, Constant Contact, Google Sheets, Knowledge Base, Audit Log, AI Config — the "AI Config" tab (formerly "Settings") contains OpenAI API key and AI Director system prompt
 - Role-based nav: `ROLE_NAV_MAP` in `constants.ts` maps `lawyer`/`psychologist` → `["/clients", "/settings"]`; `ROLE_PROGRAM_TYPE_MAP` maps `lawyer` → `"legal"`, `psychologist` → `"coparent"` for tab/program filtering; Sidebar filters `NAV_ITEMS` by role; roles not in the map see all nav items
 - Import scripts: `scripts/importIntake.ts` (legal intake from Excel), `scripts/importCoparent.ts` (co-parent intake from 3-sheet Excel — deduplicates by name, creates clients + intake forms)
 
