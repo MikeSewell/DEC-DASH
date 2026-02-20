@@ -54,11 +54,19 @@ export const NAV_ITEMS = [
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
   { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },
   { label: "Programs", href: "/programs", icon: "Users" },
+  { label: "Clients", href: "/clients", icon: "ClipboardList" },
   { label: "Admin", href: "/admin", icon: "Settings" },
+  { label: "Settings", href: "/settings", icon: "Lock" },
 ] as const;
 
+// Role-based nav filtering — roles not listed here see all nav items
+export const ROLE_NAV_MAP: Record<string, string[]> = {
+  lawyer: ["/clients", "/settings"],
+  psychologist: ["/clients", "/settings"],
+};
+
 // Role hierarchy (higher index = more permissions)
-export const ROLE_HIERARCHY = ["readonly", "staff", "manager", "admin"] as const;
+export const ROLE_HIERARCHY = ["readonly", "psychologist", "lawyer", "staff", "manager", "admin"] as const;
 
 // QB sync interval in ms (15 minutes)
 export const QB_SYNC_INTERVAL_MS = 15 * 60 * 1000;

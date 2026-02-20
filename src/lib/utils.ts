@@ -94,6 +94,8 @@ export function roleLabel(role: string): string {
     admin: "Administrator",
     manager: "Manager",
     staff: "Staff",
+    lawyer: "Lawyer",
+    psychologist: "Psychologist",
     readonly: "Read Only",
   };
   return labels[role] || role;

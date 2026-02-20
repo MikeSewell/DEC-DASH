@@ -130,6 +130,8 @@ export default function UserForm({ isOpen, onClose, user }: UserFormProps) {
             <option value="admin">Administrator</option>
             <option value="manager">Manager</option>
             <option value="staff">Staff</option>
+            <option value="lawyer">Lawyer</option>
+            <option value="psychologist">Psychologist</option>
             <option value="readonly">Read Only</option>
           </select>
         </div>

@@ -1,7 +1,7 @@
 import { Id } from "../../convex/_generated/dataModel";
 
 // User roles
-export type UserRole = "admin" | "manager" | "staff" | "readonly";
+export type UserRole = "admin" | "manager" | "staff" | "lawyer" | "psychologist" | "readonly";
 
 // Grant status
 export type GrantStatus = "active" | "pending" | "completed" | "cultivating";

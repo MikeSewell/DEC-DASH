@@ -33,6 +33,7 @@ import type * as googleSheetsSync from "../googleSheetsSync.js";
 import type * as http from "../http.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
+import type * as legalIntake from "../legalIntake.js";
 import type * as newsletterActions from "../newsletterActions.js";
 import type * as newsletterTemplate from "../newsletterTemplate.js";
 import type * as newsletters from "../newsletters.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;
+  legalIntake: typeof legalIntake;
   newsletterActions: typeof newsletterActions;
   newsletterTemplate: typeof newsletterTemplate;
   newsletters: typeof newsletters;

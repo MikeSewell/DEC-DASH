@@ -26,6 +26,8 @@ const roleBadgeVariant: Record<UserRole, "success" | "warning" | "info" | "defau
   admin: "success",
   manager: "warning",
   staff: "info",
+  lawyer: "info",
+  psychologist: "info",
   readonly: "default",
 };
 

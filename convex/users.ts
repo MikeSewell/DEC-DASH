@@ -9,7 +9,7 @@ import { Doc } from "./_generated/dataModel";
  */
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
-  ...roles: Array<"admin" | "manager" | "staff" | "readonly">
+  ...roles: Array<"admin" | "manager" | "staff" | "lawyer" | "psychologist" | "readonly">
 ): Promise<Doc<"users">> {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new Error("Not authenticated");
@@ -60,6 +60,8 @@ export const createUser = mutation({
       v.literal("admin"),
       v.literal("manager"),
       v.literal("staff"),
+      v.literal("lawyer"),
+      v.literal("psychologist"),
       v.literal("readonly")
     ),
     mustChangePassword: v.boolean(),
@@ -102,6 +104,8 @@ export const updateUserRole = mutation({
       v.literal("admin"),
       v.literal("manager"),
       v.literal("staff"),
+      v.literal("lawyer"),
+      v.literal("psychologist"),
       v.literal("readonly")
     ),
   },
