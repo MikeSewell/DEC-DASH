@@ -177,6 +177,41 @@ export const getStats = query({
 });
 
 /**
+ * Public seed: ensure programs exist (for CLI import scripts).
+ * Returns map of type → programId.
+ */
+export const ensureSeeded = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const existing = await ctx.db.query("programs").collect();
+    const result: Record<string, string> = {};
+
+    const defaults = [
+      { name: "Legal Aid Program", type: "legal" as const, description: "Free legal consultation for fathers" },
+      { name: "Co-Parent Counseling", type: "coparent" as const, description: "Co-parenting skills and communication" },
+    ];
+
+    for (const def of defaults) {
+      const match = existing.find((p) => p.type === def.type);
+      if (match) {
+        result[def.type] = match._id;
+      } else {
+        const id = await ctx.db.insert("programs", {
+          name: def.name,
+          type: def.type,
+          description: def.description,
+          isActive: true,
+          createdAt: Date.now(),
+        });
+        result[def.type] = id;
+      }
+    }
+
+    return result;
+  },
+});
+
+/**
  * Internal seed: create a program without auth (for CLI seeding).
  */
 export const seed = internalMutation({

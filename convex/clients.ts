@@ -306,6 +306,158 @@ export const remove = mutation({
 });
 
 /**
+ * Public batch import for legal clients (no auth, for CLI import scripts).
+ * Creates a client + legalIntakeForm for each row. Dedupes by firstName+lastName.
+ */
+export const importLegalBatch = mutation({
+  args: {
+    programId: v.id("programs"),
+    rows: v.array(v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      zipCode: v.optional(v.string()),
+      ethnicity: v.optional(v.string()),
+      age: v.optional(v.string()),
+      coParentName: v.optional(v.string()),
+      reasonForVisit: v.optional(v.string()),
+      attorneyNotes: v.optional(v.string()),
+      hasAttorney: v.optional(v.string()),
+      email: v.optional(v.string()),
+      numberOfVisits: v.optional(v.string()),
+      upcomingCourtDate: v.optional(v.string()),
+      hasRestrainingOrder: v.optional(v.string()),
+      countyFiledIn: v.optional(v.string()),
+      existingCourtOrders: v.optional(v.string()),
+      custodyOrderFollowed: v.optional(v.string()),
+      notFollowedReason: v.optional(v.string()),
+      minorChildrenInvolved: v.optional(v.string()),
+      childrenResidence: v.optional(v.string()),
+      marriedToMother: v.optional(v.string()),
+      childSupportOrders: v.optional(v.string()),
+      paymentStatus: v.optional(v.string()),
+      seekingTo: v.optional(v.string()),
+      safetyFears: v.optional(v.string()),
+      dateOfBirth: v.optional(v.string()),
+      countyOfOrders: v.optional(v.string()),
+      referralSource: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, args) => {
+    let created = 0;
+    let skipped = 0;
+
+    for (const row of args.rows) {
+      const { firstName, lastName, zipCode, ethnicity, age, ...intakeFields } = row;
+
+      // Check for existing client with same name in same program
+      const existing = await ctx.db.query("clients")
+        .withIndex("by_programId", (q) => q.eq("programId", args.programId))
+        .collect();
+      const dupe = existing.find(
+        (c) => c.firstName.toLowerCase() === firstName.toLowerCase()
+          && c.lastName.toLowerCase() === lastName.toLowerCase()
+      );
+      if (dupe) { skipped++; continue; }
+
+      const clientId = await ctx.db.insert("clients", {
+        firstName, lastName,
+        programId: args.programId,
+        status: "active",
+        zipCode, ethnicity,
+        ageGroup: age,
+        createdAt: Date.now(),
+      });
+
+      await ctx.db.insert("legalIntakeForms", {
+        clientId,
+        firstName, lastName,
+        ...intakeFields,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      created++;
+    }
+
+    return { created, skipped };
+  },
+});
+
+/**
+ * Public batch import for co-parent clients (no auth, for CLI import scripts).
+ * Creates a client + coparentIntakeForm for each row. Dedupes by fullName.
+ */
+export const importCoparentBatch = mutation({
+  args: {
+    programId: v.id("programs"),
+    rows: v.array(v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      fullName: v.optional(v.string()),
+      zipCode: v.optional(v.string()),
+      ethnicity: v.optional(v.string()),
+      age: v.optional(v.string()),
+      timestamp: v.optional(v.string()),
+      role: v.optional(v.string()),
+      dateOfBirth: v.optional(v.string()),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      coParentName: v.optional(v.string()),
+      coParentEthnicity: v.optional(v.string()),
+      coParentDob: v.optional(v.string()),
+      coParentPhone: v.optional(v.string()),
+      coParentEmail: v.optional(v.string()),
+      coParentZip: v.optional(v.string()),
+      coParentAge: v.optional(v.string()),
+      referralSource: v.optional(v.string()),
+      coParentInformed: v.optional(v.string()),
+      sessionDate: v.optional(v.string()),
+      sessionTime: v.optional(v.string()),
+      sessionsCompleted: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, args) => {
+    let created = 0;
+    let skipped = 0;
+
+    for (const row of args.rows) {
+      const { firstName, lastName, fullName, zipCode, ethnicity, age, ...intakeFields } = row;
+
+      // Check for existing client with same name in same program
+      const existing = await ctx.db.query("clients")
+        .withIndex("by_programId", (q) => q.eq("programId", args.programId))
+        .collect();
+      const dupe = existing.find(
+        (c) => c.firstName.toLowerCase() === firstName.toLowerCase()
+          && c.lastName.toLowerCase() === lastName.toLowerCase()
+      );
+      if (dupe) { skipped++; continue; }
+
+      const clientId = await ctx.db.insert("clients", {
+        firstName, lastName,
+        programId: args.programId,
+        status: "active",
+        zipCode, ethnicity,
+        ageGroup: age,
+        createdAt: Date.now(),
+      });
+
+      await ctx.db.insert("coparentIntakeForms", {
+        clientId,
+        fullName: fullName || `${firstName} ${lastName}`,
+        ...intakeFields,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+
+      created++;
+    }
+
+    return { created, skipped };
+  },
+});
+
+/**
  * Internal create (no auth, for CLI import scripts).
  */
 export const internalCreate = internalMutation({
