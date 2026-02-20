@@ -108,11 +108,10 @@ sshpass -e rsync -avz "public/" root@187.77.19.63:/var/www/webapp/public/ \
 sshpass -e ssh -o StrictHostKeyChecking=no root@187.77.19.63 "pm2 restart dec-dash"
 ```
 
-### Convex Production
-- **Dev deployment:** `aware-finch-86` (set in `CONVEX_DEPLOYMENT`)
-- **Prod deployment:** `zany-condor-488`
-- Deploy to prod: `npx convex deploy --yes`
-- Deploy to dev: `npx convex dev --once`
+### Convex
+- **Deployment:** `aware-finch-86` (dev only — no separate prod deployment)
+- Deploy: `npx convex dev --once`
+- **IMPORTANT:** Do NOT use `npx convex deploy` — the project only uses the dev deployment for both dev and production
 
 ## Gotchas
 
