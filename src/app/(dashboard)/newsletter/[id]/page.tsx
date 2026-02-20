@@ -31,6 +31,7 @@ export default function NewsletterEditorPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [blankWarning, setBlankWarning] = useState(false);
 
   if (newsletter === undefined) {
     return (
@@ -71,6 +72,15 @@ export default function NewsletterEditorPage() {
   }
 
   async function handleGenerate() {
+    // Guard: at least one section field must have content
+    const hasAnyContent = Object.values(sections).some(
+      (v) => typeof v === "string" && v.trim().length > 0
+    );
+    if (!hasAnyContent) {
+      setBlankWarning(true);
+      return;
+    }
+    setBlankWarning(false);
     setGenerating(true);
     try {
       await generateHtml({ id });
@@ -170,6 +180,13 @@ export default function NewsletterEditorPage() {
           </div>
         </div>
       </Card>
+
+      {/* Blank-content warning */}
+      {blankWarning && (
+        <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-300">
+          Please fill in at least one section before generating the email.
+        </div>
+      )}
 
       {/* Editor */}
       <NewsletterEditor

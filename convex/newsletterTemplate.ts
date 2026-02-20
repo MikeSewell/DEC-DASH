@@ -138,7 +138,6 @@ export function buildNewsletterHtml(
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Participant Testimonials</h3>
 <div style="background-color:#f8f9fa;padding:15px;border-radius:4px;margin-bottom:15px;border-left:3px solid ${PRIMARY};">
 <p style="color:${TEXT_DARK};font-style:italic;font-size:16px;margin:0 0 10px 0;font-family:Arial,sans-serif;">"${nl2br(sections.participantTestimonials.trim())}"</p>
-<p style="color:${TEXT_LIGHT};font-size:14px;margin:0;font-family:Arial,sans-serif;">- [PARTICIPANT_NAME], [PROGRAM_NAME]</p>
 </div>
 </div>`;
     }
@@ -218,7 +217,7 @@ export function buildNewsletterHtml(
 <table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td style="background-color:${PRIMARY};padding:30px;border-radius:6px;text-align:center;">
-<p style="color:${WHITE};font-size:20px;margin:0 0 15px 0;font-weight:bold;font-family:Arial,sans-serif;">[STATISTIC_TITLE]</p>
+<p style="color:${WHITE};font-size:20px;margin:0 0 15px 0;font-weight:bold;font-family:Arial,sans-serif;">Did You Know?</p>
 <p style="color:${WHITE};font-size:16px;margin:0 0 20px 0;opacity:0.95;font-family:Arial,sans-serif;line-height:1.5;">${nl2br(sections.fatherhoodStat!.trim())}</p>
 </td>
 </tr>
@@ -268,7 +267,8 @@ export function buildNewsletterHtml(
   }
 
   // --- Stay Connected / Social Media Section ---
-  html += `
+  if (hasContent(sections.socialMediaCTA, sections.contactInfo)) {
+    html += `
 <!-- Social Media & Contact Section -->
 <tr>
 <td style="padding:0 30px 40px 30px;">
@@ -294,11 +294,12 @@ export function buildNewsletterHtml(
 </td>
 </tr>
 </table>`;
-  if (sections.socialMediaCTA?.trim()) {
-    html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.socialMediaCTA.trim())}</p>`;
-  }
-  html += `</td>
+    if (sections.socialMediaCTA?.trim()) {
+      html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.socialMediaCTA.trim())}</p>`;
+    }
+    html += `</td>
 </tr>`;
+  }
 
   // --- Additional Notes ---
   if (hasContent(sections.additionalNotes)) {
