@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -66,6 +66,7 @@ export default function ClientsPage() {
 
   const [activeTab, setActiveTab] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showAddProgramModal, setShowAddProgramModal] = useState(false);
   const [clientForm, setClientForm] = useState<ClientFormData>(emptyClientForm);
@@ -74,9 +75,14 @@ export default function ClientsPage() {
   const [savingProgram, setSavingProgram] = useState(false);
   const [deletingProgram, setDeletingProgram] = useState<string | null>(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const clients = useQuery(api.clients.listWithPrograms, {
     programType: activeTab !== "all" ? activeTab : undefined,
-    search: search.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
   });
 
   const createClient = useMutation(api.clients.create);
