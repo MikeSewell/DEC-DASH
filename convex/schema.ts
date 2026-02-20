@@ -228,6 +228,7 @@ export default defineSchema({
   }).index("by_startedAt", ["startedAt"]),
 
   legalIntakeForms: defineTable({
+    clientId: v.optional(v.id("clients")),
     intakeDate: v.optional(v.number()),
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
@@ -260,8 +261,39 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_clientId", ["clientId"])
     .index("by_createdAt", ["createdAt"])
     .index("by_lastName", ["lastName"]),
+
+  coparentIntakeForms: defineTable({
+    clientId: v.optional(v.id("clients")),
+    timestamp: v.optional(v.string()),
+    role: v.optional(v.string()),
+    fullName: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
+    zipCode: v.optional(v.string()),
+    age: v.optional(v.string()),
+    coParentName: v.optional(v.string()),
+    coParentEthnicity: v.optional(v.string()),
+    coParentDob: v.optional(v.string()),
+    coParentPhone: v.optional(v.string()),
+    coParentEmail: v.optional(v.string()),
+    coParentZip: v.optional(v.string()),
+    coParentAge: v.optional(v.string()),
+    referralSource: v.optional(v.string()),
+    coParentInformed: v.optional(v.string()),
+    sessionDate: v.optional(v.string()),
+    sessionTime: v.optional(v.string()),
+    sessionsCompleted: v.optional(v.string()),
+    createdBy: v.optional(v.id("users")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_createdAt", ["createdAt"]),
 
   expenseAllocations: defineTable({
     runId: v.id("allocationRuns"),

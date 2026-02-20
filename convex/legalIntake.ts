@@ -1,9 +1,10 @@
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { requireRole } from "./users";
 
 const intakeFields = {
+  clientId: v.optional(v.id("clients")),
   intakeDate: v.optional(v.number()),
   firstName: v.optional(v.string()),
   lastName: v.optional(v.string()),
@@ -72,6 +73,90 @@ export const getById = query({
   handler: async (ctx, args) => {
     await requireRole(ctx, "admin", "manager", "staff", "lawyer");
     return await ctx.db.get(args.id);
+  },
+});
+
+/**
+ * Get intake form linked to a client.
+ */
+export const getByClientId = query({
+  args: { clientId: v.id("clients") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("legalIntakeForms")
+      .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
+      .first();
+  },
+});
+
+/**
+ * One-time migration: create clients from existing legalIntakeForms and link them.
+ */
+export const migrateToClients = mutation({
+  args: { legalProgramId: v.id("programs") },
+  handler: async (ctx, args) => {
+    const user = await requireRole(ctx, "admin");
+
+    const forms = await ctx.db.query("legalIntakeForms").collect();
+    let migrated = 0;
+
+    for (const form of forms) {
+      if (form.clientId) continue; // already linked
+
+      const clientId = await ctx.db.insert("clients", {
+        firstName: form.firstName || "Unknown",
+        lastName: form.lastName || "Unknown",
+        programId: args.legalProgramId,
+        status: "active",
+        zipCode: form.zipCode,
+        ethnicity: form.ethnicity,
+        enrollmentDate: form.createdAt,
+        createdAt: form.createdAt,
+      });
+
+      await ctx.db.patch(form._id, { clientId });
+      migrated++;
+    }
+
+    await ctx.runMutation(internal.auditLog.log, {
+      userId: user._id,
+      action: "migrate_legal_to_clients",
+      entityType: "legalIntakeForms",
+      details: `Migrated ${migrated} legal intake forms to client records`,
+    });
+
+    return { migrated };
+  },
+});
+
+/**
+ * Internal migration (no auth, for CLI seeding).
+ */
+export const internalMigrateToClients = internalMutation({
+  args: { legalProgramId: v.id("programs") },
+  handler: async (ctx, args) => {
+    const forms = await ctx.db.query("legalIntakeForms").collect();
+    let migrated = 0;
+
+    for (const form of forms) {
+      if (form.clientId) continue;
+
+      const clientId = await ctx.db.insert("clients", {
+        firstName: form.firstName || "Unknown",
+        lastName: form.lastName || "Unknown",
+        programId: args.legalProgramId,
+        status: "active",
+        zipCode: form.zipCode,
+        ethnicity: form.ethnicity,
+        enrollmentDate: form.createdAt,
+        createdAt: form.createdAt,
+      });
+
+      await ctx.db.patch(form._id, { clientId });
+      migrated++;
+    }
+
+    return { migrated };
   },
 });
 
@@ -198,6 +283,7 @@ export const importFromData = mutation({
   args: {
     rows: v.array(
       v.object({
+        clientId: v.optional(v.id("clients")),
         intakeDate: v.optional(v.number()),
         firstName: v.optional(v.string()),
         lastName: v.optional(v.string()),

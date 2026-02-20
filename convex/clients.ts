@@ -1,7 +1,8 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireRole } from "./users";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * List clients with optional filters by programId and/or status.
@@ -38,6 +39,110 @@ export const list = query({
 });
 
 /**
+ * List clients joined with program info, role-filtered.
+ */
+export const listWithPrograms = query({
+  args: {
+    programType: v.optional(v.string()),
+    search: v.optional(v.string()),
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const programs = await ctx.db.query("programs").collect();
+    const programMap = new Map(programs.map((p) => [p._id, p]));
+
+    let clients = await ctx.db.query("clients").collect();
+
+    // Role-based filtering
+    if (user.role === "lawyer") {
+      const legalProgramIds = new Set(
+        programs.filter((p) => p.type === "legal").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && legalProgramIds.has(c.programId));
+    } else if (user.role === "psychologist") {
+      const coparentProgramIds = new Set(
+        programs.filter((p) => p.type === "coparent").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && coparentProgramIds.has(c.programId));
+    }
+
+    // Program type filter
+    if (args.programType && args.programType !== "all") {
+      const typeIds = new Set(
+        programs.filter((p) => p.type === args.programType).map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && typeIds.has(c.programId));
+    }
+
+    // Status filter
+    if (args.status) {
+      clients = clients.filter((c) => c.status === args.status);
+    }
+
+    // Search filter
+    if (args.search) {
+      const term = args.search.toLowerCase();
+      clients = clients.filter(
+        (c) =>
+          c.firstName.toLowerCase().includes(term) ||
+          c.lastName.toLowerCase().includes(term)
+      );
+    }
+
+    return clients.map((c) => {
+      const program = c.programId ? programMap.get(c.programId) : undefined;
+      return {
+        ...c,
+        programName: program?.name ?? "\u2014",
+        programType: program?.type ?? "other",
+      };
+    });
+  },
+});
+
+/**
+ * Get client stats (role-filtered).
+ */
+export const getStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const programs = await ctx.db.query("programs").collect();
+    let clients = await ctx.db.query("clients").collect();
+
+    // Role-based filtering
+    if (user.role === "lawyer") {
+      const legalIds = new Set(
+        programs.filter((p) => p.type === "legal").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && legalIds.has(c.programId));
+    } else if (user.role === "psychologist") {
+      const coparentIds = new Set(
+        programs.filter((p) => p.type === "coparent").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && coparentIds.has(c.programId));
+    }
+
+    const total = clients.length;
+    const active = clients.filter((c) => c.status === "active").length;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const newThisMonth = clients.filter((c) => c.createdAt >= startOfMonth).length;
+
+    return { total, active, newThisMonth };
+  },
+});
+
+/**
  * Get a single client by ID.
  */
 export const getById = query({
@@ -46,6 +151,36 @@ export const getById = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.clientId);
+  },
+});
+
+/**
+ * Get client by ID with joined program and linked intake forms.
+ */
+export const getByIdWithIntake = query({
+  args: { clientId: v.id("clients") },
+  handler: async (ctx, args) => {
+    const client = await ctx.db.get(args.clientId);
+    if (!client) return null;
+
+    const program = client.programId ? await ctx.db.get(client.programId) : null;
+
+    const legalIntake = await ctx.db
+      .query("legalIntakeForms")
+      .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
+      .first();
+
+    const coparentIntake = await ctx.db
+      .query("coparentIntakeForms")
+      .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
+      .first();
+
+    return {
+      ...client,
+      program,
+      legalIntake,
+      coparentIntake,
+    };
   },
 });
 
@@ -69,7 +204,7 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await requireRole(ctx, "admin", "manager", "staff");
+    const currentUser = await requireRole(ctx, "admin", "manager", "staff", "lawyer", "psychologist");
 
     const clientId = await ctx.db.insert("clients", {
       firstName: args.firstName,
@@ -119,7 +254,7 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await requireRole(ctx, "admin", "manager", "staff");
+    const currentUser = await requireRole(ctx, "admin", "manager", "staff", "lawyer", "psychologist");
 
     const existing = await ctx.db.get(args.clientId);
     if (!existing) throw new Error("Client not found");
@@ -144,6 +279,47 @@ export const update = mutation({
       entityId: args.clientId,
       details: `Updated client ${existing.firstName} ${existing.lastName}`,
     });
+  },
+});
+
+/**
+ * Delete a client. Admin only.
+ */
+export const remove = mutation({
+  args: { clientId: v.id("clients") },
+  handler: async (ctx, args) => {
+    const currentUser = await requireRole(ctx, "admin");
+
+    const existing = await ctx.db.get(args.clientId);
+    if (!existing) throw new Error("Client not found");
+
+    await ctx.db.delete(args.clientId);
+
+    await ctx.runMutation(internal.auditLog.log, {
+      userId: currentUser._id,
+      action: "delete_client",
+      entityType: "clients",
+      entityId: args.clientId,
+      details: `Deleted client ${existing.firstName} ${existing.lastName}`,
+    });
+  },
+});
+
+/**
+ * Internal create (no auth, for CLI import scripts).
+ */
+export const internalCreate = internalMutation({
+  args: {
+    firstName: v.string(),
+    lastName: v.string(),
+    programId: v.optional(v.id("programs")),
+    enrollmentDate: v.optional(v.number()),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("withdrawn")),
+    zipCode: v.optional(v.string()),
+    ethnicity: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("clients", { ...args, createdAt: Date.now() });
   },
 });
 

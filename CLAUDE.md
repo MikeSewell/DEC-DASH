@@ -31,9 +31,13 @@ Executive dashboard for the Dads' Education Center (DEC) nonprofit. Next.js 15 +
 - Newsletter visual editing: `NewsletterPreview.tsx` supports `editable` + `onSave` props; edit mode sets iframe body `contentEditable="true"`, injects hover outline CSS, sandbox switches to `allow-same-origin allow-scripts`; save extracts `documentElement.outerHTML`; cancel increments `iframeKey` to reset; desktop/mobile toggle disabled during editing
 - Newsletter sections: ~20 fields stored as JSON string in `sections` column; editor groups them into 7 collapsible categories
 - `campaignActivityId` on newsletters table links to Constant Contact campaign for reuse between test and real sends
-- Legal intake system: `legalIntake.ts` (CRUD queries/mutations + bulk import); `legalIntakeForms` table with 28 fields, indexes `by_createdAt` and `by_lastName`
-- Role-based nav: `ROLE_NAV_MAP` in `constants.ts` maps `lawyer`/`psychologist` → `["/clients", "/settings"]`; Sidebar filters `NAV_ITEMS` by role; roles not in the map see all nav items
-- Import script: `scripts/importIntake.ts` reads Excel via `xlsx`, maps columns to schema fields, calls `importFromData` mutation in batches of 50
+- Client management: unified `/clients` page replaces old `/programs` and `/clients` pages. `clients.ts` has `listWithPrograms` (joins program info, role-filtered), `getStats`, `getByIdWithIntake` (joins program + legal/co-parent intake), `remove`. Programs are managed from the same page via "Add Program" modal.
+- Legal intake system: `legalIntake.ts` (CRUD queries/mutations + bulk import + `getByClientId` + `migrateToClients`); `legalIntakeForms` table with 28 fields + `clientId` link, indexes `by_clientId`, `by_createdAt`, `by_lastName`
+- Co-parent intake system: `coparentIntake.ts` (CRUD + `getByClientId` + bulk import); `coparentIntakeForms` table with 22 fields + `clientId` link, indexes `by_clientId`, `by_createdAt`
+- Programs table: `programs.ts` has `list`, `getById`, `create`, `update`, `remove` (blocks if clients linked), `seed` (internal, for CLI), `getStats`
+- Seed script: `convex/seedPrograms.ts` — internal mutation that creates Legal + Co-Parent programs and migrates existing legal intakes to client records. Run via `npx convex run seedPrograms`
+- Role-based nav: `ROLE_NAV_MAP` in `constants.ts` maps `lawyer`/`psychologist` → `["/clients", "/settings"]`; `ROLE_PROGRAM_TYPE_MAP` maps `lawyer` → `"legal"`, `psychologist` → `"coparent"` for tab/program filtering; Sidebar filters `NAV_ITEMS` by role; roles not in the map see all nav items
+- Import scripts: `scripts/importIntake.ts` (legal intake from Excel), `scripts/importCoparent.ts` (co-parent intake from 3-sheet Excel — deduplicates by name, creates clients + intake forms)
 
 ### Frontend (Next.js)
 

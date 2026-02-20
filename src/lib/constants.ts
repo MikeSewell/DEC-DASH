@@ -53,8 +53,7 @@ export const NAV_ITEMS = [
   { label: "Categorize", href: "/categorize", icon: "Tag" },
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
   { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },
-  { label: "Programs", href: "/programs", icon: "Users" },
-  { label: "Clients", href: "/clients", icon: "ClipboardList" },
+  { label: "Clients", href: "/clients", icon: "Users" },
   { label: "Admin", href: "/admin", icon: "Settings" },
   { label: "Settings", href: "/settings", icon: "Lock" },
 ] as const;
@@ -63,6 +62,12 @@ export const NAV_ITEMS = [
 export const ROLE_NAV_MAP: Record<string, string[]> = {
   lawyer: ["/clients", "/settings"],
   psychologist: ["/clients", "/settings"],
+};
+
+// Role-based program type filtering
+export const ROLE_PROGRAM_TYPE_MAP: Record<string, string> = {
+  lawyer: "legal",
+  psychologist: "coparent",
 };
 
 // Role hierarchy (higher index = more permissions)

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireRole } from "./users";
 
@@ -106,6 +106,38 @@ export const update = mutation({
 });
 
 /**
+ * Delete a program. Admin/manager only. Fails if clients are linked.
+ */
+export const remove = mutation({
+  args: { programId: v.id("programs") },
+  handler: async (ctx, args) => {
+    const currentUser = await requireRole(ctx, "admin", "manager");
+
+    const existing = await ctx.db.get(args.programId);
+    if (!existing) throw new Error("Program not found");
+
+    const linkedClients = await ctx.db
+      .query("clients")
+      .withIndex("by_programId", (q) => q.eq("programId", args.programId))
+      .first();
+
+    if (linkedClients) {
+      throw new Error("Cannot delete program with linked clients. Reassign clients first.");
+    }
+
+    await ctx.db.delete(args.programId);
+
+    await ctx.runMutation(internal.auditLog.log, {
+      userId: currentUser._id,
+      action: "delete_program",
+      entityType: "programs",
+      entityId: args.programId,
+      details: `Deleted program "${existing.name}"`,
+    });
+  },
+});
+
+/**
  * Get stats for each program: count of active clients and total sessions.
  */
 export const getStats = query({
@@ -141,5 +173,38 @@ export const getStats = query({
     );
 
     return stats;
+  },
+});
+
+/**
+ * Internal seed: create a program without auth (for CLI seeding).
+ */
+export const seed = internalMutation({
+  args: {
+    name: v.string(),
+    type: v.union(
+      v.literal("coparent"),
+      v.literal("legal"),
+      v.literal("fatherhood"),
+      v.literal("other")
+    ),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // Skip if a program with this type already exists
+    const existing = await ctx.db.query("programs").collect();
+    if (existing.some((p) => p.type === args.type && p.name === args.name)) {
+      const match = existing.find((p) => p.type === args.type && p.name === args.name)!;
+      return match._id;
+    }
+
+    return await ctx.db.insert("programs", {
+      name: args.name,
+      type: args.type,
+      description: args.description,
+      isActive: args.isActive,
+      createdAt: Date.now(),
+    });
   },
 });

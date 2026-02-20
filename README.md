@@ -28,12 +28,13 @@ The UI uses a **warm, organic** aesthetic inspired by community and nature — a
 - **Executive Snapshot** — Revenue, expenses, cash flow, grant utilization at a glance
 - **Financial Dashboard** — QuickBooks-synced P&L, expense breakdowns, vendor spend
 - **Grant & Budget Tracking** — Google Sheets-synced grant status, burn rates, deadlines
-- **Program & Client Management** — Track enrollments, sessions, and client goals
+- **Unified Client & Program Management** — Combined `/clients` page with program tabs, role-based filtering (lawyers see only legal clients, psychologists see only co-parent clients), per-client intake forms, program CRUD, and search
 - **AI Director** — OpenAI-powered assistant with document knowledge base for strategic Q&A
 - **Newsletter Builder** — Branded HTML email template matching the n8n workflow design: two-column header (logo + title), Executive Director greeting/signature, highlighted milestone and program boxes, participant testimonial blocks, community event tables, fatherhood stats, support section with donate/volunteer CTAs, social media icons; ~20 content sections; OpenAI polishes the template (removes empty placeholder sections, adds preheader); visual contentEditable preview editing (click text to modify/delete directly in the rendered email); send test emails for review before publishing via Constant Contact
 - **AI Expense Categorization** — Pre-scores unclassified QB expenses against grant budgets using pacing, diversification, time urgency, and budget factors; sends to OpenAI for final grant selection; users review/override and submit assignments back to QuickBooks
 - **Expense Recommender** — AI-powered expense optimization suggestions
-- **Legal Program / Clients** — Digital Father Intake Form with 28 fields across 7 collapsible sections; searchable client list with stats; bulk import from Excel; full CRUD with audit logging
+- **Legal Intake Forms** — Digital Father Intake Form with 28 fields across 7 collapsible sections; linked to client records; bulk import from Excel; full CRUD with audit logging
+- **Co-Parent Intake Forms** — Co-parenting session intake with 22 fields across 3 sections (participant info, co-parent info, session info); linked to client records; bulk import from multi-sheet Excel
 - **Role-Based Access** — Admin, manager, staff, lawyer, psychologist, and readonly roles; role-based nav filtering (lawyers see only Clients + Settings)
 - **Customizable Dashboard** — Reorderable and hideable sections per user
 
@@ -74,8 +75,9 @@ Create a `.env.local` for Next.js and set Convex environment variables via the C
 
 ```
 convex/               # Backend — schema, queries, mutations, actions, crons
+scripts/              # One-time import scripts (legal intake, co-parent intake)
 src/
-  app/(dashboard)/    # Dashboard pages (admin, expenses, categorize, programs, clients, settings, etc.)
+  app/(dashboard)/    # Dashboard pages (admin, expenses, categorize, clients, settings, etc.)
   app/api/            # Next.js API routes (OAuth callbacks)
   components/         # React components organized by feature
   lib/                # Shared utilities and constants
