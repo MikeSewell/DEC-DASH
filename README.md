@@ -27,7 +27,8 @@ The UI uses a **warm, organic** aesthetic inspired by community and nature — a
 
 - **Executive Snapshot** — Revenue, expenses, cash flow, grant utilization at a glance
 - **Financial Dashboard** — QuickBooks-synced P&L, expense breakdowns, vendor spend
-- **Grant & Budget Tracking** — Google Sheets-synced grant status, burn rates, deadlines
+- **Grant Tracker** — Full grant pipeline across 5 funding stages (Active, Committed, Pending, Cultivating, Denied) with 20 fields per grant; imported from Grant Matrix Excel; detail pages with contact info, reporting timelines with countdown badges, and QB budget-vs-spending; inline editing for admin/manager users; fuzzy-matches grants to QuickBooks classes for live spending data
+- **Grant & Budget Dashboard** — Google Sheets-synced grant status, burn rates, deadlines (dashboard widgets)
 - **Unified Client & Program Management** — Combined `/clients` page with program tabs, role-based filtering (lawyers see only legal clients, psychologists see only co-parent clients), per-client intake forms, program CRUD, and search
 - **AI Director** — OpenAI-powered assistant with document knowledge base for strategic Q&A
 - **Newsletter Builder** — Branded HTML email template matching the n8n workflow design: two-column header (logo + title), Executive Director greeting/signature, highlighted milestone and program boxes, participant testimonial blocks, community event tables, fatherhood stats, support section with donate/volunteer CTAs, social media icons; ~20 content sections; OpenAI polishes the template (removes empty placeholder sections, adds preheader); visual contentEditable preview editing (click text to modify/delete directly in the rendered email); send test emails for review before publishing via Constant Contact
@@ -75,7 +76,7 @@ Create a `.env.local` for Next.js and set Convex environment variables via the C
 
 ```
 convex/               # Backend — schema, queries, mutations, actions, crons
-scripts/              # One-time import scripts (legal intake, co-parent intake)
+scripts/              # One-time import scripts (legal intake, co-parent intake, grant matrix)
 src/
   app/(dashboard)/    # Dashboard pages (admin, expenses, clients, settings, etc.)
   app/api/            # Next.js API routes (OAuth callbacks)
@@ -88,4 +89,5 @@ src/
 
 - **QuickBooks** — Cached in `quickbooksCache` table, auto-refreshed every 15 minutes via cron
 - **Google Sheets** — Cached in `grantsCache` table, auto-refreshed every 30 minutes via cron
+- **Grant Matrix** — Imported into `grants` table via `scripts/importGrantMatrix.ts` from Excel (46 grants, 20 fields each)
 - OAuth connections are global (singleton config, any admin can initiate)

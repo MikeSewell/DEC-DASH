@@ -295,6 +295,33 @@ export default defineSchema({
     .index("by_clientId", ["clientId"])
     .index("by_createdAt", ["createdAt"]),
 
+  grants: defineTable({
+    grantKey: v.string(),
+    fundingStage: v.string(),
+    fundingSource: v.string(),
+    programType: v.optional(v.string()),
+    programName: v.optional(v.string()),
+    amountAwarded: v.optional(v.number()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    arStatus: v.optional(v.string()),
+    dateFundsReceived: v.optional(v.string()),
+    paymentSchedule: v.optional(v.string()),
+    grantNumber: v.optional(v.string()),
+    q1ReportDate: v.optional(v.string()),
+    q2ReportDate: v.optional(v.string()),
+    q3ReportDate: v.optional(v.string()),
+    q4ReportDate: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    importedAt: v.number(),
+    importedBy: v.optional(v.id("users")),
+  })
+    .index("by_grantKey", ["grantKey"])
+    .index("by_fundingStage", ["fundingStage"]),
+
   expenseAllocations: defineTable({
     runId: v.id("allocationRuns"),
     purchaseId: v.string(),

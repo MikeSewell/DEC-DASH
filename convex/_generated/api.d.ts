@@ -31,6 +31,8 @@ import type * as googleSheets from "../googleSheets.js";
 import type * as googleSheetsActions from "../googleSheetsActions.js";
 import type * as googleSheetsInternal from "../googleSheetsInternal.js";
 import type * as googleSheetsSync from "../googleSheetsSync.js";
+import type * as grants from "../grants.js";
+import type * as grantsInternal from "../grantsInternal.js";
 import type * as http from "../http.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
@@ -79,6 +81,8 @@ declare const fullApi: ApiFromModules<{
   googleSheetsActions: typeof googleSheetsActions;
   googleSheetsInternal: typeof googleSheetsInternal;
   googleSheetsSync: typeof googleSheetsSync;
+  grants: typeof grants;
+  grantsInternal: typeof grantsInternal;
   http: typeof http;
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;

@@ -49,6 +49,7 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
 // Navigation items
 export const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "Grants", href: "/grants", icon: "ClipboardList" },
   { label: "Expenses", href: "/expenses", icon: "Receipt" },
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
   { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },

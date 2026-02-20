@@ -3,8 +3,11 @@ import { Id } from "../../convex/_generated/dataModel";
 // User roles
 export type UserRole = "admin" | "manager" | "staff" | "lawyer" | "psychologist" | "readonly";
 
-// Grant status
+// Grant status (grantsCache — Sheets sync)
 export type GrantStatus = "active" | "pending" | "completed" | "cultivating";
+
+// Funding stage (grants table — Excel import)
+export type FundingStage = "active" | "committed" | "pending" | "cultivating" | "denied";
 
 // Client status
 export type ClientStatus = "active" | "completed" | "withdrawn";
