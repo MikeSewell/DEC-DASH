@@ -39,9 +39,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Proactive Alerts
 
-- [ ] **ALRT-01**: Grant deadline alerts surface upcoming quarterly reports due within 30 days
-- [ ] **ALRT-02**: Budget variance alerts trigger when grant spending exceeds pacing threshold
-- [ ] **ALRT-03**: Sync status alerts show when QuickBooks or Google Sheets sync has failed or data is stale (>1 hour for QB, >2 hours for Sheets)
+- [x] **ALRT-01**: Grant deadline alerts surface upcoming quarterly reports due within 30 days
+- [x] **ALRT-02**: Budget variance alerts trigger when grant spending exceeds pacing threshold
+- [x] **ALRT-03**: Sync status alerts show when QuickBooks or Google Sheets sync has failed or data is stale (>1 hour for QB, >2 hours for Sheets)
 - [ ] **ALRT-04**: Alerts display in the "What Needs Attention" panel on the dashboard
 
 ## v2 Requirements
@@ -105,9 +105,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAL-03 | Phase 3 | Complete |
 | CAL-04 | Phase 3 | Complete |
 | CAL-05 | Phase 3 | Complete |
-| ALRT-01 | Phase 4 | Pending |
-| ALRT-02 | Phase 4 | Pending |
-| ALRT-03 | Phase 4 | Pending |
+| ALRT-01 | Phase 4 | Complete |
+| ALRT-02 | Phase 4 | Complete |
+| ALRT-03 | Phase 4 | Complete |
 | ALRT-04 | Phase 4 | Pending |
 
 **Coverage:**

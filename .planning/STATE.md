@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T12:25:46.363Z"
+last_updated: "2026-02-28T12:56:54.307Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 3 — Google Calendar Integration
+**Current focus:** Phase 4 — Proactive Alerts Panel
 
 ## Current Position
 
-Phase: 3 of 4 (Google Calendar Integration)
-Plan: 3 of 3 in current phase (COMPLETE)
-Status: Phase 3 COMPLETE
-Last activity: 2026-02-28 — Plan 03-03 complete (CalendarWidget agenda-list component + dashboard wiring)
+Phase: 4 of 4 (Proactive Alerts Panel)
+Plan: 1 of 2 in current phase (IN PROGRESS)
+Status: Phase 4 Plan 1 COMPLETE — Plan 2 next
+Last activity: 2026-02-28 — Plan 04-01 complete (getAlerts Convex query with 6-table aggregation, urgency ranking, null-safe per-section isolation)
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [█████████░] 90%
 | Phase 03-google-calendar-integration P01 | 2 | 2 tasks | 6 files |
 | Phase 03-google-calendar-integration P02 | 3 | 2 tasks | 5 files |
 | Phase 03-google-calendar-integration P03 | 4 | 2 tasks | 2 files |
+| Phase 04-proactive-alerts-panel P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ Recent decisions affecting current work:
 - [Phase 03-google-calendar-integration]: calendarColorMap built from events array unique calendarIds — avoids needing a second config query in the widget
 - [Phase 03-google-calendar-integration]: EventRow conditionally wraps in anchor tag only when htmlLink exists — avoids unnecessary anchor wrapping
 - [Phase 03-google-calendar-integration]: Today empty state detected when first visible event's dayKey differs from todayKey — simple inline detection without pre-iterating all days
+- [Phase 04-proactive-alerts-panel]: Per-section try/catch isolation in getAlerts — one failed table read cannot crash entire alert query, always returns valid Alert[]
+- [Phase 04-proactive-alerts-panel]: Alert IDs use Convex document _id for global uniqueness — avoids collisions when two grants share same fundingSource name
+- [Phase 04-proactive-alerts-panel]: QB staleness uses qbCache.fetchedAt not qbConfig.connectedAt — fetchedAt reflects last data sync, connectedAt reflects OAuth connection time
 
 ### Pending Todos
 
@@ -109,5 +113,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-google-calendar-integration/03-03-PLAN.md — CalendarWidget agenda-list component with day grouping, all-day pinning, currently-happening highlight, show-more toggle, wired into dashboard SECTION_COMPONENTS
+Stopped at: Completed 04-proactive-alerts-panel/04-01-PLAN.md — getAlerts Convex query with Alert interface, 6-table aggregation (grants, grantsCache, quickbooksCache, quickbooksConfig, googleSheetsConfig, googleCalendarConfig), urgency-ranked Alert[] output
 Resume file: None
