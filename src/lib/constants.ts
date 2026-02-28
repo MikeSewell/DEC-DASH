@@ -108,3 +108,50 @@ export const CALENDAR_DOT_COLORS = [
   "#5BBFB5", // light teal
   "#1A7A7A", // dark teal
 ] as const;
+
+// Event type classification config — maps event types to keyword patterns and Tailwind-safe color classes
+export interface EventTypeConfig {
+  label: string;
+  keywords: string[];       // Lowercase substrings to match against summary + calendarDisplayName
+  bgClass: string;          // Tailwind bg class for the badge
+  textClass: string;        // Tailwind text class for the badge
+  dotColor: string;         // CSS variable ref for the left-border indicator
+}
+
+export const EVENT_TYPE_CONFIG: Record<string, EventTypeConfig> = {
+  client: {
+    label: "Client",
+    keywords: ["client", "session", "intake", "co-parent", "coparent", "legal clinic", "consultation", "counseling", "father"],
+    bgClass: "bg-primary/10",
+    textClass: "text-primary",
+    dotColor: "var(--primary)",
+  },
+  board: {
+    label: "Board",
+    keywords: ["board", "director", "governance", "trustee", "advisory"],
+    bgClass: "bg-accent/15",
+    textClass: "text-accent",
+    dotColor: "var(--accent)",
+  },
+  community: {
+    label: "Community",
+    keywords: ["community", "outreach", "workshop", "event", "fundrais", "gala", "volunteer", "open house", "webinar", "training"],
+    bgClass: "bg-warning/10",
+    textClass: "text-warning",
+    dotColor: "var(--warning)",
+  },
+  grant: {
+    label: "Grant",
+    keywords: ["grant", "report due", "funder", "proposal", "deadline", "submission"],
+    bgClass: "bg-danger/10",
+    textClass: "text-danger",
+    dotColor: "var(--danger)",
+  },
+  general: {
+    label: "Event",
+    keywords: [],  // Fallback — matches everything not caught above
+    bgClass: "bg-muted/10",
+    textClass: "text-muted",
+    dotColor: "var(--muted)",
+  },
+};

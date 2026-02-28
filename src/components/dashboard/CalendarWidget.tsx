@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useCalendarEvents } from "@/hooks/useGoogleCalendar";
-import { CALENDAR_DOT_COLORS } from "@/lib/constants";
+import { useToast } from "@/components/ui/Toast";
+import { EVENT_TYPE_CONFIG, type EventTypeConfig } from "@/lib/constants";
 
 // --- Types ---
 
@@ -21,6 +22,27 @@ interface CalendarEvent {
 }
 
 // --- Helpers ---
+
+function classifyEventType(event: CalendarEvent): EventTypeConfig {
+  const haystack = `${event.summary} ${event.calendarDisplayName}`.toLowerCase();
+  for (const [key, config] of Object.entries(EVENT_TYPE_CONFIG)) {
+    if (key === "general") continue; // Check fallback last
+    if (config.keywords.some((kw) => haystack.includes(kw))) {
+      return config;
+    }
+  }
+  return EVENT_TYPE_CONFIG.general;
+}
+
+function formatCountdown(startAt: number, now: number): string | null {
+  const diffMs = startAt - now;
+  if (diffMs <= 0 || diffMs > 2 * 60 * 60 * 1000) return null; // Past or >2h away
+  const totalMin = Math.ceil(diffMs / 60000);
+  if (totalMin <= 60) return `in ${totalMin} min`;
+  const hours = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  return mins > 0 ? `in ${hours}h ${mins}m` : `in ${hours}h`;
+}
 
 function getDayLabel(eventDate: Date, today: Date): string {
   const eventDay = new Date(eventDate);
@@ -56,9 +78,8 @@ function CalendarWidgetSkeleton() {
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-3 px-1 py-2">
           <div className="w-14 h-3 rounded bg-border/60 shrink-0" />
+          <div className="w-12 h-4 rounded-full bg-border/60 shrink-0" />
           <div className="flex-1 h-3 rounded bg-border/60" />
-          <div className="w-2 h-2 rounded-full bg-border/60 shrink-0" />
-          <div className="w-16 h-3 rounded bg-border/60 shrink-0" />
         </div>
       ))}
     </div>
@@ -108,19 +129,20 @@ function EmptyTodayMessage() {
 
 interface EventRowProps {
   event: CalendarEvent;
-  color: string;
+  eventType: EventTypeConfig;
   now: number;
 }
 
-function EventRow({ event, color, now }: EventRowProps) {
+function EventRow({ event, eventType, now }: EventRowProps) {
   const isHappening = !event.isAllDay && now >= event.startAt && now < event.endAt;
+  const countdown = !event.isAllDay ? formatCountdown(event.startAt, now) : null;
 
   const rowContent = (
     <div
       className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors ${
         isHappening ? "border-l-4" : ""
       }`}
-      style={isHappening ? { borderLeftColor: color } : undefined}
+      style={isHappening ? { borderLeftColor: eventType.dotColor } : undefined}
     >
       {/* Time column */}
       <div className="w-16 shrink-0 text-xs text-muted">
@@ -131,6 +153,11 @@ function EventRow({ event, color, now }: EventRowProps) {
         )}
       </div>
 
+      {/* Type badge */}
+      <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${eventType.bgClass} ${eventType.textClass}`}>
+        {eventType.label}
+      </span>
+
       {/* Content column */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{event.summary}</p>
@@ -139,16 +166,12 @@ function EventRow({ event, color, now }: EventRowProps) {
         )}
       </div>
 
-      {/* Calendar source */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div
-          className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <span className="text-xs text-muted hidden sm:block max-w-[80px] truncate">
-          {event.calendarDisplayName}
+      {/* Countdown badge — only when within 2 hours */}
+      {countdown && (
+        <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning tabular-nums animate-pulse">
+          {countdown}
         </span>
-      </div>
+      )}
     </div>
   );
 
@@ -170,6 +193,43 @@ const VISIBLE_EVENT_LIMIT = 10;
 export default function CalendarWidget() {
   const result = useCalendarEvents();
   const [expanded, setExpanded] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const { toast } = useToast();
+  const toastedEventIds = useRef(new Set<string>());
+
+  // Update `now` every 60 seconds to drive live countdown badges
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Toast for imminent events (30-60 min window) — fires once per event per session
+  useEffect(() => {
+    if (!result || result === null) return;
+    const events = result.events as CalendarEvent[];
+
+    for (const event of events) {
+      if (event.isAllDay) continue;
+      const diffMs = event.startAt - now;
+      const diffMin = diffMs / 60000;
+
+      // Only toast for events starting in 30-60 minutes
+      if (diffMin < 30 || diffMin > 60) continue;
+
+      // Dedup: only fire once per event per session
+      if (toastedEventIds.current.has(event.eventId)) continue;
+      toastedEventIds.current.add(event.eventId);
+
+      const eventType = classifyEventType(event);
+      const minutesAway = Math.round(diffMin);
+
+      toast({
+        title: `${eventType.label} in ${minutesAway} min`,
+        description: event.summary,
+        variant: "info",
+      });
+    }
+  }, [result, now, toast]);
 
   // Loading state
   if (result === undefined) {
@@ -182,14 +242,7 @@ export default function CalendarWidget() {
   }
 
   const events = result.events as CalendarEvent[];
-  const now = Date.now();
   const today = new Date();
-
-  // Build calendar color map
-  const uniqueCalendarIds = [...new Set(events.map((e) => e.calendarId))];
-  const calendarColorMap: Record<string, string> = Object.fromEntries(
-    uniqueCalendarIds.map((id, i) => [id, CALENDAR_DOT_COLORS[i % CALENDAR_DOT_COLORS.length]])
-  );
 
   // Group events by day key (YYYY-MM-DD based on startAt)
   const dayMap = new Map<string, CalendarEvent[]>();
@@ -239,7 +292,7 @@ export default function CalendarWidget() {
         const eventDate = new Date(event.startAt);
         const dayLabel = getDayLabel(eventDate, today);
         const dayEventCount = dayMap.get(dayKey)!.length;
-        const color = calendarColorMap[event.calendarId] ?? CALENDAR_DOT_COLORS[0];
+        const eventType = classifyEventType(event);
 
         return (
           <div key={`${event._id}-${index}`}>
@@ -266,7 +319,7 @@ export default function CalendarWidget() {
             )}
 
             {/* Event row */}
-            <EventRow event={event} color={color} now={now} />
+            <EventRow event={event} eventType={eventType} now={now} />
           </div>
         );
       })}
