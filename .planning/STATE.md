@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T12:56:54.307Z"
+last_updated: "2026-02-28T13:01:43.904Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 4 — Proactive Alerts Panel
+**Current focus:** Phase 4 — Proactive Alerts Panel (COMPLETE)
 
 ## Current Position
 
-Phase: 4 of 4 (Proactive Alerts Panel)
-Plan: 1 of 2 in current phase (IN PROGRESS)
-Status: Phase 4 Plan 1 COMPLETE — Plan 2 next
-Last activity: 2026-02-28 — Plan 04-01 complete (getAlerts Convex query with 6-table aggregation, urgency ranking, null-safe per-section isolation)
+Phase: 4 of 4 (Proactive Alerts Panel) — COMPLETE
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: ALL PHASES COMPLETE — milestone v1.0 achieved
+Last activity: 2026-02-28 — Plan 04-02 complete (WhatNeedsAttention refactored to single api.alerts.getAlerts query, toast notifications, 4 icon types, 3 severity styles)
 
-Progress: [█████████░] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [█████████░] 95%
 | Phase 03-google-calendar-integration P02 | 3 | 2 tasks | 5 files |
 | Phase 03-google-calendar-integration P03 | 4 | 2 tasks | 2 files |
 | Phase 04-proactive-alerts-panel P01 | 2 | 2 tasks | 2 files |
+| Phase 04-proactive-alerts-panel P02 | 2 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Recent decisions affecting current work:
 - [Phase 04-proactive-alerts-panel]: Per-section try/catch isolation in getAlerts — one failed table read cannot crash entire alert query, always returns valid Alert[]
 - [Phase 04-proactive-alerts-panel]: Alert IDs use Convex document _id for global uniqueness — avoids collisions when two grants share same fundingSource name
 - [Phase 04-proactive-alerts-panel]: QB staleness uses qbCache.fetchedAt not qbConfig.connectedAt — fetchedAt reflects last data sync, connectedAt reflects OAuth connection time
+- [Phase 04-proactive-alerts-panel]: useRef dedup guard for toasts ensures critical alerts fire exactly once per browser session
+- [Phase 04-proactive-alerts-panel]: Toast variant 'warning' used for critical-severity alerts — Toast system has no 'critical' variant
+- [Phase 04-proactive-alerts-panel]: Single api.alerts.getAlerts query replaces 3-query fan-out in WhatNeedsAttention — server aggregation avoids query coordination complexity
 
 ### Pending Todos
 
@@ -113,5 +117,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-proactive-alerts-panel/04-01-PLAN.md — getAlerts Convex query with Alert interface, 6-table aggregation (grants, grantsCache, quickbooksCache, quickbooksConfig, googleSheetsConfig, googleCalendarConfig), urgency-ranked Alert[] output
+Stopped at: Completed 04-proactive-alerts-panel/04-02-PLAN.md — WhatNeedsAttention refactored to single api.alerts.getAlerts query with useToast() critical alert notifications (useRef dedup guard), 4 icon types (deadline/integration/budget/sync), 3 severity styles (critical/warning/info). ALL PHASES COMPLETE.
 Resume file: None
