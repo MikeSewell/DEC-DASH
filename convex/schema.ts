@@ -67,6 +67,31 @@ export default defineSchema({
     connectedBy: v.optional(v.id("users")),
   }),
 
+  googleCalendarConfig: defineTable({
+    calendars: v.array(v.object({
+      calendarId: v.string(),
+      displayName: v.string(),
+    })),
+    lastSyncAt: v.optional(v.number()),
+    configuredBy: v.id("users"),
+  }),
+
+  googleCalendarCache: defineTable({
+    eventId: v.string(),
+    calendarId: v.string(),
+    calendarDisplayName: v.string(),
+    summary: v.string(),
+    startAt: v.number(),
+    endAt: v.number(),
+    isAllDay: v.boolean(),
+    location: v.optional(v.string()),
+    htmlLink: v.optional(v.string()),
+    lastSyncAt: v.number(),
+  })
+    .index("by_eventId_calendarId", ["eventId", "calendarId"])
+    .index("by_startAt", ["startAt"])
+    .index("by_calendarId", ["calendarId"]),
+
   grantsCache: defineTable({
     sheetRowId: v.string(),
     grantName: v.string(),
