@@ -11,6 +11,10 @@ export function useProfitAndLoss() {
   return useQuery(api.quickbooks.getProfitAndLoss);
 }
 
+export function useTrends() {
+  return useQuery(api.quickbooks.getTrends);
+}
+
 export function useExpenses() {
   return useQuery(api.quickbooks.getExpenses);
 }

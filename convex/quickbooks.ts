@@ -34,6 +34,33 @@ export const getCachedReport = query({
   },
 });
 
+// Shared helper: parse raw P&L JSON data into totals
+function parsePnlTotals(rawData: string): { totalRevenue: number; totalExpenses: number; netIncome: number } {
+  const raw = JSON.parse(rawData);
+  const rows: any[] = raw?.Rows?.Row ?? [];
+
+  let totalRevenue = 0;
+  let totalExpenses = 0;
+  let netIncome = 0;
+
+  for (const row of rows) {
+    const group = (row.group ?? row.Header?.ColData?.[0]?.value ?? "").toLowerCase();
+    const summaryValue = parseFloat(row.Summary?.ColData?.[1]?.value ?? "0");
+
+    if (group.includes("income") && !group.includes("netincome") && !group.includes("net income")) {
+      totalRevenue += summaryValue;
+    } else if (group.includes("expense") || group.includes("cost of goods")) {
+      totalExpenses += summaryValue;
+    } else if (group.includes("grossprofit") || group.includes("gross profit")) {
+      // Gross profit row — informational, revenue - COGS
+    } else if (group.includes("netincome") || group.includes("net income")) {
+      netIncome = summaryValue;
+    }
+  }
+
+  return { totalRevenue, totalExpenses: Math.abs(totalExpenses), netIncome };
+}
+
 // Get Profit & Loss — parsed into structured ProfitLossData
 export const getProfitAndLoss = query({
   handler: async (ctx) => {
@@ -46,39 +73,69 @@ export const getProfitAndLoss = query({
     const raw = JSON.parse(cached.data);
     const rows: any[] = raw?.Rows?.Row ?? [];
 
-    let totalRevenue = 0;
-    let totalExpenses = 0;
-    let netIncome = 0;
     const revenueByCategory: Record<string, number> = {};
     const expensesByCategory: Record<string, number> = {};
 
     for (const row of rows) {
       const group = (row.group ?? row.Header?.ColData?.[0]?.value ?? "").toLowerCase();
-      const summaryValue = parseFloat(row.Summary?.ColData?.[1]?.value ?? "0");
 
       if (group.includes("income") && !group.includes("netincome") && !group.includes("net income")) {
-        totalRevenue += summaryValue;
         extractCategories(row, revenueByCategory);
       } else if (group.includes("expense") || group.includes("cost of goods")) {
-        totalExpenses += summaryValue;
         extractCategories(row, expensesByCategory);
-      } else if (group.includes("grossprofit") || group.includes("gross profit")) {
-        // Gross profit row — informational, revenue - COGS
-      } else if (group.includes("netincome") || group.includes("net income")) {
-        netIncome = summaryValue;
       }
     }
+
+    const { totalRevenue, totalExpenses, netIncome } = parsePnlTotals(cached.data);
 
     return {
       data: {
         totalRevenue,
-        totalExpenses: Math.abs(totalExpenses),
+        totalExpenses,
         netIncome,
         revenueByCategory,
         expensesByCategory,
         period: { start: cached.periodStart ?? "", end: cached.periodEnd ?? "" },
       },
       fetchedAt: cached.fetchedAt,
+    };
+  },
+});
+
+// Get year-over-year trends — compares current month P&L with same month in prior year
+export const getTrends = query({
+  handler: async (ctx) => {
+    const currentCache = await ctx.db
+      .query("quickbooksCache")
+      .withIndex("by_reportType", (q) => q.eq("reportType", "profit_loss"))
+      .first();
+
+    const priorYearCache = await ctx.db
+      .query("quickbooksCache")
+      .withIndex("by_reportType", (q) => q.eq("reportType", "profit_loss_prior_year"))
+      .first();
+
+    // Both must exist for trends to be meaningful
+    if (!currentCache || !priorYearCache) return null;
+
+    const current = parsePnlTotals(currentCache.data);
+    const prior = parsePnlTotals(priorYearCache.data);
+
+    function computeTrend(
+      current: number,
+      prior: number,
+      positiveWhenHigher: boolean
+    ): { pctChange: number; positive: boolean } | null {
+      if (prior === 0) return null; // avoid division by zero
+      const pctChange = Math.round(((current - prior) / Math.abs(prior)) * 1000) / 10; // 1 decimal place
+      const positive = positiveWhenHigher ? current > prior : current < prior;
+      return { pctChange, positive };
+    }
+
+    return {
+      revenue: computeTrend(current.totalRevenue, prior.totalRevenue, true),
+      expenses: computeTrend(current.totalExpenses, prior.totalExpenses, false),
+      fetchedAt: Math.max(currentCache.fetchedAt, priorYearCache.fetchedAt),
     };
   },
 });
