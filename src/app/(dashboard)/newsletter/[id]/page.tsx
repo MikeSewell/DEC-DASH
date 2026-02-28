@@ -6,6 +6,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import type { NewsletterSections, NewsletterStatus } from "@/types";
+import { cn } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -63,6 +64,14 @@ export default function NewsletterEditorPage() {
       return {};
     }
   })();
+
+  // Content size for 400KB Constant Contact limit
+  const WARN_KB = 350;  // 87.5% of limit
+  const ERROR_KB = 390; // 97.5% of limit
+  const sizeBytes = newsletter.generatedEmailHtml
+    ? new TextEncoder().encode(newsletter.generatedEmailHtml).length
+    : 0;
+  const sizeKB = Math.round(sizeBytes / 1024);
 
   async function handleTitleSave() {
     if (titleValue.trim() && titleValue !== newsletter!.title) {
@@ -146,6 +155,22 @@ export default function NewsletterEditorPage() {
             <Badge variant={statusBadgeVariant[newsletter.status as NewsletterStatus]}>
               {newsletter.status}
             </Badge>
+            {newsletter.generatedEmailHtml && (
+              <span
+                className={cn(
+                  "text-xs px-2 py-0.5 rounded-full font-medium",
+                  sizeKB >= ERROR_KB
+                    ? "bg-red-100 text-red-700"
+                    : sizeKB >= WARN_KB
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-green-100 text-green-700"
+                )}
+              >
+                {sizeKB >= ERROR_KB && "Near limit \u2014 "}
+                {sizeKB >= WARN_KB && sizeKB < ERROR_KB && "Approaching limit \u2014 "}
+                {sizeKB} KB / 400 KB
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
