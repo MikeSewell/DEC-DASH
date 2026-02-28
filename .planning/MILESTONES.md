@@ -1,5 +1,32 @@
 # Milestones
 
+## v1.1 Polish (Shipped: 2026-02-28)
+
+**Phases:** 3 | **Plans:** 4 | **Commits:** 7 | **Files:** 24 | **LOC:** 22,027 TS
+**Timeline:** 10 days (Feb 19 → Feb 28, 2026)
+**Git range:** `feat(05-01)..feat(07-02)` | **Tag:** `v1.1`
+
+**Delivered:** Enhanced the dashboard with trend indicators, color-coded calendar events, and configurable alerts — making the daily command center more informative and less noisy.
+
+**Key accomplishments:**
+- Year-over-year trend arrows on Revenue YTD and Total Expenses KPI cards from QB prior-year P&L data
+- Color-coded event type badges (Client, Board, Community, Grant) with keyword classification
+- Live countdown badges for imminent calendar events with 60-second auto-refresh
+- Toast notifications for events starting in 30-60 minutes with useRef dedup
+- Admin Alerts config tab with 5 editable thresholds (deadline window, budget variance, staleness hours)
+- Per-user alert dismissal with Convex persistence and client-side filtering
+
+**Phases:**
+1. Dashboard KPI Trends (1 plan) — Prior-year P&L sync, getTrends query, SVG trend arrows on KPI cards
+2. Calendar Enhancements (1 plan) — EVENT_TYPE_CONFIG classification, countdown badges, imminent event toasts
+3. Alert Configuration & Persistence (2 plans) — alertConfig/alertDismissals schema + CRUD, admin tab, dismiss UI, enhanced toasts
+
+**Known Gaps:** Phase 07 VERIFICATION.md was not created (documentation gap only — integration checker confirmed all 8/8 requirements wired in code).
+
+**Archives:** `milestones/v1.1-ROADMAP.md` | `milestones/v1.1-REQUIREMENTS.md` | `milestones/v1.1-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.0 Command Center (Shipped: 2026-02-28)
 
 **Phases:** 4 | **Plans:** 11 | **Commits:** 49 | **Files:** 71 | **LOC:** 21,372 TS
