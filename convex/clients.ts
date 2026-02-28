@@ -143,6 +143,51 @@ export const getStats = query({
 });
 
 /**
+ * Get active client counts grouped by program type (legal, coparent, other).
+ * Role-filtered: lawyers see legal only, psychologists see coparent only.
+ */
+export const getStatsByProgram = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const programs = await ctx.db.query("programs").collect();
+    const programMap = new Map(programs.map((p) => [p._id, p.type]));
+
+    let clients = await ctx.db.query("clients").collect();
+
+    // Role-based filtering (mirrors getStats)
+    if (user.role === "lawyer") {
+      const legalIds = new Set(
+        programs.filter((p) => p.type === "legal").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && legalIds.has(c.programId));
+    } else if (user.role === "psychologist") {
+      const coparentIds = new Set(
+        programs.filter((p) => p.type === "coparent").map((p) => p._id)
+      );
+      clients = clients.filter((c) => c.programId && coparentIds.has(c.programId));
+    }
+
+    const activeClients = clients.filter((c) => c.status === "active");
+    const byType: Record<string, number> = {};
+    for (const client of activeClients) {
+      const type = client.programId ? (programMap.get(client.programId) ?? "other") : "other";
+      byType[type] = (byType[type] ?? 0) + 1;
+    }
+
+    return {
+      legal: byType["legal"] ?? 0,
+      coparent: byType["coparent"] ?? 0,
+      other: byType["other"] ?? 0,
+    };
+  },
+});
+
+/**
  * Get a single client by ID.
  */
 export const getById = query({

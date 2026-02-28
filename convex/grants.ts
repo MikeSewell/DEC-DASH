@@ -62,6 +62,50 @@ export const getStats = query({
   },
 });
 
+/**
+ * Get grants with upcoming report deadlines (within 30 days).
+ * Returns grant name, funder, and specific deadline date for display in attention panel.
+ */
+export const getUpcomingDeadlines = query({
+  args: {},
+  handler: async (ctx) => {
+    const allGrants = await ctx.db.query("grants").collect();
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    const upcoming: { grantId: string; fundingSource: string; programName: string; deadlineDate: string; reportLabel: string }[] = [];
+
+    for (const grant of allGrants) {
+      const quarters = [
+        { date: grant.q1ReportDate, label: "Q1 Report" },
+        { date: grant.q2ReportDate, label: "Q2 Report" },
+        { date: grant.q3ReportDate, label: "Q3 Report" },
+        { date: grant.q4ReportDate, label: "Q4 Report" },
+      ];
+
+      for (const q of quarters) {
+        if (q.date) {
+          const d = new Date(q.date);
+          if (d >= now && d <= thirtyDaysFromNow) {
+            upcoming.push({
+              grantId: grant._id,
+              fundingSource: grant.fundingSource ?? "Unknown Funder",
+              programName: grant.programName ?? "Unknown Program",
+              deadlineDate: q.date,
+              reportLabel: q.label,
+            });
+          }
+        }
+      }
+    }
+
+    // Sort by soonest deadline first
+    upcoming.sort((a, b) => new Date(a.deadlineDate).getTime() - new Date(b.deadlineDate).getTime());
+
+    return upcoming;
+  },
+});
+
 // Public mutation for CLI import script (ConvexHttpClient can't call internal mutations)
 export const importBatch = mutation({
   args: {
