@@ -63,7 +63,10 @@ Plans:
   3. Dismissed alerts do not reappear on subsequent dashboard loads or sessions (dismissal stored per-user in Convex)
   4. Newly surfaced or changed alerts trigger a sonner toast notification so Kareem is aware without looking at the panel
   5. Alert config changes take effect on the next alert query without requiring a page reload
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 07-01-PLAN.md — Add Convex backend tables (alertConfig, alertDismissals), CRUD modules, and refactor getAlerts for dynamic thresholds
+- [ ] 07-02-PLAN.md — Add Alerts admin tab, gear icon shortcut, dismiss UI, and enhanced toast notifications
 
 ## Progress
 
@@ -75,4 +78,4 @@ Plans:
 | 4. Proactive Alerts Panel | v1.0 | 2/2 | Complete | 2026-02-28 |
 | 5. Dashboard KPI Trends | 1/1 | Complete    | 2026-02-28 | - |
 | 6. Calendar Enhancements | 1/1 | Complete    | 2026-02-28 | - |
-| 7. Alert Configuration & Persistence | v1.1 | 0/? | Not started | - |
+| 7. Alert Configuration & Persistence | v1.1 | 0/2 | Not started | - |
