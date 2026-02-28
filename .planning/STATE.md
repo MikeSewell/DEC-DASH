@@ -32,7 +32,7 @@ Progress: [████░░░░░░] 40%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: ~4 min
 - Total execution time: ~0.2 hours
 
@@ -41,14 +41,15 @@ Progress: [████░░░░░░] 40%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-newsletter-template-fix | 2/2 | ~9 min | ~5 min |
-| 02-dashboard-data-population | 1/4 | ~3 min | ~3 min |
+| 02-dashboard-data-population | 2/4 | ~6 min | ~3 min |
 
 **Recent Trend:**
-- Last 5 plans: 4 min, 5 min, 3 min
+- Last 5 plans: 4 min, 5 min, 3 min, 3 min
 - Trend: stable
 
 *Updated after each plan completion*
 | Phase 02-dashboard-data-population P01 | 3 | 2 tasks | 5 files |
+| Phase 02-dashboard-data-population P02 | 3 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - [Phase 02-dashboard-data-population]: QB token refresh uses || (not ??) fallback: empty string is also invalid as refresh token, so || correctly handles both undefined and empty string cases
 - [Phase 02-dashboard-data-population]: formatDollars extracted to @/lib/utils shared utility — same compact format logic (K/.3M) used by all dashboard stat cards
 - [Phase 02-dashboard-data-population]: getUpcomingDeadlines returns full objects enabling rich WhatNeedsAttention panel display without a second Convex query
+- [Phase 02-dashboard-data-population]: useSheetsConfig() from useGrantTracker hook used in section components — keeps hook abstraction consistent, avoids raw useQuery in UI components
+- [Phase 02-dashboard-data-population]: BarChartSkeleton uses deterministic height formula instead of Math.random() to prevent React hydration mismatches
+- [Phase 02-dashboard-data-population]: DonationPerformance stays clean empty state — no donation reportType exists in QB integration, so clean null state is correct behavior
 
 ### Pending Todos
 
@@ -86,5 +90,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 02-dashboard-data-population/02-01-PLAN.md — data foundation (QB fix + utils + queries)
+Stopped at: Completed 02-dashboard-data-population/02-02-PLAN.md — skeleton shimmer + three-state loading across 6 dashboard sections
 Resume file: None

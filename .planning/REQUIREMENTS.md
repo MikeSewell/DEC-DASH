@@ -10,17 +10,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 ### Dashboard Data Fix
 
 - [x] **DASH-01**: All KPI cards render live data from QuickBooks cache (cash on hand, revenue YTD, total expenses)
-- [ ] **DASH-02**: All chart visualizations (P&L doughnut, expense breakdown, grant budget bars) render with real data
-- [ ] **DASH-03**: Dashboard handles 3-state loading correctly: skeleton while loading, "not connected" when integration missing, actual data when available
-- [ ] **DASH-04**: Grant tracking overview section displays active grants with status and deadlines
-- [ ] **DASH-05**: Program demographics charts (co-parent + legal) render from Sheets-synced data
+- [x] **DASH-02**: All chart visualizations (P&L doughnut, expense breakdown, grant budget bars) render with real data
+- [x] **DASH-03**: Dashboard handles 3-state loading correctly: skeleton while loading, "not connected" when integration missing, actual data when available
+- [x] **DASH-04**: Grant tracking overview section displays active grants with status and deadlines
+- [x] **DASH-05**: Program demographics charts (co-parent + legal) render from Sheets-synced data
 
 ### Dashboard Command Center
 
 - [x] **CMD-01**: Financial snapshot section shows cash position, revenue YTD, and expense summary at a glance
 - [x] **CMD-02**: Client activity section shows total active clients, new clients this month, and per-program counts
 - [ ] **CMD-03**: "What Needs Attention" panel surfaces actionable items (grant deadlines, budget warnings, sync failures)
-- [ ] **CMD-04**: Dashboard sections load independently so one failed integration doesn't break the entire page
+- [x] **CMD-04**: Dashboard sections load independently so one failed integration doesn't break the entire page
 
 ### Newsletter Template Fix
 
@@ -88,14 +88,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DASH-01 | Phase 2 | Complete |
-| DASH-02 | Phase 2 | Pending |
-| DASH-03 | Phase 2 | Pending |
-| DASH-04 | Phase 2 | Pending |
-| DASH-05 | Phase 2 | Pending |
+| DASH-02 | Phase 2 | Complete |
+| DASH-03 | Phase 2 | Complete |
+| DASH-04 | Phase 2 | Complete |
+| DASH-05 | Phase 2 | Complete |
 | CMD-01 | Phase 2 | Complete |
 | CMD-02 | Phase 2 | Complete |
 | CMD-03 | Phase 2 | Pending |
-| CMD-04 | Phase 2 | Pending |
+| CMD-04 | Phase 2 | Complete |
 | NEWS-01 | Phase 1 | Complete |
 | NEWS-02 | Phase 1 | Complete |
 | NEWS-03 | Phase 1 | Complete |
