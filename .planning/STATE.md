@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Polish
-status: shipped
-last_updated: "2026-02-28T16:32:00Z"
+milestone: v1.2
+milestone_name: Intelligence
+status: defining_requirements
+last_updated: "2026-02-28T17:00:00Z"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,15 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** v1.1 Polish shipped. Planning next milestone.
+**Current focus:** v1.2 Intelligence — KB-powered KPIs, AI summary panel, donation charts
 
 ## Current Position
 
-Milestone: v1.1 Polish — SHIPPED 2026-02-28
-Status: All 3 phases complete, 4 plans executed, 7 feat commits
-Tag: v1.1
-
-Progress: ██████████ 100% — Milestone complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-28 — Milestone v1.2 started
 
 ## Accumulated Context
 
@@ -36,7 +35,7 @@ Archived to PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- Run `npx convex dev --once` interactively to deploy schema changes (alertConfig + alertDismissals tables)
+- Run `npx convex dev --once` interactively to deploy schema changes (alertConfig + alertDismissals tables from v1.1)
 - Deploy to production: run npm run build + rsync to VPS + pm2 restart
 
 ### Blockers/Concerns
@@ -47,5 +46,5 @@ Archived to PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Milestone v1.1 completed and archived
+Stopped at: Starting v1.2 Intelligence milestone
 Resume file: None

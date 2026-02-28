@@ -39,6 +39,17 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
+## Current Milestone: v1.2 Intelligence
+
+**Goal:** Surface knowledge base data and donation trends directly on the dashboard — AI-extracted KPIs, auto-generated summaries, and QB income visualizations.
+
+**Target features:**
+- KB-powered KPI cards — extract client/program stats and impact metrics from uploaded documents
+- AI summary panel — key organizational takeaways from KB docs, manually triggered regeneration
+- Donation performance charts — trend visualization from QB income accounts
+
+- [ ] KB-powered KPI cards displaying client stats and impact metrics from knowledge base documents
+- [ ] AI-generated summary panel with key takeaways from KB documents
 - [ ] Donation performance charts — trend visualization from QB income accounts
 
 ### Out of Scope
@@ -56,7 +67,7 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ## Context
 
-Shipped v1.1 Polish milestone with 22,027 LOC TypeScript across 94 TS/TSX files.
+Shipped v1.1 Polish milestone with 22,027 LOC TypeScript across 94 TS/TSX files. Starting v1.2 Intelligence — surfacing KB data and donation trends on dashboard.
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API, Google Calendar API, OpenAI Assistants API.
 26 database tables, 100+ backend functions, 13 routes, 4 AI systems, 5 third-party integrations.
 
@@ -101,4 +112,4 @@ Known operational notes:
 | Inline ?? fallbacks for thresholds | alerts.ts uses `configRow?.field ?? default` instead of cross-file constant imports | ✓ Good — self-contained, avoids circular deps |
 
 ---
-*Last updated: 2026-02-28 after v1.1 milestone*
+*Last updated: 2026-02-28 after v1.2 milestone start*
