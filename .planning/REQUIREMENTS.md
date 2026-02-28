@@ -1,0 +1,120 @@
+# Requirements: DEC DASH 2.0
+
+**Defined:** 2026-02-28
+**Core Value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
+
+## v1 Requirements
+
+Requirements for this milestone. Each maps to roadmap phases.
+
+### Dashboard Data Fix
+
+- [ ] **DASH-01**: All KPI cards render live data from QuickBooks cache (cash on hand, revenue YTD, total expenses)
+- [ ] **DASH-02**: All chart visualizations (P&L doughnut, expense breakdown, grant budget bars) render with real data
+- [ ] **DASH-03**: Dashboard handles 3-state loading correctly: skeleton while loading, "not connected" when integration missing, actual data when available
+- [ ] **DASH-04**: Grant tracking overview section displays active grants with status and deadlines
+- [ ] **DASH-05**: Program demographics charts (co-parent + legal) render from Sheets-synced data
+
+### Dashboard Command Center
+
+- [ ] **CMD-01**: Financial snapshot section shows cash position, revenue YTD, and expense summary at a glance
+- [ ] **CMD-02**: Client activity section shows total active clients, new clients this month, and per-program counts
+- [ ] **CMD-03**: "What Needs Attention" panel surfaces actionable items (grant deadlines, budget warnings, sync failures)
+- [ ] **CMD-04**: Dashboard sections load independently so one failed integration doesn't break the entire page
+
+### Newsletter Template Fix
+
+- [ ] **NEWS-01**: Newsletter HTML uses table-based layout for cross-client compatibility (Gmail, Outlook, Apple Mail)
+- [ ] **NEWS-02**: All CSS is inlined — no external stylesheets, no unsupported properties (box-shadow removed)
+- [ ] **NEWS-03**: Newsletter editor validates content size and warns when approaching 400KB Constant Contact limit
+- [ ] **NEWS-04**: Newsletter preview accurately reflects how email will render in major email clients
+
+### Google Calendar Integration
+
+- [ ] **CAL-01**: Google Calendar events sync to Convex cache table via service account auth (reusing existing Sheets credentials)
+- [ ] **CAL-02**: Calendar sync runs on a cron schedule (configurable, default 30 min)
+- [ ] **CAL-03**: Admin can configure which Google Calendar IDs to sync from the Admin console
+- [ ] **CAL-04**: Dashboard widget shows today's events and upcoming events (next 7 days)
+- [ ] **CAL-05**: Calendar events display event title, time, and calendar source
+
+### Proactive Alerts
+
+- [ ] **ALRT-01**: Grant deadline alerts surface upcoming quarterly reports due within 30 days
+- [ ] **ALRT-02**: Budget variance alerts trigger when grant spending exceeds pacing threshold
+- [ ] **ALRT-03**: Sync status alerts show when QuickBooks or Google Sheets sync has failed or data is stale (>1 hour for QB, >2 hours for Sheets)
+- [ ] **ALRT-04**: Alerts display in the "What Needs Attention" panel on the dashboard
+
+## v2 Requirements
+
+Deferred to future milestone. Tracked but not in current roadmap.
+
+### Dashboard Enhancements
+
+- **DASH-V2-01**: Trend indicators on KPI cards (up/down arrows with percentage change)
+- **DASH-V2-02**: Donation performance trend charts
+
+### Calendar Enhancements
+
+- **CAL-V2-01**: Color-coded event types (client sessions, board meetings, community events, grant deadlines)
+- **CAL-V2-02**: Countdown badges for imminent events
+- **CAL-V2-03**: Calendar event reminders/notifications
+
+### Alert Enhancements
+
+- **ALRT-V2-01**: Configurable alert thresholds per alert type
+- **ALRT-V2-02**: Alert dismissal/acknowledgement with persistence across sessions
+- **ALRT-V2-03**: In-app toast notifications for new alerts (sonner)
+
+### Newsletter Enhancements
+
+- **NEWS-V2-01**: Mobile-responsive email template with media queries where supported
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Two-way Google Calendar editing | Creates sync conflicts; read-only with link-out to Google is sufficient |
+| Gmail integration | Email stays in Gmail — surfacing it adds complexity without proportional value |
+| Google Drive integration | Documents stay in Drive — not a core command center need |
+| Social media integration | Not needed for daily operational command center |
+| Mobile native app | Web-first with responsive design is sufficient |
+| Real-time push notifications (browser/mobile) | In-app alerts panel sufficient for v1; push notifications are v2+ |
+| Google Calendar webhooks | Cron-based polling is simpler and sufficient for event data that changes infrequently |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DASH-01 | — | Pending |
+| DASH-02 | — | Pending |
+| DASH-03 | — | Pending |
+| DASH-04 | — | Pending |
+| DASH-05 | — | Pending |
+| CMD-01 | — | Pending |
+| CMD-02 | — | Pending |
+| CMD-03 | — | Pending |
+| CMD-04 | — | Pending |
+| NEWS-01 | — | Pending |
+| NEWS-02 | — | Pending |
+| NEWS-03 | — | Pending |
+| NEWS-04 | — | Pending |
+| CAL-01 | — | Pending |
+| CAL-02 | — | Pending |
+| CAL-03 | — | Pending |
+| CAL-04 | — | Pending |
+| CAL-05 | — | Pending |
+| ALRT-01 | — | Pending |
+| ALRT-02 | — | Pending |
+| ALRT-03 | — | Pending |
+| ALRT-04 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 22 total
+- Mapped to phases: 0
+- Unmapped: 22 ⚠️
+
+---
+*Requirements defined: 2026-02-28*
+*Last updated: 2026-02-28 after initial definition*
