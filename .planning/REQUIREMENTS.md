@@ -9,8 +9,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Dashboard Enhancements
 
-- [ ] **DASH-01**: KPI cards show year-over-year trend indicator (arrow + percentage change vs same month last year)
-- [ ] **DASH-02**: Trend data computed from QB historical P&L data (current month vs same month prior year)
+- [x] **DASH-01**: KPI cards show year-over-year trend indicator (arrow + percentage change vs same month last year)
+- [x] **DASH-02**: Trend data computed from QB historical P&L data (current month vs same month prior year)
 
 ### Calendar Enhancements
 
@@ -51,8 +51,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DASH-01 | Phase 5 | Pending |
-| DASH-02 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
+| DASH-02 | Phase 5 | Complete |
 | CAL-01 | Phase 6 | Pending |
 | CAL-02 | Phase 6 | Pending |
 | CAL-03 | Phase 6 | Pending |

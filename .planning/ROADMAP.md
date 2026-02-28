@@ -21,7 +21,7 @@ Full details: `milestones/v1.0-ROADMAP.md`
 
 ### v1.1 Polish
 
-- [ ] **Phase 5: Dashboard KPI Trends** — Year-over-year trend indicators on KPI cards from QB historical data
+- [x] **Phase 5: Dashboard KPI Trends** — Year-over-year trend indicators on KPI cards from QB historical data (completed 2026-02-28)
 - [ ] **Phase 6: Calendar Enhancements** — Color-coded events, countdown badges, and toast notifications for imminent events
 - [ ] **Phase 7: Alert Configuration & Persistence** — Configurable thresholds, dismissal persistence, and sonner toast notifications
 
@@ -71,6 +71,6 @@ Plans:
 | 2. Dashboard Data Population | v1.0 | 4/4 | Complete | 2026-02-28 |
 | 3. Google Calendar Integration | v1.0 | 3/3 | Complete | 2026-02-28 |
 | 4. Proactive Alerts Panel | v1.0 | 2/2 | Complete | 2026-02-28 |
-| 5. Dashboard KPI Trends | v1.1 | 0/1 | Planned | - |
+| 5. Dashboard KPI Trends | 1/1 | Complete   | 2026-02-28 | - |
 | 6. Calendar Enhancements | v1.1 | 0/? | Not started | - |
 | 7. Alert Configuration & Persistence | v1.1 | 0/? | Not started | - |
