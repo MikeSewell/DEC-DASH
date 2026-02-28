@@ -20,8 +20,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Alert Enhancements
 
-- [ ] **ALRT-01**: Admin console "Alerts" config section with editable thresholds (deadline window days, budget variance %, sync staleness hours) + gear icon shortcut on attention panel
-- [ ] **ALRT-02**: Alerts can be dismissed/acknowledged with persistence across sessions (stored in Convex per user)
+- [x] **ALRT-01**: Admin console "Alerts" config section with editable thresholds (deadline window days, budget variance %, sync staleness hours) + gear icon shortcut on attention panel
+- [x] **ALRT-02**: Alerts can be dismissed/acknowledged with persistence across sessions (stored in Convex per user)
 - [ ] **ALRT-03**: New/changed alerts trigger in-app toast notifications via the existing toast system
 
 ## v2 Requirements
@@ -56,8 +56,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAL-01 | Phase 6 | Complete |
 | CAL-02 | Phase 6 | Complete |
 | CAL-03 | Phase 6 | Complete |
-| ALRT-01 | Phase 7 | Pending |
-| ALRT-02 | Phase 7 | Pending |
+| ALRT-01 | Phase 7 | Complete |
+| ALRT-02 | Phase 7 | Complete |
 | ALRT-03 | Phase 7 | Pending |
 
 **Coverage:**
