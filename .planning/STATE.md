@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T10:09:11.709Z"
+last_updated: "2026-02-28T10:59:00Z"
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 6
+  completed_plans: 5
 ---
 
 # Project State
@@ -18,22 +18,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 1 — Newsletter Template Fix
+**Current focus:** Phase 2 — Dashboard Data Population
 
 ## Current Position
 
-Phase: 1 of 4 (Newsletter Template Fix)
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase Complete
-Last activity: 2026-02-28 — Plan 01-02 complete (size indicator + preview accuracy label)
+Phase: 2 of 4 (Dashboard Data Population)
+Plan: 2 of 4 in current phase (COMPLETE)
+Status: In Progress
+Last activity: 2026-02-28 — Plan 02-02 complete (skeleton shimmer components + three-state loading across 6 dashboard sections)
 
-Progress: [██░░░░░░░░] 25%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: ~5 min
+- Total plans completed: 3
+- Average duration: ~4 min
 - Total execution time: ~0.2 hours
 
 **By Phase:**
@@ -41,12 +41,14 @@ Progress: [██░░░░░░░░] 25%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-newsletter-template-fix | 2/2 | ~9 min | ~5 min |
+| 02-dashboard-data-population | 1/4 | ~3 min | ~3 min |
 
 **Recent Trend:**
-- Last 5 plans: 4 min, 5 min
+- Last 5 plans: 4 min, 5 min, 3 min
 - Trend: stable
 
 *Updated after each plan completion*
+| Phase 02-dashboard-data-population P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -63,6 +65,12 @@ Recent decisions affecting current work:
 - [Phase 01-newsletter-template-fix]: juiceMod.default ?? juiceMod cast pattern for CJS/ESM interop of juice module in Convex node runtime
 - [Phase 01-newsletter-template-fix]: Size indicator is informational only — does not block sending; thresholds at 87.5% (350KB) and 97.5% (390KB) of 400KB CC limit
 - [Phase 01-newsletter-template-fix]: Preview accuracy note hidden during edit mode to reduce UI clutter
+- [Phase 02-dashboard-data-population]: QB token refresh uses || (not ??) fallback because empty string is also invalid as refresh token
+- [Phase 02-dashboard-data-population]: formatDollars extracted from ExecutiveSnapshot to @/lib/utils — same logic, shared across all dashboard stat cards
+- [Phase 02-dashboard-data-population]: getUpcomingDeadlines returns full objects (grantId, fundingSource, programName, deadlineDate, reportLabel) enabling rich WhatNeedsAttention display without second query
+- [Phase 02-dashboard-data-population]: QB token refresh uses || (not ??) fallback: empty string is also invalid as refresh token, so || correctly handles both undefined and empty string cases
+- [Phase 02-dashboard-data-population]: formatDollars extracted to @/lib/utils shared utility — same compact format logic (K/.3M) used by all dashboard stat cards
+- [Phase 02-dashboard-data-population]: getUpcomingDeadlines returns full objects enabling rich WhatNeedsAttention panel display without a second Convex query
 
 ### Pending Todos
 
@@ -70,12 +78,13 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 2]: QB refresh token rotation may be a latent production bug — audit quickbooksActions.ts token persistence before assuming it works
+- [Phase 2 RESOLVED]: QB refresh token rotation latent production bug — FIXED in 02-01 with || config.refreshToken fallback
 - [Phase 3]: Google Calendar service account must be manually shared with each calendar before any code will work — silent empty-result failure mode
 - [Phase 4]: Alert thresholds (30-day deadline window, 15% budget variance) should be validated with Kareem before coding to avoid alert fatigue
+- [Phase 2 ongoing]: npx convex dev --once fails with auth error in non-interactive terminal — Convex deploys must be run interactively by user
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 01-newsletter-template-fix/01-02-PLAN.md — Phase 01 complete (size indicator + preview accuracy label)
+Stopped at: Completed 02-dashboard-data-population/02-01-PLAN.md — data foundation (QB fix + utils + queries)
 Resume file: None
