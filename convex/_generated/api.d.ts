@@ -11,6 +11,7 @@
 import type * as aiDirector from "../aiDirector.js";
 import type * as aiDirectorActions from "../aiDirectorActions.js";
 import type * as aiDirectorInternal from "../aiDirectorInternal.js";
+import type * as alerts from "../alerts.js";
 import type * as allocation from "../allocation.js";
 import type * as allocationActions from "../allocationActions.js";
 import type * as allocationInternal from "../allocationInternal.js";
@@ -27,6 +28,10 @@ import type * as crons from "../crons.js";
 import type * as dashboardPrefs from "../dashboardPrefs.js";
 import type * as debug from "../debug.js";
 import type * as expenseActions from "../expenseActions.js";
+import type * as googleCalendar from "../googleCalendar.js";
+import type * as googleCalendarActions from "../googleCalendarActions.js";
+import type * as googleCalendarInternal from "../googleCalendarInternal.js";
+import type * as googleCalendarSync from "../googleCalendarSync.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as googleSheetsActions from "../googleSheetsActions.js";
 import type * as googleSheetsInternal from "../googleSheetsInternal.js";
@@ -61,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   aiDirector: typeof aiDirector;
   aiDirectorActions: typeof aiDirectorActions;
   aiDirectorInternal: typeof aiDirectorInternal;
+  alerts: typeof alerts;
   allocation: typeof allocation;
   allocationActions: typeof allocationActions;
   allocationInternal: typeof allocationInternal;
@@ -77,6 +83,10 @@ declare const fullApi: ApiFromModules<{
   dashboardPrefs: typeof dashboardPrefs;
   debug: typeof debug;
   expenseActions: typeof expenseActions;
+  googleCalendar: typeof googleCalendar;
+  googleCalendarActions: typeof googleCalendarActions;
+  googleCalendarInternal: typeof googleCalendarInternal;
+  googleCalendarSync: typeof googleCalendarSync;
   googleSheets: typeof googleSheets;
   googleSheetsActions: typeof googleSheetsActions;
   googleSheetsInternal: typeof googleSheetsInternal;
