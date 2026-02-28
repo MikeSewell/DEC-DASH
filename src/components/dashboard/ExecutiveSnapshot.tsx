@@ -3,7 +3,7 @@
 import { useGrants, useActiveGrants } from "@/hooks/useGrantTracker";
 import { useAccounts, useProfitAndLoss } from "@/hooks/useQuickBooks";
 import Spinner from "@/components/ui/Spinner";
-import { cn } from "@/lib/utils";
+import { cn, formatDollars } from "@/lib/utils";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -48,15 +48,6 @@ function StatCard({ icon, value, label, trend, loading, accentColor = "text-prim
   );
 }
 
-function formatDollars(amount: number): string {
-  if (amount >= 1_000_000) {
-    return `$${(amount / 1_000_000).toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    return `$${(amount / 1_000).toFixed(0)}K`;
-  }
-  return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
 
 export default function ExecutiveSnapshot() {
   const allGrants = useGrants();

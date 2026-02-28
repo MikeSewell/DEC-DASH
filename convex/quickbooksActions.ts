@@ -32,7 +32,7 @@ export const refreshTokens = internalAction({
     await ctx.runMutation(internal.quickbooksInternal.updateTokens, {
       configId: config._id,
       accessToken: token.access_token,
-      refreshToken: token.refresh_token,
+      refreshToken: token.refresh_token || config.refreshToken,
       tokenExpiry: Date.now() + token.expires_in * 1000,
     });
 
