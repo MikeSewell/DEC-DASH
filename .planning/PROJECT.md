@@ -32,7 +32,14 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
-(None yet — define with `/gsd:new-milestone`)
+- [ ] KPI trend indicators — year-over-year arrows with percentage change on dashboard cards
+- [ ] Donation performance charts — trend visualization from QB income accounts
+- [ ] Color-coded calendar events — visual distinction by event type (client sessions, board meetings, community events, grant deadlines)
+- [ ] Countdown badges for imminent calendar events
+- [ ] Calendar event toast notifications — alert for events starting within 30-60 min
+- [ ] Configurable alert thresholds — Admin console Alerts section + gear icon shortcut on panel
+- [ ] Alert dismissal with persistence — acknowledge alerts across sessions
+- [ ] In-app toast notifications for new alerts (sonner)
 
 ### Out of Scope
 
@@ -80,5 +87,15 @@ Known operational note: Google Calendar service account must be manually shared 
 | Per-section try/catch in alerts | One failed table read cannot crash entire alert query | ✓ Good — resilient alert system |
 | Toast dedup via useRef | Prevents repeated critical alert toasts on re-renders | ✓ Good — clean UX, fires once per session |
 
+## Current Milestone: v1.1 Polish
+
+**Goal:** Enhance shipped v1.0 dashboard, calendar, and alerts features with trend indicators, color-coded events, configurable thresholds, and alert persistence.
+
+**Target features:**
+- KPI trend indicators (year-over-year comparison)
+- Donation performance charts from QB income accounts
+- Color-coded calendar event types + countdown badges + event toasts
+- Configurable alert thresholds + dismissal persistence + sonner toast notifications
+
 ---
-*Last updated: 2026-02-28 after v1.0 milestone*
+*Last updated: 2026-02-28 after v1.1 milestone start*
