@@ -375,4 +375,22 @@ export default defineSchema({
   }).index("by_runId", ["runId"])
     .index("by_status", ["status"])
     .index("by_purchaseId", ["purchaseId"]),
+
+  alertConfig: defineTable({
+    deadlineWindowDays: v.number(),     // default 30
+    budgetVariancePct: v.number(),      // default 90 (means 90%)
+    qbStalenessHours: v.number(),       // default 1
+    sheetsStalenessHours: v.number(),   // default 2
+    calendarStalenessHours: v.number(), // default 2
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.id("users")),
+  }),
+
+  alertDismissals: defineTable({
+    userId: v.id("users"),
+    alertKey: v.string(), // matches Alert.id (e.g. "deadline-{grantId}-Q1 Report")
+    dismissedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_alertKey", ["userId", "alertKey"]),
 });
