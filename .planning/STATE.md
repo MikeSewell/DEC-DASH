@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish
-status: in-progress
-last_updated: "2026-02-28T14:23:06Z"
+status: unknown
+last_updated: "2026-02-28T14:27:43.437Z"
 progress:
-  total_phases: 3
+  total_phases: 2
   completed_phases: 2
   total_plans: 2
   completed_plans: 2
