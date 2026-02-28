@@ -17,4 +17,11 @@ crons.interval(
   internal.googleSheetsSync.runSync
 );
 
+// Sync Google Calendar events every 30 minutes
+crons.interval(
+  "google-calendar-sync",
+  { minutes: 30 },
+  internal.googleCalendarSync.runSync
+);
+
 export default crons;

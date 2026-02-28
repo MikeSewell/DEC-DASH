@@ -40,6 +40,11 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Active clients and program breakdown",
   },
   {
+    id: "calendar",
+    title: "Calendar",
+    description: "Upcoming events and schedule",
+  },
+  {
     id: "programs-coparent",
     title: "Programs — Co-Parent",
     description: "Co-parent program enrollment and outcomes",
@@ -93,3 +98,13 @@ export const BRAND_COLORS = {
   dark: "#1B4332",         // deep dark forest
   light: "#F5F7F3",        // warm off-white
 };
+
+// Calendar dot colors — deterministic index-based assignment from DEC theme palette
+export const CALENDAR_DOT_COLORS = [
+  "#1B5E6B", // primary teal
+  "#6BBF59", // accent green
+  "#2B9E9E", // mid teal
+  "#8CC63F", // lime
+  "#5BBFB5", // light teal
+  "#1A7A7A", // dark teal
+] as const;
