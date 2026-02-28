@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 4 (Dashboard Data Population)
-Plan: 2 of 4 in current phase (COMPLETE)
+Plan: 3 of 4 in current phase (COMPLETE)
 Status: In Progress
-Last activity: 2026-02-28 — Plan 02-02 complete (skeleton shimmer components + three-state loading across 6 dashboard sections)
+Last activity: 2026-02-28 — Plan 02-03 complete (WhatNeedsAttention panel + ClientActivity section wired into dashboard)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Progress: [████░░░░░░] 40%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-newsletter-template-fix | 2/2 | ~9 min | ~5 min |
-| 02-dashboard-data-population | 2/4 | ~6 min | ~3 min |
+| 02-dashboard-data-population | 3/4 | ~9 min | ~3 min |
 
 **Recent Trend:**
 - Last 5 plans: 4 min, 5 min, 3 min, 3 min
@@ -75,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 02-dashboard-data-population]: useSheetsConfig() from useGrantTracker hook used in section components — keeps hook abstraction consistent, avoids raw useQuery in UI components
 - [Phase 02-dashboard-data-population]: BarChartSkeleton uses deterministic height formula instead of Math.random() to prevent React hydration mismatches
 - [Phase 02-dashboard-data-population]: DonationPerformance stays clean empty state — no donation reportType exists in QB integration, so clean null state is correct behavior
+- [Phase 02-dashboard-data-population]: WhatNeedsAttention rendered outside DashboardSection wrapper — not reorderable, always visible above sections loop
+- [Phase 02-dashboard-data-population]: qbConfig === null (not undefined) correctly detects QB not-connected vs still-loading
+- [Phase 02-dashboard-data-population]: client-activity registered after profit-loss in DEFAULT_DASHBOARD_SECTIONS — money-then-people ordering
 
 ### Pending Todos
 
@@ -90,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 02-dashboard-data-population/02-02-PLAN.md — skeleton shimmer + three-state loading across 6 dashboard sections
+Stopped at: Completed 02-dashboard-data-population/02-03-PLAN.md — WhatNeedsAttention panel + ClientActivity section wired into dashboard
 Resume file: None
