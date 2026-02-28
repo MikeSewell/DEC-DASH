@@ -15,6 +15,7 @@ import ProfitLoss from "@/components/dashboard/ProfitLoss";
 import ProgramsCoparent from "@/components/dashboard/ProgramsCoparent";
 import ProgramsLegal from "@/components/dashboard/ProgramsLegal";
 import ClientActivity from "@/components/dashboard/ClientActivity";
+import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import WhatNeedsAttention from "@/components/dashboard/WhatNeedsAttention";
 import Spinner from "@/components/ui/Spinner";
 
@@ -28,6 +29,7 @@ const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
   "client-activity": ClientActivity,
   "programs-coparent": ProgramsCoparent,
   "programs-legal": ProgramsLegal,
+  "calendar": CalendarWidget,
 };
 
 const SECTION_TITLES: Record<DashboardSectionId, string> = Object.fromEntries(
