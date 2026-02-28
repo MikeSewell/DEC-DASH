@@ -8,7 +8,7 @@ import {
   Legend,
 } from "chart.js";
 import { useProfitAndLoss } from "@/hooks/useQuickBooks";
-import Spinner from "@/components/ui/Spinner";
+import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { ProfitLossData } from "@/types";
@@ -32,11 +32,7 @@ export default function ProfitLoss() {
   const plResult = useProfitAndLoss();
 
   if (plResult === undefined) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <ChartSkeleton />;
   }
 
   if (plResult === null) {
@@ -47,6 +43,7 @@ export default function ProfitLoss() {
         </svg>
         <p className="text-sm">No P&L data available.</p>
         <p className="text-xs mt-1">Connect QuickBooks to view Profit & Loss information.</p>
+        <a href="/admin" className="text-primary hover:underline text-xs mt-2 inline-block">Connect QuickBooks →</a>
       </div>
     );
   }
