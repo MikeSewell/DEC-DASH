@@ -57,24 +57,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| KB-01 | — | Pending |
-| KB-02 | — | Pending |
-| KB-03 | — | Pending |
-| KB-04 | — | Pending |
-| SUM-01 | — | Pending |
-| SUM-02 | — | Pending |
-| SUM-03 | — | Pending |
-| SUM-04 | — | Pending |
-| DON-01 | — | Pending |
-| DON-02 | — | Pending |
-| DON-03 | — | Pending |
-| DON-04 | — | Pending |
+| KB-01 | Phase 8 | Pending |
+| KB-02 | Phase 8 | Pending |
+| KB-03 | Phase 8 | Pending |
+| KB-04 | Phase 8 | Pending |
+| SUM-01 | Phase 9 | Pending |
+| SUM-02 | Phase 9 | Pending |
+| SUM-03 | Phase 9 | Pending |
+| SUM-04 | Phase 9 | Pending |
+| DON-01 | Phase 10 | Pending |
+| DON-02 | Phase 10 | Pending |
+| DON-03 | Phase 10 | Pending |
+| DON-04 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12
+- Mapped to phases: 12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after initial definition*
+*Last updated: 2026-03-01 after roadmap creation*
