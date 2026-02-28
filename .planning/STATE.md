@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T10:59:00Z"
+last_updated: "2026-02-28T11:07:45.703Z"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -78,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 02-dashboard-data-population]: WhatNeedsAttention rendered outside DashboardSection wrapper — not reorderable, always visible above sections loop
 - [Phase 02-dashboard-data-population]: qbConfig === null (not undefined) correctly detects QB not-connected vs still-loading
 - [Phase 02-dashboard-data-population]: client-activity registered after profit-loss in DEFAULT_DASHBOARD_SECTIONS — money-then-people ordering
+- [Phase 02-dashboard-data-population]: StatCardGridSkeleton not reused for 3-card ExecutiveSnapshot (hardcodes grid-cols-4) — 3x StatCardSkeleton inline in sm:grid-cols-3 wrapper instead
+- [Phase 02-dashboard-data-population]: Grant imports removed from ExecutiveSnapshot — grant data displayed in dedicated GrantBudgetSection/GrantTrackingSection on dashboard
+- [Phase 02-dashboard-data-population]: Total Expenses colored text-danger (red) per CMD-01 color coding — negative financial signal distinct from Revenue (green)
 
 ### Pending Todos
 
