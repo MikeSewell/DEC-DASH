@@ -77,11 +77,11 @@ Plans:
   2. When a grant's QuickBooks spending exceeds pacing thresholds, a budget variance alert appears automatically
   3. If QuickBooks or Google Sheets data is stale (QB >1 hour, Sheets >2 hours since last sync), a sync status alert appears in the panel
   4. All alerts are ranked by urgency and the panel loads even if one underlying data source is temporarily unavailable
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Build alerts.ts pure Convex query computing Alert[] from grants, quickbooksCache, googleCalendarCache with urgency ranking
-- [ ] 04-02: Build AlertsPanel.tsx component and wire sonner toasts for critical alerts; integrate panel into dashboard layout
+- [ ] 04-01-PLAN.md — Build convex/alerts.ts pure Convex query computing Alert[] from grants, grantsCache, quickbooksCache, quickbooksConfig, googleSheetsConfig, googleCalendarConfig with urgency ranking
+- [ ] 04-02-PLAN.md — Refactor WhatNeedsAttention.tsx to consume single alerts query, add budget/sync alert icons, wire useToast() for critical alerts
 
 ## Progress
 
