@@ -26,8 +26,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **NEWS-01**: Newsletter HTML uses table-based layout for cross-client compatibility (Gmail, Outlook, Apple Mail)
 - [x] **NEWS-02**: All CSS is inlined — no external stylesheets, no unsupported properties (box-shadow removed)
-- [ ] **NEWS-03**: Newsletter editor validates content size and warns when approaching 400KB Constant Contact limit
-- [ ] **NEWS-04**: Newsletter preview accurately reflects how email will render in major email clients
+- [x] **NEWS-03**: Newsletter editor validates content size and warns when approaching 400KB Constant Contact limit
+- [x] **NEWS-04**: Newsletter preview accurately reflects how email will render in major email clients
 
 ### Google Calendar Integration
 
@@ -98,8 +98,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CMD-04 | Phase 2 | Pending |
 | NEWS-01 | Phase 1 | Complete |
 | NEWS-02 | Phase 1 | Complete |
-| NEWS-03 | Phase 1 | Pending |
-| NEWS-04 | Phase 1 | Pending |
+| NEWS-03 | Phase 1 | Complete |
+| NEWS-04 | Phase 1 | Complete |
 | CAL-01 | Phase 3 | Pending |
 | CAL-02 | Phase 3 | Pending |
 | CAL-03 | Phase 3 | Pending |
