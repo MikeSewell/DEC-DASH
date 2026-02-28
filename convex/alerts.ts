@@ -14,9 +14,18 @@ export const getAlerts = query({
   handler: async (ctx): Promise<Alert[]> => {
     const alerts: Alert[] = [];
     const now = Date.now();
-    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
-    // ─── Section A: ALRT-01 — Grant deadline alerts (30-day window) ───────────
+    // ─── Load alert thresholds from alertConfig singleton (fall back to defaults) ─
+    const configRow = await ctx.db.query("alertConfig").first();
+    const config = {
+      deadlineWindowDays: configRow?.deadlineWindowDays ?? 30,
+      budgetVariancePct: configRow?.budgetVariancePct ?? 90,
+      qbStalenessHours: configRow?.qbStalenessHours ?? 1,
+      sheetsStalenessHours: configRow?.sheetsStalenessHours ?? 2,
+      calendarStalenessHours: configRow?.calendarStalenessHours ?? 2,
+    };
+
+    // ─── Section A: ALRT-01 — Grant deadline alerts (configurable window) ────
     try {
       const allGrants = await ctx.db.query("grants").collect();
       const reportLabels: Array<keyof typeof allGrants[0]> = [
@@ -32,6 +41,8 @@ export const getAlerts = query({
         q4ReportDate: "Q4 Report",
       };
 
+      const windowMs = config.deadlineWindowDays * 24 * 60 * 60 * 1000;
+
       for (const grant of allGrants) {
         for (const field of reportLabels) {
           const dateStr = grant[field] as string | undefined;
@@ -39,7 +50,7 @@ export const getAlerts = query({
 
           const dateMs = new Date(dateStr).getTime();
           if (isNaN(dateMs)) continue;
-          if (dateMs < now || dateMs > now + thirtyDaysMs) continue;
+          if (dateMs < now || dateMs > now + windowMs) continue;
 
           const daysLeft = Math.ceil((dateMs - now) / 86400000);
           const reportLabel = labelNames[field as string];
@@ -67,7 +78,7 @@ export const getAlerts = query({
         if (g.amountSpent === undefined || g.totalAmount <= 0) continue;
 
         const pct = g.amountSpent / g.totalAmount;
-        if (pct < 0.9) continue;
+        if (pct < config.budgetVariancePct / 100) continue;
 
         alerts.push({
           id: `budget-${g._id}`,
@@ -93,13 +104,13 @@ export const getAlerts = query({
 
       if (qbCache) {
         const qbAgeMs = now - qbCache.fetchedAt;
-        if (qbAgeMs > 60 * 60 * 1000) {
+        if (qbAgeMs > config.qbStalenessHours * 60 * 60 * 1000) {
           alerts.push({
             id: "sync-qb-stale",
             type: "sync",
             severity: "warning",
             title: "QuickBooks Data Is Stale",
-            description: `Last synced ${Math.floor(qbAgeMs / 3600000)}h ${Math.floor((qbAgeMs % 3600000) / 60000)}m ago`,
+            description: `Last synced ${Math.floor(qbAgeMs / 3600000)}h ${Math.floor((qbAgeMs % 3600000) / 60000)}m ago (threshold: ${config.qbStalenessHours}h)`,
             action: { label: "Admin", href: "/admin" },
             urgencyScore: 500,
           });
@@ -149,13 +160,13 @@ export const getAlerts = query({
           ...sheetsConfigs.map((c) => c.lastSyncAt ?? 0)
         );
 
-        if (latestSheetSync > 0 && now - latestSheetSync > 2 * 60 * 60 * 1000) {
+        if (latestSheetSync > 0 && now - latestSheetSync > config.sheetsStalenessHours * 60 * 60 * 1000) {
           alerts.push({
             id: "sync-sheets-stale",
             type: "sync",
             severity: "info",
             title: "Google Sheets Data Is Stale",
-            description: `Last synced ${Math.floor((now - latestSheetSync) / 3600000)}h ago (threshold: 2h)`,
+            description: `Last synced ${Math.floor((now - latestSheetSync) / 3600000)}h ago (threshold: ${config.sheetsStalenessHours}h)`,
             action: { label: "Admin", href: "/admin" },
             urgencyScore: 300,
           });
@@ -171,14 +182,14 @@ export const getAlerts = query({
 
       if (
         calConfig?.lastSyncAt &&
-        now - calConfig.lastSyncAt > 2 * 60 * 60 * 1000
+        now - calConfig.lastSyncAt > config.calendarStalenessHours * 60 * 60 * 1000
       ) {
         alerts.push({
           id: "sync-calendar-stale",
           type: "sync",
           severity: "info",
           title: "Google Calendar Data Is Stale",
-          description: `Last synced ${Math.floor((now - calConfig.lastSyncAt) / 3600000)}h ago (threshold: 2h)`,
+          description: `Last synced ${Math.floor((now - calConfig.lastSyncAt) / 3600000)}h ago (threshold: ${config.calendarStalenessHours}h)`,
           action: { label: "Admin", href: "/admin" },
           urgencyScore: 250,
         });
