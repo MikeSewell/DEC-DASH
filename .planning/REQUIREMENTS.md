@@ -19,7 +19,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [x] **CMD-01**: Financial snapshot section shows cash position, revenue YTD, and expense summary at a glance
 - [x] **CMD-02**: Client activity section shows total active clients, new clients this month, and per-program counts
-- [ ] **CMD-03**: "What Needs Attention" panel surfaces actionable items (grant deadlines, budget warnings, sync failures)
+- [x] **CMD-03**: "What Needs Attention" panel surfaces actionable items (grant deadlines, budget warnings, sync failures)
 - [x] **CMD-04**: Dashboard sections load independently so one failed integration doesn't break the entire page
 
 ### Newsletter Template Fix
@@ -94,7 +94,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-05 | Phase 2 | Complete |
 | CMD-01 | Phase 2 | Complete |
 | CMD-02 | Phase 2 | Complete |
-| CMD-03 | Phase 2 | Pending |
+| CMD-03 | Phase 2 | Complete |
 | CMD-04 | Phase 2 | Complete |
 | NEWS-01 | Phase 1 | Complete |
 | NEWS-02 | Phase 1 | Complete |
