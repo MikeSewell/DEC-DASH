@@ -1,6 +1,7 @@
 // Branded HTML email template for DEC newsletters
 // Ported from the n8n workflow — injects content into a pre-built template,
 // then OpenAI polishes (removes empty sections, fixes formatting).
+// Email-safe: table-based layout, inline CSS only, no box-shadow/opacity/overflow:hidden
 
 interface NewsletterSections {
   welcomeMessage?: string;
@@ -49,6 +50,9 @@ export function buildNewsletterHtml(
   let html = "";
 
   // --- Outer wrapper + Main container ---
+  // Fix 1: Removed box-shadow (unsupported in Outlook Word renderer). Kept border-radius for
+  // progressive enhancement (Apple Mail/Gmail render it; Outlook ignores safely).
+  // Added width="600" HTML attribute alongside max-width CSS.
   html += `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,7 +66,7 @@ export function buildNewsletterHtml(
 <td align="center" style="padding:20px 0;">
 
 <!-- Main Container -->
-<table role="presentation" border="0" width="600" cellspacing="0" cellpadding="0" style="background-color:${WHITE};border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1);max-width:600px;">
+<table role="presentation" border="0" width="600" cellspacing="0" cellpadding="0" style="background-color:${WHITE};border-radius:8px;max-width:600px;">
 
 <!-- Header Section -->
 <tr>
@@ -76,8 +80,10 @@ export function buildNewsletterHtml(
 <!-- Title Column -->
 <td align="left" valign="middle" style="padding:30px 30px 30px 20px;">
 <h1 style="color:${WHITE};font-size:24px;margin:0 0 5px 0;font-weight:bold;font-family:Arial,sans-serif;line-height:1.2;">${title}</h1>
-<h2 style="color:${WHITE};font-size:18px;margin:0 0 8px 0;font-weight:normal;font-family:Arial,sans-serif;opacity:0.95;">Dads Evoking Change</h2>
-<p style="color:${WHITE};font-size:15px;margin:0;opacity:0.9;font-family:Arial,sans-serif;line-height:1.3;">Empowering Fathers, Strengthening Families</p>
+<!-- Fix 2: Replaced opacity:0.95 with direct color value -->
+<h2 style="color:#f2f2f2;font-size:18px;margin:0 0 8px 0;font-weight:normal;font-family:Arial,sans-serif;">Dads Evoking Change</h2>
+<!-- Fix 2: Replaced opacity:0.9 with direct color value -->
+<p style="color:#f2f2f2;font-size:15px;margin:0;font-family:Arial,sans-serif;line-height:1.3;">Empowering Fathers, Strengthening Families</p>
 </td>
 </tr>
 </table>
@@ -100,13 +106,24 @@ export function buildNewsletterHtml(
     }
     html += `
 <p style="color:${PRIMARY};font-size:16px;line-height:1.6;margin:15px 0 0 0;font-style:italic;font-family:Arial,sans-serif;">With gratitude and determination,<br><strong>Kareem Chadly</strong><br>Executive Director<br><br></p>`;
-    // Recent Milestones
+    // Fix 3: Recent Milestones — div replaced with email-safe table pattern
+    // Uses bgcolor attribute as Outlook fallback + nested table for padding+border support
     if (sections.recentMilestones?.trim()) {
       html += `
-<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;border-left:4px solid ${PRIMARY_LIGHT};">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:20px;">
+<tr>
+<td style="border-left:4px solid ${PRIMARY_LIGHT};" bgcolor="#f8f9fa">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="padding:20px;font-family:Arial,Helvetica,sans-serif;">
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Recent Milestones</h3>
 <p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.recentMilestones.trim())}</p>
-</div>`;
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>`;
     }
     html += `</td>
 </tr>`;
@@ -123,23 +140,49 @@ export function buildNewsletterHtml(
       html += `<p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.programUpdates.trim())}</p>
 <p><br></p>`;
     }
-    // Program Highlights & Outcomes
+    // Fix 4: Program Highlights — div replaced with email-safe table pattern
     if (sections.programHighlights?.trim()) {
       html += `
-<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;border-left:4px solid ${PRIMARY_LIGHT};">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:20px;">
+<tr>
+<td style="border-left:4px solid ${PRIMARY_LIGHT};" bgcolor="#f8f9fa">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="padding:20px;font-family:Arial,Helvetica,sans-serif;">
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Program Highlights &amp; Outcomes</h3>
 <p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">${nl2br(sections.programHighlights.trim())}</p>
-</div>`;
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>`;
     }
-    // Participant Testimonials
+    // Fix 5: Participant Testimonials — both nested divs replaced with table-based pattern
+    // Outer: table with border:2px solid + white background
+    // Inner: nested table with bgcolor + border-left (border-radius removed for Outlook compat)
     if (sections.participantTestimonials?.trim()) {
       html += `
-<div style="background-color:${WHITE};padding:20px;border-radius:6px;margin-bottom:20px;border:2px solid ${PRIMARY_LIGHT};">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:20px;border:2px solid ${PRIMARY_LIGHT};">
+<tr>
+<td bgcolor="${WHITE}" style="padding:20px;">
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Participant Testimonials</h3>
-<div style="background-color:#f8f9fa;padding:15px;border-radius:4px;margin-bottom:15px;border-left:3px solid ${PRIMARY};">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="border-left:3px solid ${PRIMARY};" bgcolor="#f8f9fa">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="padding:15px;font-family:Arial,Helvetica,sans-serif;">
 <p style="color:${TEXT_DARK};font-style:italic;font-size:16px;margin:0 0 10px 0;font-family:Arial,sans-serif;">"${nl2br(sections.participantTestimonials.trim())}"</p>
-</div>
-</div>`;
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>`;
     }
     // Upcoming Events Next Month
     if (sections.upcomingEvents?.trim()) {
@@ -158,7 +201,8 @@ export function buildNewsletterHtml(
 <tr>
 <td style="padding:0 30px 30px 30px;">
 <h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Dad of the Month</h2>
-<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8f9fa;border-radius:8px;overflow:hidden;">
+<!-- Fix 6: Removed overflow:hidden from this table (no email client supports it) -->
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8f9fa;border-radius:8px;" bgcolor="#f8f9fa">
 <tr><td style="padding:20px;">`;
     if (sections.photoLink?.trim()) {
       html += `<img src="${sections.photoLink.trim()}" alt="${sections.dadOfMonthName?.trim() || "Dad of the Month"}" width="120" style="display:block;border-radius:50%;margin:0 auto 16px;max-width:120px;height:auto;">`;
@@ -181,10 +225,12 @@ export function buildNewsletterHtml(
 <tr>
 <td style="padding:0 30px 30px 30px;">
 <h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Community &amp; Partnerships</h2>`;
-    // Community Events to Feature — table rows
+    // Fix 7: Community Events — div replaced with table equivalent using bgcolor
     if (sections.communityEvents?.trim()) {
       html += `
-<div style="background-color:#f8f9fa;padding:20px;border-radius:6px;margin-bottom:20px;">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:20px;">
+<tr>
+<td bgcolor="#f8f9fa" style="padding:20px;">
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Community Events to Feature</h3>
 <table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
@@ -193,15 +239,27 @@ export function buildNewsletterHtml(
 </td>
 </tr>
 </table>
-</div>`;
+</td>
+</tr>
+</table>`;
     }
-    // New & Active Partnerships
+    // Fix 8: Partnerships — div replaced with highlighted box table pattern using bgcolor="#e8f4f8"
     if (sections.partnerships?.trim()) {
       html += `
-<div style="background-color:#e8f4f8;padding:20px;border-radius:6px;border-left:4px solid ${PRIMARY_LIGHT};">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="border-left:4px solid ${PRIMARY_LIGHT};" bgcolor="#e8f4f8">
+<table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
+<tr>
+<td style="padding:20px;font-family:Arial,Helvetica,sans-serif;">
 <h3 style="color:${FOOTER_BG};font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">New &amp; Active Partnerships</h3>
 <p style="color:${TEXT_DARK};font-size:16px;line-height:1.6;margin:0 0 15px 0;font-family:Arial,sans-serif;">${nl2br(sections.partnerships.trim())}</p>
-</div>`;
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>`;
     }
     html += `</td>
 </tr>`;
@@ -216,9 +274,10 @@ export function buildNewsletterHtml(
 <h2 style="color:${PRIMARY};font-size:24px;margin:0 0 20px 0;border-bottom:3px solid ${PRIMARY_LIGHT};padding-bottom:10px;font-family:Arial,sans-serif;">Fatherhood by the Numbers</h2>
 <table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
-<td style="background-color:${PRIMARY};padding:30px;border-radius:6px;text-align:center;">
+<td style="background-color:${PRIMARY};padding:30px;border-radius:6px;text-align:center;" bgcolor="${PRIMARY}">
 <p style="color:${WHITE};font-size:20px;margin:0 0 15px 0;font-weight:bold;font-family:Arial,sans-serif;">Did You Know?</p>
-<p style="color:${WHITE};font-size:16px;margin:0 0 20px 0;opacity:0.95;font-family:Arial,sans-serif;line-height:1.5;">${nl2br(sections.fatherhoodStat!.trim())}</p>
+<!-- Fix 9: Replaced opacity:0.95 with direct color value #ffffff -->
+<p style="color:${WHITE};font-size:16px;margin:0 0 20px 0;font-family:Arial,sans-serif;line-height:1.5;">${nl2br(sections.fatherhoodStat!.trim())}</p>
 </td>
 </tr>
 </table>
@@ -249,11 +308,12 @@ export function buildNewsletterHtml(
 </td>
 </tr>
 </table>`;
-    // Special Volunteer Request (yellow box)
+    // Fix 10: Volunteer Request yellow box — removed border-radius:6px from td (Outlook ignores it
+    // and it causes inconsistent rendering). bgcolor and border-left kept for proper rendering.
     html += `
 <table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
-<td style="background-color:#fff3cd;padding:20px;border-radius:6px;border-left:4px solid #ffc107;">
+<td style="background-color:#fff3cd;padding:20px;border-left:4px solid #ffc107;" bgcolor="#fff3cd">
 <h3 style="color:#856404;font-size:18px;margin:0 0 15px 0;font-family:Arial,sans-serif;">Special Volunteer Request</h3>
 <p style="color:#856404;font-size:16px;line-height:1.6;margin:0;font-family:Arial,sans-serif;">We are seeking pro bono attorneys, mediators, and family therapists to support our fathers. If you're a professional in these fields and want to make a difference, please click the volunteer button below.</p>
 </td>
@@ -312,10 +372,11 @@ export function buildNewsletterHtml(
   }
 
   // --- Footer Section ---
+  // Fix 11: border-radius:0 0 8px 8px kept for progressive enhancement (Apple Mail/Gmail render it)
   html += `
 <!-- Footer Section -->
 <tr>
-<td style="background-color:${FOOTER_BG};padding:30px;border-radius:0 0 8px 8px;">
+<td style="background-color:${FOOTER_BG};padding:30px;border-radius:0 0 8px 8px;" bgcolor="${FOOTER_BG}">
 <table role="presentation" border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td align="center">
@@ -340,6 +401,11 @@ export function buildNewsletterHtml(
 </tr>
 </table>
 </td>
+</tr>
+
+<!-- Fix 12: Constant Contact open rate tracking token -->
+<tr>
+<td style="font-size:0;line-height:0;">[[trackingImage]]</td>
 </tr>
 
 </table>
