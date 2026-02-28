@@ -14,9 +14,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Calendar Enhancements
 
-- [ ] **CAL-01**: Calendar events display color-coded by event type (client sessions, board meetings, community events, grant deadlines)
-- [ ] **CAL-02**: Imminent events show countdown badges (e.g. "in 30 min", "in 2 hours")
-- [ ] **CAL-03**: Toast notification fires for events starting within 30-60 min when dashboard loads
+- [x] **CAL-01**: Calendar events display color-coded by event type (client sessions, board meetings, community events, grant deadlines)
+- [x] **CAL-02**: Imminent events show countdown badges (e.g. "in 30 min", "in 2 hours")
+- [x] **CAL-03**: Toast notification fires for events starting within 30-60 min when dashboard loads
 
 ### Alert Enhancements
 
@@ -53,9 +53,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | DASH-01 | Phase 5 | Complete |
 | DASH-02 | Phase 5 | Complete |
-| CAL-01 | Phase 6 | Pending |
-| CAL-02 | Phase 6 | Pending |
-| CAL-03 | Phase 6 | Pending |
+| CAL-01 | Phase 6 | Complete |
+| CAL-02 | Phase 6 | Complete |
+| CAL-03 | Phase 6 | Complete |
 | ALRT-01 | Phase 7 | Pending |
 | ALRT-02 | Phase 7 | Pending |
 | ALRT-03 | Phase 7 | Pending |

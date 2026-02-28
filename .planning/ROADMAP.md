@@ -22,7 +22,7 @@ Full details: `milestones/v1.0-ROADMAP.md`
 ### v1.1 Polish
 
 - [x] **Phase 5: Dashboard KPI Trends** — Year-over-year trend indicators on KPI cards from QB historical data (completed 2026-02-28)
-- [ ] **Phase 6: Calendar Enhancements** — Color-coded events, countdown badges, and toast notifications for imminent events
+- [x] **Phase 6: Calendar Enhancements** — Color-coded events, countdown badges, and toast notifications for imminent events (completed 2026-02-28)
 - [ ] **Phase 7: Alert Configuration & Persistence** — Configurable thresholds, dismissal persistence, and sonner toast notifications
 
 ## Phase Details
@@ -49,7 +49,9 @@ Plans:
   2. Events within 2 hours show a live countdown badge (e.g. "in 47 min") that updates without page refresh
   3. When the dashboard loads and an event starts within 30-60 minutes, a toast notification fires once per session per event
   4. Color coding and countdown badges display correctly with both the existing dark and any future light calendar themes
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — Add event type color badges, live countdown badges, and imminent event toast notifications
 
 ### Phase 7: Alert Configuration & Persistence
 **Goal**: Alerts are configurable and actionable — Kareem can tune thresholds to reduce noise and dismiss alerts he has addressed, with persistence across sessions
@@ -72,5 +74,5 @@ Plans:
 | 3. Google Calendar Integration | v1.0 | 3/3 | Complete | 2026-02-28 |
 | 4. Proactive Alerts Panel | v1.0 | 2/2 | Complete | 2026-02-28 |
 | 5. Dashboard KPI Trends | 1/1 | Complete    | 2026-02-28 | - |
-| 6. Calendar Enhancements | v1.1 | 0/? | Not started | - |
+| 6. Calendar Enhancements | 1/1 | Complete   | 2026-02-28 | - |
 | 7. Alert Configuration & Persistence | v1.1 | 0/? | Not started | - |
