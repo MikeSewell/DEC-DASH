@@ -3,16 +3,9 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { ListSkeleton } from "@/components/dashboard/skeletons/TableSkeleton";
-import { formatDate } from "@/lib/utils";
-
-interface AttentionItem {
-  id: string;
-  type: "deadline" | "integration" | "info";
-  severity: "warning" | "info" | "success";
-  title: string;
-  description: string;
-  action?: { label: string; href: string };
-}
+import { useToast } from "@/components/ui/Toast";
+import { useEffect, useRef } from "react";
+import type { Alert } from "../../../convex/alerts";
 
 function BellIcon() {
   return (
@@ -46,74 +39,62 @@ function CheckCircleIcon() {
   );
 }
 
-function ItemIcon({ type }: { type: AttentionItem["type"] }) {
-  if (type === "deadline") return <CalendarIcon />;
-  if (type === "integration") return <PlugIcon />;
+function ChartBarIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
     </svg>
   );
 }
 
-const severityStyles: Record<AttentionItem["severity"], string> = {
+function RefreshIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182" />
+    </svg>
+  );
+}
+
+function ItemIcon({ type }: { type: Alert["type"] }) {
+  if (type === "deadline") return <CalendarIcon />;
+  if (type === "integration") return <PlugIcon />;
+  if (type === "budget") return <ChartBarIcon />;
+  if (type === "sync") return <RefreshIcon />;
+  return <CalendarIcon />; // fallback
+}
+
+const severityStyles: Record<Alert["severity"], string> = {
+  critical: "border-l-4 border-red-400 bg-red-50/50 dark:bg-red-950/20",
   warning: "border-l-4 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20",
   info: "border-l-4 border-primary bg-primary/5",
-  success: "border-l-4 border-accent bg-accent/5",
 };
 
-const severityIconColors: Record<AttentionItem["severity"], string> = {
+const severityIconColors: Record<Alert["severity"], string> = {
+  critical: "text-red-500",
   warning: "text-amber-500",
   info: "text-primary",
-  success: "text-accent",
 };
 
 export default function WhatNeedsAttention() {
-  const deadlines = useQuery(api.grants.getUpcomingDeadlines);
-  const qbConfig = useQuery(api.quickbooks.getConfig);
-  const grantStats = useQuery(api.grants.getStats);
+  const alerts = useQuery(api.alerts.getAlerts);
+  const { toast } = useToast();
+  const toastedIds = useRef(new Set<string>());
+  const isLoading = alerts === undefined;
 
-  const isLoading = deadlines === undefined || qbConfig === undefined || grantStats === undefined;
-
-  // Build attention items from resolved data
-  const items: AttentionItem[] = [];
-
-  if (!isLoading) {
-    // QB connection status
-    if (qbConfig === null) {
-      items.push({
-        id: "qb-not-connected",
-        type: "integration",
-        severity: "warning",
-        title: "QuickBooks Not Connected",
-        description: "Financial data unavailable — connect QuickBooks to see expenses, P&L, and cash on hand.",
-        action: { label: "Connect", href: "/admin" },
-      });
-    } else if (qbConfig?.isExpired) {
-      items.push({
-        id: "qb-expired",
-        type: "integration",
-        severity: "warning",
-        title: "QuickBooks Token Expired",
-        description: "Your QuickBooks session has expired. Reconnect to restore financial data sync.",
-        action: { label: "Reconnect", href: "/admin" },
-      });
-    }
-
-    // Upcoming grant deadlines
-    if (deadlines && deadlines.length > 0) {
-      for (const deadline of deadlines) {
-        items.push({
-          id: `deadline-${deadline.grantId}-${deadline.reportLabel}`,
-          type: "deadline",
-          severity: "warning",
-          title: `${deadline.reportLabel} — ${deadline.fundingSource}`,
-          description: `Due ${formatDate(deadline.deadlineDate)}`,
-          action: { label: "View Grant", href: "/grants" },
+  // Fire toast for critical alerts — once per ID per browser session
+  useEffect(() => {
+    if (!alerts) return;
+    for (const alert of alerts) {
+      if (alert.severity === "critical" && !toastedIds.current.has(alert.id)) {
+        toastedIds.current.add(alert.id);
+        toast({
+          title: alert.title,
+          description: alert.description,
+          variant: "warning", // Toast system uses "warning" for amber styling
         });
       }
     }
-  }
+  }, [alerts, toast]);
 
   return (
     <div className="rounded-2xl border border-border bg-surface shadow-[var(--warm-shadow-sm)]">
@@ -127,7 +108,7 @@ export default function WhatNeedsAttention() {
         </h2>
         {!isLoading && (
           <span className="rounded-full bg-primary text-white text-xs font-medium px-2.5 py-0.5 tabular-nums">
-            {items.length}
+            {alerts.length}
           </span>
         )}
       </div>
@@ -136,7 +117,7 @@ export default function WhatNeedsAttention() {
       <div className="px-5 py-4">
         {isLoading ? (
           <ListSkeleton items={3} />
-        ) : items.length === 0 ? (
+        ) : alerts.length === 0 ? (
           /* All-clear state */
           <div className="flex flex-col items-center justify-center py-6 gap-2 text-center">
             <CheckCircleIcon />
@@ -147,33 +128,33 @@ export default function WhatNeedsAttention() {
         ) : (
           /* Items list */
           <div className="space-y-2">
-            {items.map((item) => (
+            {alerts.map((alert) => (
               <div
-                key={item.id}
-                className={`flex items-start gap-3 rounded-lg p-3 ${severityStyles[item.severity]}`}
+                key={alert.id}
+                className={`flex items-start gap-3 rounded-lg p-3 ${severityStyles[alert.severity]}`}
               >
                 {/* Item icon */}
-                <div className={`mt-0.5 shrink-0 ${severityIconColors[item.severity]}`}>
-                  <ItemIcon type={item.type} />
+                <div className={`mt-0.5 shrink-0 ${severityIconColors[alert.severity]}`}>
+                  <ItemIcon type={alert.type} />
                 </div>
 
                 {/* Item content */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground leading-tight">
-                    {item.title}
+                    {alert.title}
                   </p>
                   <p className="text-xs text-muted mt-0.5">
-                    {item.description}
+                    {alert.description}
                   </p>
                 </div>
 
                 {/* Action link */}
-                {item.action && (
+                {alert.action && (
                   <a
-                    href={item.action.href}
+                    href={alert.action.href}
                     className="shrink-0 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground hover:bg-surface-hover hover:border-primary transition-colors"
                   >
-                    {item.action.label}
+                    {alert.action.label}
                   </a>
                 )}
               </div>
