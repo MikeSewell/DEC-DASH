@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuickBooksConfig, useAccounts, useProfitAndLoss } from "@/hooks/useQuickBooks";
+import { useQuickBooksConfig, useAccounts, useProfitAndLoss, useTrends } from "@/hooks/useQuickBooks";
 import { StatCardSkeleton } from "@/components/dashboard/skeletons/StatCardSkeleton";
 import { cn, formatDollars, formatCurrencyExact, timeAgo } from "@/lib/utils";
 
@@ -30,11 +30,23 @@ function StatCard({ icon, value, label, trend, accentColor = "text-primary", too
         {trend && (
           <p
             className={cn(
-              "text-xs mt-1 font-medium",
+              "text-xs mt-1 font-medium inline-flex items-center gap-1",
               trend.positive ? "text-success" : "text-danger"
             )}
           >
-            {trend.positive ? "+" : ""}
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              {trend.positive ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25" />
+              )}
+            </svg>
             {trend.value}
           </p>
         )}
@@ -47,9 +59,10 @@ export default function ExecutiveSnapshot() {
   const qbConfig = useQuickBooksConfig();
   const accounts = useAccounts();
   const pnl = useProfitAndLoss();
+  const trends = useTrends();
 
-  // Loading state: any query still undefined
-  if (qbConfig === undefined || accounts === undefined || pnl === undefined) {
+  // Loading state: any query still undefined — include trends to prevent flash of no-trend then trend appearing
+  if (qbConfig === undefined || accounts === undefined || pnl === undefined || trends === undefined) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCardSkeleton />
@@ -88,6 +101,15 @@ export default function ExecutiveSnapshot() {
   const cashOnHand = accounts?.data?.totalCash ?? null;
   const totalRevenue = pnl?.data?.totalRevenue ?? null;
   const totalExpenses = pnl?.data?.totalExpenses ?? null;
+
+  // Trend indicators (null if no prior-year data available)
+  const revenueTrend = trends?.revenue
+    ? { value: `${Math.abs(trends.revenue.pctChange).toFixed(1)}% vs last year`, positive: trends.revenue.positive }
+    : null;
+
+  const expensesTrend = trends?.expenses
+    ? { value: `${Math.abs(trends.expenses.pctChange).toFixed(1)}% vs last year`, positive: trends.expenses.positive }
+    : null;
 
   // Determine most recent fetchedAt for timestamp
   const latestFetchedAt = Math.max(accounts?.fetchedAt ?? 0, pnl?.fetchedAt ?? 0);
@@ -139,6 +161,7 @@ export default function ExecutiveSnapshot() {
           label="Revenue YTD"
           tooltip={totalRevenue !== null ? formatCurrencyExact(totalRevenue) : undefined}
           accentColor="text-success"
+          trend={revenueTrend}
         />
 
         {/* Card 3: Total Expenses */}
@@ -162,6 +185,7 @@ export default function ExecutiveSnapshot() {
           label="Total Expenses"
           tooltip={totalExpenses !== null ? formatCurrencyExact(totalExpenses) : undefined}
           accentColor="text-danger"
+          trend={expensesTrend}
         />
       </div>
 
