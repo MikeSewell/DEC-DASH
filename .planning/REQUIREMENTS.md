@@ -31,7 +31,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Google Calendar Integration
 
-- [ ] **CAL-01**: Google Calendar events sync to Convex cache table via service account auth (reusing existing Sheets credentials)
+- [x] **CAL-01**: Google Calendar events sync to Convex cache table via service account auth (reusing existing Sheets credentials)
 - [ ] **CAL-02**: Calendar sync runs on a cron schedule (configurable, default 30 min)
 - [ ] **CAL-03**: Admin can configure which Google Calendar IDs to sync from the Admin console
 - [ ] **CAL-04**: Dashboard widget shows today's events and upcoming events (next 7 days)
@@ -100,7 +100,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NEWS-02 | Phase 1 | Complete |
 | NEWS-03 | Phase 1 | Complete |
 | NEWS-04 | Phase 1 | Complete |
-| CAL-01 | Phase 3 | Pending |
+| CAL-01 | Phase 3 | Complete |
 | CAL-02 | Phase 3 | Pending |
 | CAL-03 | Phase 3 | Pending |
 | CAL-04 | Phase 3 | Pending |
