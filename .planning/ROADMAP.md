@@ -36,7 +36,9 @@ Full details: `milestones/v1.0-ROADMAP.md`
   2. Trend percentage reflects current month vs same month in the prior year using QB P&L data
   3. When QB is not connected or historical data is unavailable, KPI cards render without trend indicators (graceful fallback, no errors)
   4. Trend indicators respect the three-state loading pattern — skeleton shown while data loads, no flash of wrong state
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 05-01-PLAN.md — Add prior-year P&L sync, trend computation query, and wire trend arrows into KPI cards
 
 ### Phase 6: Calendar Enhancements
 **Goal**: The CalendarWidget makes event type and urgency instantly readable so Kareem can scan upcoming commitments without reading every event title
@@ -69,6 +71,6 @@ Full details: `milestones/v1.0-ROADMAP.md`
 | 2. Dashboard Data Population | v1.0 | 4/4 | Complete | 2026-02-28 |
 | 3. Google Calendar Integration | v1.0 | 3/3 | Complete | 2026-02-28 |
 | 4. Proactive Alerts Panel | v1.0 | 2/2 | Complete | 2026-02-28 |
-| 5. Dashboard KPI Trends | v1.1 | 0/? | Not started | - |
+| 5. Dashboard KPI Trends | v1.1 | 0/1 | Planned | - |
 | 6. Calendar Enhancements | v1.1 | 0/? | Not started | - |
 | 7. Alert Configuration & Persistence | v1.1 | 0/? | Not started | - |
