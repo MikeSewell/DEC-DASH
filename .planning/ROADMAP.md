@@ -28,11 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Kareem can see a warning in the editor when the newsletter content is approaching the 400 KB Constant Contact limit
   3. The newsletter preview panel in the dashboard matches how the email actually renders in a real email client
   4. All CSS is inlined in the generated HTML and no unsupported properties (e.g., box-shadow) appear in the output
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: Audit and rewrite newsletterTemplate.ts with table-based layout and full CSS inlining
-- [ ] 01-02: Add content size validation and preview accuracy improvements
+- [ ] 01-01-PLAN.md — Rewrite newsletterTemplate.ts with table-based layout and add juice CSS inlining to generation pipeline
+- [ ] 01-02-PLAN.md — Add content size validation and preview accuracy improvements
 
 ### Phase 2: Dashboard Data Population
 **Goal**: Every section of the dashboard shows live data with correct loading, empty, and error states
@@ -90,7 +90,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Newsletter Template Fix | 0/2 | Not started | - |
+| 1. Newsletter Template Fix | 0/2 | Planning complete | - |
 | 2. Dashboard Data Population | 0/4 | Not started | - |
 | 3. Google Calendar Integration | 0/3 | Not started | - |
 | 4. Proactive Alerts Panel | 0/2 | Not started | - |
