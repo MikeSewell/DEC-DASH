@@ -1,27 +1,31 @@
 # Feature Research
 
-**Domain:** Nonprofit Executive Dashboard — Daily Command Center
-**Researched:** 2026-02-28
-**Confidence:** HIGH (for established dashboard patterns), MEDIUM (for calendar/alert specifics)
+**Domain:** Nonprofit Executive Dashboard — v1.2 Intelligence Milestone
+**Researched:** 2026-03-01
+**Confidence:** HIGH (existing codebase patterns), MEDIUM (KB extraction behavior)
 
 ---
 
-## Context: What Already Exists
+## Context: What This Milestone Is
 
-The DEC DASH already has substantial infrastructure. This research is for the **milestone additions**:
+v1.2 Intelligence adds three new dashboard capabilities to an already-working app:
 
-| Already Built | Status |
-|---------------|--------|
-| QB integration (P&L, expenses, budget vs. actuals) | Working but data not rendering on dashboard |
-| Grant tracker (5-stage pipeline, detail pages, inline editing) | Working |
-| Client & program management (unified roster, legal + co-parent intake) | Working |
-| AI Director chat (knowledge base, vector store) | Working |
-| Newsletter system (section editor, AI HTML generation, CC send) | Working but template formatting broken |
-| RBAC (6-tier role system) | Working |
-| Admin console (7-tab configuration) | Working |
-| Dashboard widget framework (sectioned layout, user prefs, show/hide/reorder) | Working shell — data not populating |
+1. **KB-powered KPI cards** — extract client/program stats and impact metrics from uploaded documents in the OpenAI vector store
+2. **AI summary panel** — organizational highlights auto-generated from KB documents, manually re-triggerable
+3. **Donation performance charts** — income trend visualization from QB revenue data
 
-**This milestone adds:** Dashboard data population fix, Google Calendar integration, Proactive alerts, Newsletter template fix.
+**What already exists that this builds on:**
+
+| Existing Infrastructure | Relevance to v1.2 |
+|-------------------------|-------------------|
+| OpenAI Assistants API (aiDirectorActions.ts) | KB extraction reuses the same vector store + file_search pattern |
+| Vector store + knowledgeBase table | Files already live in OpenAI vector store — can be queried |
+| `quickbooks.getProfitAndLoss` → `revenueByCategory` | Income by category already parsed in getProfitAndLoss; fetchProfitAndLoss action already handles multi-period data |
+| `DonationPerformance.tsx` component (exists but always null) | Shell chart component + getDonations query exist; getDonations returns null (no PayPal) |
+| `quickbooks.getTrends` (current vs. prior year) | Single month comparison exists; multi-month trend requires new QB fetch action |
+| Dashboard section system (DashboardSection + SECTION_COMPONENTS map) | New sections slot into existing reorderable framework |
+| `appSettings` key-value table | KB summary cache can be stored here or in a dedicated table |
+| Three-state loading pattern (undefined/null/data) | All new components must follow: undefined=loading, null=unconfigured, data=ready |
 
 ---
 
@@ -29,108 +33,103 @@ The DEC DASH already has substantial infrastructure. This research is for the **
 
 ### Table Stakes (Users Expect These)
 
-Features the Executive Director assumes work. Missing = dashboard feels broken.
+Features the Executive Director assumes exist once the milestone is announced. Missing = milestone feels incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **KPI cards with real data** | Dashboard has the cards; empty cards are worse than no cards — signals the tool doesn't work | LOW | Root cause: likely hook data shape mismatch or missing QB cache. Fix existing `ExecutiveSnapshot`, `GrantBudget`, etc. |
-| **Financial snapshot (cash on hand, revenue YTD, expenses)** | Every nonprofit exec dashboard shows this; QuickBooks is already connected | LOW | `accounts.data.totalCash` and `pnl.data.totalRevenue` are already referenced in `ExecutiveSnapshot.tsx` — data shape needs verification |
-| **Grant status at a glance** | DEC lives on grants; knowing active grant count + total is daily need | LOW | `useGrants()` + `useActiveGrants()` hooks already exist; data not rendering |
-| **Client activity count** | Program staff need to see active client numbers without going to /clients page | LOW | Can query `clients` table for active count; no dedicated dashboard widget yet |
-| **Today's upcoming events** | If a calendar integration is added, showing today's events is minimum viable | MEDIUM | Requires Google Calendar sync to Convex table first |
-| **Newsletter template rendering correctly** | Template was the core output of newsletter system; broken HTML defeats the whole feature | MEDIUM | Constant Contact sends HTML email; Outlook/Gmail render differences are the likely culprit. Use table-based layout, inline styles |
-| **Consistent data refresh** | Dashboard data that auto-updates or clearly shows last-sync time | LOW | QB cron is 15min, Sheets is 30min — show `fetchedAt` timestamp in cards |
+| **KB KPI cards actually extract real numbers** | If KB contains "150 clients served" in a report, users expect the card to show 150, not a placeholder | HIGH | OpenAI file_search returns text passages; number extraction requires a targeted prompt + parse pass. The AI can hallucinate numbers — needs explicit grounding instructions |
+| **Graceful empty/not-configured states** | All existing dashboard sections handle null/undefined with helpful messages + admin link. KB cards must do the same when no files are uploaded | LOW | Follow existing ExecutiveSnapshot null pattern exactly. `knowledgeBase.listFiles` returns [] when empty, not null |
+| **"Last extracted" timestamp on KB cards** | Every other dashboard section shows "Updated X ago". KB cards without a freshness indicator feel stale or unreliable | LOW | Store `extractedAt` timestamp alongside the extracted values in Convex |
+| **Manual re-trigger for KB summary** | AI summaries go stale as new documents are uploaded. User needs a "Regenerate" button — passive auto-generation alone is insufficient | MEDIUM | Button → Convex action → OpenAI call → save result. Loading state during generation is required |
+| **Donation chart uses actual QB income data** | `DonationPerformance.tsx` already exists but always shows null. Users who see it expect it to show something from QB | MEDIUM | QB P&L `revenueByCategory` has income line items (grants, donations, program fees). Income trend over multiple months requires fetching prior months' P&L from QB API |
+| **Skeleton loading states** | All other sections use `ChartSkeleton` / `StatCardSkeleton`. New sections without loading skeletons flash incorrectly | LOW | Reuse existing skeleton components from `src/components/dashboard/skeletons/` |
 
 ### Differentiators (Competitive Advantage)
 
-Features that make DEC DASH meaningfully better than generic nonprofit tools like Salesforce NPSP or Bloomerang for daily use.
+Features that justify the milestone's existence beyond "we added more stuff."
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **"What Needs Attention" alert panel** | Proactive surface: grant deadlines in 30 days, QB budget anomaly, clients with no recent sessions — replaces email-checking workflow | MEDIUM | Computed from existing data: grants table (`q1/q2/q3/q4ReportDate`), QB variance, clients table. No new data sources needed |
-| **Google Calendar unified view** | Surfaces client sessions, board meetings, community events, grant deadlines in one place — eliminates context-switching to Google Calendar | HIGH | Requires new Convex table `calendarEvents`, new Convex action using googleapis (already a dependency), new cron job. OAuth via service account or user OAuth |
-| **Upcoming deadlines timeline** | Visual countdown of grant report dates, client follow-up reminders — the "what's coming" complement to "what's happening now" | MEDIUM | Can derive from `grants` table Q1-Q4 dates + Calendar events; render as ordered list with countdown badges (already done on grant detail page, duplicate pattern) |
-| **Anomaly-flagged alerts** | Identify spend categories exceeding budget by >15%, unusual vendor charges, grants nearing expiry — surfaces the non-obvious | HIGH | Requires threshold logic computed from QB data; likely AI-assisted analysis using existing `allocationActions.ts` patterns |
-| **Newsletter preview that matches what CC sends** | WYSIWYG preview so Kareem sees exactly what subscribers receive before sending | MEDIUM | Already exists (`NewsletterPreview.tsx` with contentEditable iframe) — depends on template fix |
-| **Role-filtered calendar view** | Lawyers see only client session events; staff see team meetings; admin sees everything | MEDIUM | Extend existing `ROLE_PROGRAM_TYPE_MAP` pattern from clients to calendar event types |
+| **KB-grounded KPI extraction (not hallucinated)** | Generic dashboards show financial KPIs only. KB-powered cards surface program-level impact — "families served this quarter," "court dates resolved" — data that only lives in uploaded reports, not QB | HIGH | Key design: prompt must instruct GPT to return "NOT_FOUND" when a metric is absent, not invent a number. Store raw extracted text alongside the parsed value for auditability |
+| **Multi-metric extraction in single pass** | Extract active clients, total sessions, key outcomes, demographic highlights all in one OpenAI call — not 5 separate calls | MEDIUM | Structured JSON response format (function calling or response_format) ensures parseable output. Batch extraction is cheaper and faster than sequential |
+| **AI summary grounded in KB, not hallucination** | "AI summary" is only valuable if it synthesizes actual uploaded documents. The summary panel should cite document names, not fabricate narrative | HIGH | Pass document titles as context in the prompt. Instruct: "only summarize what documents explicitly state." Response should be 3-5 bullet highlights, not a paragraph |
+| **Income breakdown by source, not just total** | Most QB dashboards show total revenue. QB `revenueByCategory` already has grant income vs. program fees vs. individual donations separated — showing this breakdown is a differentiator | MEDIUM | Reuse the `revenueByCategory` data already parsed in `getProfitAndLoss`. Stack or grouped bar chart by income category over time is more informative than a single line |
+| **Donor/income trend over rolling 6 months** | Single-month YoY comparison exists in KPI cards. A 6-month rolling chart reveals seasonal patterns and grant receipt timing | HIGH | Requires fetching 5 additional prior-month P&L reports from QB API. New action: `fetchMonthlyIncomeTrend`. Adds QB API calls but provides context no single-month view can |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| **Real-time calendar sync (webhooks/push)** | Seems more up-to-date than polling | Google Calendar push notifications require a publicly accessible HTTPS endpoint + webhook registration management, token refresh complexity — much harder to maintain on a VPS. Polling every 30-60min is sufficient for daily command center use | Cron-based polling with sync token for incremental updates (Google's own recommended approach for server-side apps) |
-| **In-app email notifications / push alerts** | "Get notified when X happens" | Adds infrastructure complexity (web push API, service workers, notification permissions) for a single-user exec tool. Kareem opens the app daily — the dashboard IS the notification | Prominent "Attention Required" panel on dashboard home page, visible immediately on open |
-| **Editable Google Calendar events from dashboard** | Seems convenient | Creates two-way sync conflict risk, requires write OAuth scopes, much more complexity for marginal gain. The calendar is already maintained in Google | Read-only display only. Link out to Google Calendar for editing |
-| **Custom dashboard widget builder** | Power user flexibility | Existing show/hide/reorder already covers DEC's single-user need. Full drag-and-drop widget builder is weeks of work for a small nonprofit | The existing `dashboardPrefs` section ordering is sufficient |
-| **Full-screen Gantt chart for grant timeline** | Looks comprehensive | Overkill for 46 grants managed by one ED. The quarterly reporting countdown badges on grant detail pages already serve this need | Keep the existing countdown badges; surface upcoming reports in the alert panel |
-| **Automated newsletter sends on schedule** | Efficiency | Newsleters to donors require human review. Automated sends risk wrong content reaching donors. The current test→review→send flow is correct | Keep the manual review/send flow; surface draft newsletters in the alert panel as "ready to review" |
-| **Gmail or Outlook integration** | Unified inbox seems useful | Explicitly out of scope per PROJECT.md; adds auth complexity and privacy concerns | The alert panel covers the "things needing action" use case without email integration |
+| **Auto-regenerate KB summary on every document upload** | "Keep it always fresh" | OpenAI API call on every upload adds latency to the upload flow, increases costs, and may run on partial document sets during multi-file upload sessions | Manual "Regenerate" button triggered by the user when they're done uploading. Store `extractedAt` so staleness is visible |
+| **Real-time KB extraction (streaming)** | Streaming looks responsive | Convex actions don't support streaming responses to the client. The existing `sendMessage` in aiDirectorActions.ts runs to completion and stores the result. Streaming would require a different architecture (SSE, WebSockets) that doesn't fit the current Convex pattern | Show loading spinner during extraction (same as AI Director chat's loading state). Typical extraction takes 3-8 seconds — acceptable without streaming |
+| **PayPal/GoFundMe donation platform integration for donation chart** | "Real donation data" | Explicitly out of scope per PROJECT.md. QB already receives donation income via journal entries. The donation chart should read QB income categories, not external platforms | Parse QB `revenueByCategory` for income lines matching "donation" or "contribution." If QB has no such categories, show a "no income data matching donations" message |
+| **LLM-generated narrative for every KPI card** | "Explain this number" | Adds an AI call per card, dramatically increases cost and latency. The existing AI Director chat already supports "explain this" queries | Show the raw extracted value and its source document name. Let the user ask AI Director for narrative context |
+| **Scheduled weekly summary emails** | "Automate reporting" | Requires email infrastructure, scheduling complexity, and content review workflow. Newsletter system already handles email. Kareem opens the dashboard daily | Dashboard summary panel with timestamp covers this. Email digest is v2+ |
+| **KB extraction from QB data (not documents)** | "Analyze financials too" | QB financial analysis is already covered by AI Insights tab in expenses section. Mixing KB document extraction with QB data in the same panel creates confused data provenance | Keep KB extraction strictly for uploaded documents. QB financial analysis stays in the Expenses → AI Insights tab |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Google Calendar Cron Sync]
-    └──requires──> [calendarEvents Convex table]
-    └──requires──> [googleapis credential config in Admin]
-    └──enables──> [Calendar Widget on Dashboard]
-    └──enables──> [Calendar events in Alerts Panel]
+[KB-Powered KPI Cards]
+    └──requires──> [knowledgeBase table with uploaded files] (already exists)
+    └──requires──> [OpenAI vector store ID in aiDirectorConfig] (already exists)
+    └──requires──> [new Convex action: extractKbMetrics] (new)
+    └──requires──> [new Convex table or appSettings keys for cached extracted values] (new)
+    └──renders via──> [new dashboard section: KbInsights or similar] (new)
+    └──independent of──> [QB connection]
 
-[Dashboard KPI Cards Fix]
-    └──requires──> [QB data shape verification]
-    └──requires──> [Grant hook data shape verification]
-    └──independent of──> [Calendar integration]
+[AI Summary Panel]
+    └──requires──> [knowledgeBase table with files] (already exists)
+    └──requires──> [OpenAI vector store] (already exists)
+    └──shares action infrastructure with──> [KB-Powered KPI Cards] (can be same action, different prompt)
+    └──requires──> [stored summary text in Convex] (new field or appSettings key)
+    └──requires──> [manual regenerate trigger UI] (new)
+    └──independent of──> [QB connection]
 
-[Alerts / "What Needs Attention" Panel]
-    └──requires──> [Dashboard KPI cards working] (for financial anomaly alerts)
-    └──requires──> [grants table with Q-report dates] (already exists)
-    └──enhanced by──> [calendarEvents table] (optional: calendar-sourced deadlines)
-    └──does NOT require──> [Calendar integration to launch basic version]
+[Donation Performance Charts]
+    └──requires──> [QB connected] (already gated, follows existing pattern)
+    └──requires──> [QB income data: revenueByCategory from getProfitAndLoss] (already exists for current month)
+    └──requires──> [multi-month income trend: new fetchMonthlyIncomeTrend action] (new — biggest new backend work)
+    └──requires──> [new quickbooksCache reportType: "income_trend"] (new cache entry)
+    └──renders in──> [existing DonationPerformance.tsx component] (extend, don't replace)
+    └──independent of──> [KB features]
 
-[Newsletter Template Fix]
-    └──requires──> [HTML email audit: Outlook vs Gmail rendering]
-    └──independent of──> [all other features]
-    └──enables──> [Newsletter preview accuracy]
-    └──enables──> [Constant Contact send reliability]
-
-[Upcoming Deadlines Timeline Widget]
-    └──requires──> [grants Q-report dates] (already exists)
-    └──enhanced by──> [calendarEvents table]
+[KB KPI Cards] ──independent of──> [Donation Charts]
+[AI Summary Panel] ──shares infra with──> [KB KPI Cards]
 ```
 
 ### Dependency Notes
 
-- **Alerts panel does NOT require Calendar:** The most valuable alerts (grant deadlines, QB anomalies) come from existing data. Calendar enriches it but is not a blocker.
-- **Dashboard fix is independent:** Can fix KPI card data population without touching Calendar or Alerts.
-- **Newsletter fix is fully isolated:** Template HTML rendering is its own contained problem.
-- **Calendar requires Admin config surface:** Need a place for Kareem to paste Google service account credentials or complete OAuth. The existing Admin console (7 tabs) is the right place to add a "Google Calendar" tab.
+- **KB KPI Cards and AI Summary share the same infrastructure:** Both call OpenAI with the vector store, both cache results in Convex. Build one Convex action that handles both extraction types (metrics + summary) to avoid two separate OpenAI round-trips.
+- **Donation chart is fully independent of KB:** QB connection is the only dependency. Can be built or shipped separately.
+- **Multi-month income trend is the hardest new backend piece:** The existing `fetchPriorYearPnl` action fetches a single prior month. Fetching 5 prior months for a rolling 6-month view means 5 additional QB API calls. This should be a single new action that loops, not 5 separate actions. Cache as a single `income_trend` entry (JSON array of month objects).
+- **No new auth or integrations required:** Everything reuses existing OpenAI API key and QB OAuth tokens.
 
 ---
 
 ## MVP Definition
 
-This is a subsequent milestone on a working app. MVP here means "what makes this milestone shippable."
+This is a targeted milestone on a working app. MVP means "what makes v1.2 shippable."
 
-### Launch With (v1 — this milestone)
+### Launch With (v1.2)
 
-- [x] Fix dashboard KPI cards to actually render QB + grant data — the dashboard is the core of the tool
-- [x] Fix newsletter HTML template — Outlook-safe table-based layout with inline styles
-- [x] Google Calendar read-only sync via service account — cron job storing events in Convex
-- [x] Calendar widget on dashboard (today's events + next 7 days)
-- [x] Alerts panel ("What Needs Attention") — grant report deadlines within 30 days, grants expiring, QB budget variance >15%
+- [ ] **KB KPI extraction** — Convex action queries vector store for 3-5 configurable impact metrics (active clients, sessions, key outcomes). Results cached in Convex with timestamp. New dashboard section renders them as stat cards.
+- [ ] **AI summary panel** — Same action (or companion action) generates 3-5 bullet highlights from KB documents. Cached, with manual Regenerate button. Empty state when no KB files exist.
+- [ ] **Donation/income chart** — Replace the always-null `getDonations` path with real QB income data. Read from existing `revenueByCategory` for current-month breakdown. Add rolling 6-month income trend via new action + cache.
 
 ### Add After Validation (v1.x)
 
-- [ ] Calendar events by event type with role-based filtering — trigger: multiple users report seeing irrelevant events
-- [ ] Financial anomaly detection (unusual vendor, category spike) — trigger: QB data proves useful enough to analyze
-- [ ] Upcoming deadlines timeline as standalone dashboard section — trigger: Kareem asks for it
+- [ ] **Configurable KB extraction fields** — Admin UI to specify which metrics to extract (instead of hardcoded). Trigger: Kareem wants metrics beyond the initial 3-5.
+- [ ] **KB summary history** — Store last N summaries with timestamps so Kareem can compare. Trigger: "Can you show me last week's summary?"
+- [ ] **Income breakdown by category as stacked chart** — Show grant income vs. program fees vs. contributions separately over time. Trigger: QB income data proves rich enough to warrant breakdown.
 
 ### Future Consideration (v2+)
 
-- [ ] Email digest of alerts — defer until Kareem asks; daily dashboard open covers this
-- [ ] AI-generated weekly briefing from alert data — cool but complex; out of scope now
-- [ ] Multi-calendar support (personal + org calendar) — out of scope now
+- [ ] **Automated KB re-extraction on document upload** — Adds API cost but removes manual friction. Defer until usage patterns are clear.
+- [ ] **KB extraction confidence scores** — Show "extracted from: [document name]" per metric. Needs citation parsing from OpenAI response.
+- [ ] **Multi-month income forecast** — Project next 3 months based on historical pattern. Requires more months of data than DEC currently has in QB.
 
 ---
 
@@ -138,86 +137,63 @@ This is a subsequent milestone on a working app. MVP here means "what makes this
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| Fix dashboard KPI data rendering | HIGH | LOW (data shape fix, existing infrastructure) | P1 |
-| Fix newsletter HTML template | HIGH | LOW (HTML/CSS audit, table-based layout) | P1 |
-| Alerts panel (grant deadlines, budget warnings) | HIGH | MEDIUM (computed from existing data) | P1 |
-| Google Calendar sync + widget | HIGH | HIGH (new OAuth, new table, new cron, new UI) | P1 |
-| Upcoming deadlines timeline | MEDIUM | LOW (reuse grant countdown badge pattern) | P2 |
-| Role-filtered calendar view | LOW | MEDIUM | P3 |
-| Financial anomaly AI detection | MEDIUM | HIGH | P3 |
+| KB KPI extraction (backend action + cache) | HIGH | MEDIUM (new Convex action, OpenAI call, storage schema) | P1 |
+| KB stat cards (frontend component) | HIGH | LOW (follows existing StatCard pattern exactly) | P1 |
+| AI summary panel with regenerate | HIGH | MEDIUM (companion to KB extraction, needs UI for regenerate + loading state) | P1 |
+| Donation chart from QB income data (current month) | HIGH | LOW (revenueByCategory already parsed, just wire into DonationPerformance.tsx) | P1 |
+| Rolling 6-month income trend (new QB action + cache) | MEDIUM | HIGH (5 additional QB API calls, new cache structure, date math) | P2 |
+| Income breakdown by source (stacked chart) | MEDIUM | MEDIUM (data exists, charting library supports it) | P2 |
+| Configurable KB extraction fields (admin UI) | LOW | HIGH | P3 |
 
 **Priority key:**
-- P1: Must have for this milestone
-- P2: Should have, add when possible in this milestone
+- P1: Must ship for v1.2 milestone
+- P2: Ship if P1 lands cleanly and time permits
 - P3: Future milestone
 
 ---
 
-## Competitor Feature Analysis
+## Implementation Behavior Notes by Feature
 
-| Feature | Salesforce NPSP | Bloomerang | DEC DASH Approach |
-|---------|-----------------|------------|-------------------|
-| Dashboard KPIs | Generic, requires heavy config | Donor-centric, not program-focused | Purpose-built for DEC's specific grant/program/QB data mix |
-| Calendar integration | Via AppExchange ($) | Not built-in | Direct Google Calendar API, no extra cost |
-| Grant tracking | Opportunity records (generic CRM) | Not built-in | Custom 5-stage pipeline with Q-report dates |
-| Newsletter | Third-party (Mailchimp integration) | Built-in basic | CC integration with AI-generated template |
-| Alerts | Configurable but complex setup | Email-only | In-dashboard alert panel with computed rules |
-| AI tools | Einstein (expensive add-on) | None | Built-in AI Director + expense categorization |
+### KB Metric Extraction — Expected Behavior
 
-DEC DASH wins by being purpose-built for DEC's exact workflow, not a horizontal CRM adapted for nonprofits.
+The standard pattern for RAG-based metric extraction from organizational documents:
 
----
+1. **Prompt structure matters:** The extraction prompt must be specific. "What is the current number of active clients?" outperforms "summarize client data." Specificity reduces hallucination.
+2. **JSON response format:** Use `response_format: { type: "json_object" }` or OpenAI function calling to get structured output. Free-text responses require regex parsing which is brittle.
+3. **NOT_FOUND sentinel:** Instruct the model to return `"value": null, "source": null` when a metric is not found in the documents. Never return a fabricated number. The prompt: "If you cannot find this metric explicitly stated in the documents, return null — do not estimate."
+4. **Source attribution:** Request the document name or passage as part of the response. This allows showing "from: Q4 Program Report.pdf" under the stat card, which builds trust.
+5. **Staleness model:** KB extraction should be explicitly user-triggered (Regenerate button) plus auto-triggered when new files are added to the KB (optional v1.x). Do not run on every dashboard load — that would cost $0.01-0.10 per page view.
+6. **Storage:** Cache extracted values in a new Convex table `kbInsightsCache` with fields: `{ metricKey, value, sourceDocument, extractedAt }` or simpler as `appSettings` keys like `kb_metric_active_clients`. The appSettings approach is lower friction since the table already exists.
 
-## Implementation Notes by Feature
+### AI Summary Panel — Expected Behavior
 
-### Dashboard KPI Data Fix
-The `ExecutiveSnapshot.tsx` already references `accounts.data.totalCash` and `pnl.data.totalRevenue`. The issue is likely:
-1. QB cache returns data in unexpected shape (check `quickbooksCache` table `data` field — it's stored as JSON string)
-2. `useAccounts()` / `useProfitAndLoss()` hooks parse the JSON string; verify the parsed shape matches what components expect
-3. Missing null guards — `--` fallback exists but data may be `null` vs `undefined`
+1. **Summary scope:** Should synthesize across ALL KB documents, not just the most recent one. Vector store file_search handles this.
+2. **Output format:** 3-5 bullet points, each 1-2 sentences. Not a paragraph — bullets are scannable for a busy Executive Director.
+3. **Tone:** Factual, not promotional. "Q3 report shows 87 families served" not "DEC is making great strides."
+4. **Prompt constraint:** "Summarize only what is explicitly stated in the uploaded documents. Do not add interpretation or context not present in the source material."
+5. **Regenerate UX:** Button shows spinner during generation (typically 5-15 seconds for file_search + response). Button is disabled during generation to prevent double-submission. Same pattern as AI Director's send button.
+6. **Timestamp:** "Generated [X ago] — Regenerate" provides the right mental model. Kareem knows the summary reflects KB contents as of the last regeneration.
 
-### Google Calendar Integration Pattern
-- **Auth:** Service account (not user OAuth) — same pattern as Google Sheets (`googleSheetsConfig` table with `serviceAccountEmail`). Admin shares calendar with service account email.
-- **Scope:** `https://www.googleapis.com/auth/calendar.readonly` — read-only, no write risk
-- **Sync:** Cron every 60 minutes (less frequent than QB/Sheets is fine). Use Google's incremental sync token pattern — store `nextSyncToken` in a new `googleCalendarConfig` table.
-- **Storage:** New `calendarEvents` table: `{ eventId, calendarId, title, startTime, endTime, location, description, eventType, lastSyncAt }`
-- **Event types:** Classify by calendar source or event title keyword matching (e.g., "session" → client_session, "board" → board_meeting, "grant" → grant_deadline)
-- **Token expiry:** Handle 410 response by wiping `calendarEvents` and doing full re-sync
+### Donation/Income Chart — Expected Behavior
 
-### Alerts Panel Design
-The "What Needs Attention" panel should appear at the top of the dashboard, above KPI cards, only when there are active alerts. Empty state = no panel shown (clean default view).
+The existing `DonationPerformance.tsx` component was built for a PayPal integration that never happened. QB is the right data source, but the data model differs from the original `DonationsData` interface:
 
-Alert categories:
-1. **Grant deadlines** — Q-report dates within 30 days (from `grants` table)
-2. **Grants expiring** — `endDate` within 60 days (from `grants` table)
-3. **Budget variance** — QB expense category exceeds budget by >15% (from QB cache)
-4. **Newsletter drafts** — newsletters in `review` status ready to send
-5. **Calendar today** — events starting today (from `calendarEvents` table, if connected)
-
-Each alert = title + severity (warning/critical) + action link. Computed as a Convex query — no new infrastructure needed.
-
-### Newsletter Template Fix
-HTML email rendering problems are well-documented. The fix:
-1. **Replace div layout with table-based layout** — tables render consistently across Outlook, Gmail, Apple Mail
-2. **Inline all CSS** — email clients strip `<style>` tags; use `style=""` attributes on every element
-3. **Use web-safe fonts or fallback stacks** — Nunito/Fraunces are Google Fonts; they won't load in email clients. Use `Arial, Helvetica, sans-serif` as fallbacks
-4. **Max-width 600px** — standard email width that works across all clients
-5. **Test against Litmus or Email on Acid patterns** — the CLAUDE.md describes a specific template with `box-shadow`, `border-radius`, two-column header. `box-shadow` doesn't render in Outlook; `border-radius` support is partial. Simplify to flat design for Outlook compatibility while preserving visual hierarchy.
+1. **Current-month approach (P1):** `getProfitAndLoss` already returns `revenueByCategory` — a Record<string, number> of income line items. Wire this directly into the chart as a pie/bar breakdown. The `DonationPerformance` component can be refactored to consume `getProfitAndLoss` instead of `getDonations`.
+2. **6-month rolling approach (P2):** Requires a new QB action `fetchMonthlyIncomeTrend` that loops over 6 months and fetches a P&L for each. Cache as `income_trend` reportType with data: `[{ month: "2025-09", income: 45000, byCategory: {...} }, ...]`.
+3. **Chart type recommendation:** Line chart (existing in DonationPerformance.tsx) for total income trend. Stacked bar chart for income-by-category breakdown. Both can live in the same component — show whichever data is available.
+4. **Label mapping:** QB account names like "Government Grants Income" or "Program Service Revenue" are not user-friendly. A mapping layer (constants object or admin-configurable) should translate QB category names to display labels. Example: `{ "Government Grants Income": "Grants", "Individual Contributions": "Donations" }`.
+5. **Empty state:** If QB is connected but has no income categories in the P&L (new org, no transactions yet), show "No income recorded in QuickBooks for this period" rather than a broken chart.
 
 ---
 
 ## Sources
 
-- [Databox: The Ultimate Guide to Nonprofit Dashboards](https://databox.com/nonprofit-kpi-dashboard) — MEDIUM confidence (multiple verified by Funraise guide)
-- [Funraise: Your Ultimate Nonprofit Dashboard Guide](https://www.funraise.org/blog/your-ultimate-nonprofit-dashboard-guide-with-samples) — MEDIUM confidence
-- [ClariBI: Build Executive Dashboards That Get Used Daily](https://claribi.com/blog/post/build-executive-dashboard-that-actually-gets-used/) — MEDIUM confidence (design patterns verified across sources)
-- [GoLimelight: 5 Financial Dashboards Every Nonprofit Needs](https://www.golimelight.com/blog/financial-dashboards-for-nonprofits) — MEDIUM confidence
-- [Google Developers: Synchronize resources efficiently](https://developers.google.com/workspace/calendar/api/guides/sync) — HIGH confidence (official Google docs)
-- [Google Developers: Authorizing Requests to the Google Calendar API](https://developers.google.com/calendar/api/guides/auth) — HIGH confidence (official Google docs)
-- [Tabular: 2025 Email Newsletter Design Tips](https://tabular.email/blog/newsletter-design-best-practices) — MEDIUM confidence
-- [TextMagic: HTML Email Best Practices](https://www.textmagic.com/blog/html-email-best-practices/) — MEDIUM confidence (consistent with industry standards)
+- Existing codebase analysis: `convex/aiDirectorActions.ts`, `convex/quickbooks.ts`, `src/components/dashboard/DonationPerformance.tsx`, `src/components/dashboard/ExecutiveSnapshot.tsx` — HIGH confidence (direct code inspection)
+- OpenAI Assistants API file_search behavior: HIGH confidence (established in v1.0 via `aiDirectorActions.ts` implementation which uses the same pattern)
+- QB P&L income parsing: HIGH confidence (`parsePnlTotals` and `extractCategories` in `quickbooks.ts` already handle income row extraction correctly — `revenueByCategory` is populated)
+- Dashboard section framework: HIGH confidence (existing `SECTION_COMPONENTS` map and `DashboardSection` wrapper show the integration pattern clearly)
 
 ---
 
-*Feature research for: DEC DASH 2.0 — Command Center Milestone*
-*Researched: 2026-02-28*
+*Feature research for: DEC DASH 2.0 — v1.2 Intelligence Milestone*
+*Researched: 2026-03-01*

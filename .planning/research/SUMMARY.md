@@ -1,183 +1,207 @@
 # Project Research Summary
 
-**Project:** DEC DASH 2.0 — Command Center Milestone
-**Domain:** Nonprofit Executive Dashboard (Next.js 15 + Convex — milestone additions)
-**Researched:** 2026-02-28
+**Project:** DEC DASH 2.0 — v1.2 Intelligence Milestone
+**Domain:** Nonprofit Executive Dashboard — KB extraction, AI summary, donation/income charts
+**Researched:** 2026-03-01
 **Confidence:** HIGH
 
 ## Executive Summary
 
-DEC DASH 2.0 is an existing, working executive dashboard for the Dads' Education Center nonprofit. This milestone is not a greenfield build — it is a targeted addition of four capabilities to a production system: fixing dashboard KPI data rendering, integrating Google Calendar, adding a proactive alerts panel, and fixing the newsletter HTML template. The base stack (Next.js 15, Convex, googleapis, OpenAI, Constant Contact) is locked and proven. All four additions follow established patterns already in the codebase: the Calendar sync mirrors the Sheets sync, the alerts panel reads existing tables without new infrastructure, and the newsletter fix is a targeted HTML audit rather than a rewrite.
+DEC DASH 2.0 v1.2 is a targeted enhancement milestone adding three intelligence features to an already-working nonprofit dashboard: KB-powered KPI cards that extract real program metrics from uploaded documents, an AI summary panel grounded in knowledge base contents, and donation/income performance charts sourced from QuickBooks monthly P&L data. The existing stack (Next.js 15, Convex, OpenAI SDK v6, Chart.js) covers all three features with zero new npm packages. All implementation work is new Convex actions, new schema tables, and new/modified frontend components following patterns already established in the codebase.
 
-The recommended approach is to build in dependency order: newsletter template fix first (fully isolated, no schema changes, immediate value), then dashboard data fix (unblocks core value, no new features), then Google Calendar integration (new schema and Convex modules, but follows the cache-through pattern), and finally the alerts panel (reads all of the above). This sequencing means each phase delivers independent value and the hardest phase (Calendar) does not block the others. Two new npm packages are needed: `convex-helpers` (for proper loading state management) and `sonner` (for toast notifications). No other new dependencies are required — `googleapis` already handles Calendar.
+The recommended approach is strictly cache-then-query: external service calls (OpenAI, QuickBooks) happen only in Convex actions and store results into Convex tables; React components read exclusively from those tables via `useQuery`. KB extraction must use Chat Completions with `response_format: json_schema` — NOT the Assistants API file_search path, which is non-deterministic and does not support structured output formatting. The QB monthly income chart should use `summarize_column_by=Month` on the existing P&L endpoint — one API call for 12 months of data rather than 12 separate calls.
 
-The top risk is operational, not technical: the Google Calendar service account integration requires manual sharing of each calendar with the service account email before any code will work. A second major risk is the existing dashboard's `undefined`/`null` conflation causing silent failures; this must be audited component-by-component before Calendar and alerts are added on top. The QuickBooks refresh token rotation pattern (Pitfall 3) is a latent production bug that could cause all QB data to go stale after ~100 days — it should be audited and fixed during the dashboard data phase.
+The dominant risks are hallucinated KPI values (OpenAI filling in required schema fields with fabricated numbers when documents don't contain the data), runaway OpenAI API costs (auto-triggering summary generation on dashboard load instead of manual-only), and silent data mismatch in QB income account parsing (QB nonprofit-mode uses different row label strings than the current parser expects). All three risks are avoidable with specific, well-understood mitigations identified in research. Build order matters: schema changes deploy first, KB backend before KB frontend, income trend backend is independent and can be built in parallel.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The existing stack requires no major additions. `googleapis ^171.4.0` is already installed and handles Google Calendar API v3 via `google.calendar({ version: 'v3', auth })` — the same auth credentials (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`) used for Sheets work for Calendar. The only new packages needed are `convex-helpers` (Convex-team-maintained utility providing `useQueryWithStatus` for distinct loading/empty/error states) and `sonner` (the standard React 19 + Next.js 15 App Router toast library, 5KB, no peer conflicts).
+The v1.2 milestone adds no new npm packages. Everything builds on what already exists.
 
 **Core technologies:**
-- `googleapis` (existing): Google Calendar API access — reuse exactly as used for Sheets; no new auth setup
-- `convex-helpers`: `useQueryWithStatus` hook — distinguishes `undefined` (loading), `null` (not configured), and actual data for dashboard components
-- `sonner`: Toast display layer for proactive alerts — `<Toaster>` in dashboard layout, `toast()` in client components
-- Convex crons (built-in): Calendar sync schedule — same `crons.ts` file as QB and Sheets syncs
-- `date-fns` (existing): Deadline countdown logic — `formatDistanceToNow`, `isBefore`, `addDays`
+- **openai ^6.22.0** — Chat Completions with `response_format: json_schema` for deterministic KPI extraction; Assistants API (existing `aiDirectorActions.ts` pattern) for the narrative AI summary only; already installed and in production use
+- **Convex ^1.32.0** — new `kbSummaryCache` table, new `kbInsights.ts` and `kbInsightsActions.ts` files, extended `quickbooksCache` with `income_trend` reportType; all patterns follow existing Convex module conventions
+- **chart.js ^4.5.1 + react-chartjs-2 ^5.3.1** — monthly income line chart in `DonationPerformance.tsx`; already registered and rendering in `ProfitLoss.tsx`; only the data source changes (from always-null `getDonations` to new `getIncomeTrend` query)
+- **date-fns ^4.1.0** — month label formatting for chart X-axis; already installed
 
-**What NOT to add:** Calendar UI libraries (`react-big-calendar`, `@fullcalendar/react`) are overkill; a simple event list widget is the correct scope. External notification services (OneSignal, Pusher) are unnecessary for a single-user internal tool.
+**Critical version constraint:** The Assistants API runs (`openai.beta.threads.runs.createAndPoll`) do NOT support `response_format: json_schema` — that parameter is Chat Completions only. KB KPI extraction must use `chat.completions.create()` with a structured output schema, not the Assistants thread path.
+
+See: `.planning/research/STACK.md`
 
 ### Expected Features
 
-**Must have (table stakes — this milestone):**
-- KPI cards showing real QB + grant data — the dashboard is the core tool; empty cards signal the whole product doesn't work
-- Newsletter HTML rendering correctly in Gmail and Outlook — the template output is the primary artifact of the newsletter system
-- Google Calendar read-only sync — client sessions, board meetings, community events surfaced in one place
-- Calendar widget on dashboard — today's events and next 7 days minimum
-- Alerts panel ("What Needs Attention") — grant report deadlines within 30 days, grants expiring, QB budget variance >15%
+**Must have — table stakes for v1.2:**
+- KB KPI cards extract real numbers from uploaded documents with source document attribution and extraction timestamp — not placeholders or hallucinated values
+- Graceful empty/not-configured states on all new sections following the existing `undefined`/`null`/`data` three-state pattern
+- Manual "Regenerate" button on AI summary panel — passive display without user-triggered refresh is insufficient for a point-in-time document snapshot
+- Donation/income chart reads actual QB income data — `DonationPerformance.tsx` already exists but the `getDonations` query always returns null (confirmed by codebase comment); must be wired to real monthly P&L data
+- Skeleton loading states matching existing `ChartSkeleton` / `StatCardSkeleton` components; no flash-of-wrong-state
 
-**Should have (add in this milestone if possible):**
-- Upcoming deadlines timeline widget — low effort, reuses existing grant countdown badge pattern
-- Last-sync timestamps visible on all data-dependent sections — users need to know if data is fresh
-- Manual "Sync Now" trigger for QB-dependent sections
+**Should have — differentiators that justify the milestone:**
+- KB extraction grounded strictly in documents — explicit "return null if not found" prompt constraint prevents hallucination; source document name displayed under each KPI card builds user trust
+- Multi-metric extraction in a single OpenAI call — batch extraction is cheaper and faster than one call per metric
+- Income breakdown by QB source category (grants vs. program fees vs. contributions) — more informative than a single total line
+- Rolling 6-12 month income trend via `summarize_column_by=Month` — reveals seasonal patterns and grant receipt timing
 
-**Defer to v2+:**
-- Role-filtered calendar view by event type
-- Financial anomaly AI detection (unusual vendor/category spikes)
-- Email digest of alerts — daily dashboard use covers this
-- AI-generated weekly briefing from alert data
-- Two-way calendar editing from dashboard
+**Defer to v1.x/v2+:**
+- Automated KB re-extraction on every document upload (cost and latency not warranted until usage patterns are clear)
+- KB summary history with compare-over-time capability
+- Multi-month income forecast / projection
+- Configurable KB extraction fields via admin UI (admin specifies which metrics to extract)
+- Scheduled weekly summary emails
 
 **Anti-features to reject:**
-- Real-time calendar push webhooks — polling every 30-60 min is sufficient; webhooks require public HTTPS endpoint management on a VPS
-- Editable Google Calendar events from dashboard — write scopes, two-way sync conflict risk, marginal gain
-- Automated newsletter sends — human review before sending to donors is a workflow requirement, not a limitation
+- Streaming KB summary generation — Convex actions do not support streaming to client; 5-30 second extraction time is acceptable with a loading spinner
+- Per-card AI narrative explanations — adds cost per card; AI Director chat already handles "explain this" queries
+- PayPal/GoFundMe API integration for donation data — out of scope per PROJECT.md; QB income accounts capture donation totals adequately
+
+See: `.planning/research/FEATURES.md`
 
 ### Architecture Approach
 
-All four additions follow the cache-through integration pattern established by QuickBooks and Google Sheets. External APIs are never called from the frontend; Convex actions fetch on a cron schedule and cache into Convex tables; frontend reads only from the cache via `useQuery`. This pattern tolerates API downtime, avoids rate-limit pressure, and provides real-time reactive updates through Convex's subscription model. Alerts are computed as a pure Convex query over existing live tables (grants, quickbooksCache, googleCalendarCache) — no separate alerts table needed, which keeps alerts always current with zero sync lag.
+The milestone integrates two independent subsystems — KB Intelligence and Income Trend — into the existing dashboard section framework. Both follow the established cache-then-query pattern. KB intelligence uses two new Convex files (`kbInsightsActions.ts` for OpenAI calls, `kbInsights.ts` for table CRUD) and one new schema table (`kbSummaryCache`). Income trend adds a new `fetchIncomeTrend` internalAction to the existing `quickbooksActions.ts` and wires it into the 15-minute cron via `syncAllData`. The new `KBInsights` dashboard section registers via the existing `SECTION_COMPONENTS` map and `DEFAULT_DASHBOARD_SECTIONS` array — the reorderable section framework requires zero new infrastructure.
 
 **Major components:**
-1. `convex/googleCalendarActions.ts` (new, "use node") — googleapis `calendar.events.list()` for each configured calendar ID; 60-day window; upserts to cache via internalMutation
-2. `convex/googleCalendar.ts` + `googleCalendarInternal.ts` + `googleCalendarSync.ts` (new) — public queries, internal mutations, and cron entrypoint following the Sheets module family pattern
-3. `convex/alerts.ts` (new, pure query) — computes Alert[] from grants (Q-report dates), quickbooksCache (budget variance), googleCalendarCache (today's events); sorted by urgency; no writes
-4. `src/components/dashboard/CalendarWidget.tsx` + `AlertsPanel.tsx` (new) — self-contained components owning their own `useQuery` calls; no prop drilling to parent page
-5. Schema additions: `googleCalendarConfig` table (singleton, stores calendarIds array) and `googleCalendarCache` table (indexed by startTime, eventType, eventId)
-6. Admin console: new "Google Calendar" tab for configuring calendar IDs — follows QB/Sheets/CC tab pattern with singleton `.first()` config query
+1. `convex/kbInsightsActions.ts` ("use node") — Chat Completions for structured KPI extraction; Assistants API for narrative summary; reads `assistantId`/`vectorStoreId` from existing `aiDirectorConfig` (no new AI config needed)
+2. `convex/kbInsights.ts` — queries and mutations for `kbSummaryCache` table using `cacheType: "summary" | "kpis"` discriminator; singleton upsert via delete-then-insert pattern matching existing `aiDirectorConfig`/`alertConfig` singletons
+3. `convex/quickbooksActions.ts` (extended) — adds `fetchIncomeTrend` internalAction using `summarize_column_by=Month`; wired into existing `syncAllData` so it runs on every 15-minute QB cron automatically
+4. `src/components/dashboard/KBInsights.tsx` — new dashboard section: AI summary bullets + KB KPI stat cards + Regenerate button; uses `status` field ("idle" | "generating" | "ready" | "failed") to prevent duplicate generation triggers and show stale data during regeneration
+5. `src/hooks/useKnowledgeBase.ts` — `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` following existing hook file patterns
+6. `src/components/dashboard/DonationPerformance.tsx` (modified) — replace `useDonations()` call with `useIncomeTrend()`; update chart title copy; all rendering logic unchanged
 
-**Key data flow insight:** The dashboard data bug (Pitfall 4 / Anti-Pattern 4) is likely that some sections read from `grantsCache` (Google Sheets sync, limited fields) instead of `grants` (Excel import, rich data with Q-report dates). These are separate tables. Each dashboard section must be audited to confirm it reads from the correct table for its data needs.
+**Build order (strict dependencies):**
+1. Schema: add `kbSummaryCache` table to `convex/schema.ts` → deploy with `npx convex dev --once`
+2. KB backend: `kbInsights.ts` + `kbInsightsActions.ts` (depends on step 1)
+3. Income trend backend: `quickbooks.ts` + `quickbooksActions.ts` extensions (independent of steps 1-2, can be parallel)
+4. Frontend hooks: `useKnowledgeBase.ts` + add `useIncomeTrend()` to `useQuickBooks.ts` (depends on steps 2-3)
+5. `KBInsights.tsx` component (depends on step 4)
+6. `DonationPerformance.tsx` update (depends on step 4, independent of step 5)
+7. Dashboard registration: `constants.ts`, `types/index.ts`, `dashboard/page.tsx` (depends on steps 5-6)
+
+See: `.planning/research/ARCHITECTURE.md`
 
 ### Critical Pitfalls
 
-1. **Google Calendar service account not shared with calendars** — Service accounts get zero access by default; `calendar.events.list()` returns 200 with empty results (no error thrown). Fix: manually share each Google Calendar with the service account email at "See all event details" permission before writing any code. Store calendar IDs explicitly in the `googleCalendarConfig` table — do not rely on `calendarList.list()`.
+1. **OpenAI hallucination on required schema fields** — When extraction schema fields are marked required, the model invents plausible values rather than returning null when source documents don't contain that data. Prevention: make all KPI schema fields optional/nullable; include explicit prompt instruction "return null for any metric not explicitly stated in the documents"; post-validate extracted values against plausible ranges; show source document name under each KPI card for auditability.
 
-2. **Dashboard `undefined` vs `null` conflation** — `useQuery` returns `undefined` (loading) then the actual result including `null` (not configured). Components that don't branch on all three states (`undefined` → spinner, `null` → "Connect X" CTA, data present → render) silently show broken values. Use `useQueryWithStatus` from `convex-helpers` and audit all 7 dashboard sections against the three-state pattern.
+2. **Using Assistants API file_search for structured extraction** — `file_search` threads return non-deterministic conversational text; `response_format: json_schema` is not supported in Assistants API runs. Prevention: use `chat.completions.create()` with `response_format: { type: "json_schema" }` for KPI extraction; reserve the Assistants API exclusively for the narrative summary feature where conversational output is appropriate.
 
-3. **QuickBooks refresh token not persisted after rotation** — QB's rotating refresh tokens: every successful refresh returns a new token that invalidates the old one. If `quickbooksActions.ts` refreshes the token but doesn't write the new one back to `quickbooksConfig`, the next sync fails with `invalid_grant`. This is a latent production bug — audit and fix before adding more QB-dependent features.
+3. **AI summary cost runaway from auto-triggering** — Each generation call can consume 50,000–100,000 input tokens ($0.50–$1.00/call at gpt-4o rates) if triggered on dashboard load or via a fixed-interval cron. Prevention: manual-only "Regenerate" button gated behind `requireRole(["admin", "manager"])`; store result in `kbSummaryCache` with `status` field; disable button during generation to prevent duplicate requests.
 
-4. **Newsletter HTML exceeds Constant Contact's 400 KB limit** — A fully-populated newsletter with all 19 sections can exceed CC's limit. The error is generic and silent. Fix: add a byte-length check before saving/sending; remove HTML comments from the template output; verify `[[trackingImage]]` is included (required by CC for open tracking, currently missing).
+4. **QB income account names are org-specific and unfilterable by type** — There is no "donations" QB account type; account names like "Individual Contributions," "Unrestricted Gifts," or "Donor Revenue" vary entirely by how DEC's bookkeeper configured their chart of accounts. The existing `revenueByCategory` map already contains the right data but requires knowing which key names represent donation income. Prevention: surface all `revenueByCategory` account names in the admin panel; let admin designate which accounts represent donation/income categories; store designation in `appSettings`.
 
-5. **Calendar timezone handling — events display at wrong times** — Google Calendar API returns datetimes with timezone offsets. Converting to Unix timestamps discards timezone metadata. Fix: store both the Unix timestamp and the timezone string; render with `toLocaleString('en-US', { timeZone: org_timezone })`; add an org timezone setting to `appSettings`. This must be built into the data model from the start — retrofitting is painful.
+5. **QB nonprofit-mode changes P&L row group labels silently** — DEC's QB may use nonprofit accounting mode where "Income" rows are labeled "Revenue" or "Support & Revenue," causing the existing parser (which matches on `"income"`) to return `$0` with no error. Prevention: log one real QB P&L JSON response from DEC's environment before writing the monthly income parser; broaden label matching to include "revenue" and "support" variants.
+
+6. **KB extraction results go stale when documents are added or deleted** — The `kbSummaryCache` table has no relationship to `knowledgeBase` table mutations. Prevention: store `kbSnapshotIds` (list of `knowledgeBase._id` values at extraction time) alongside results; compare against current KB in the display query; show "Data may be outdated — regenerate?" badge when the sets differ. Manual regeneration plus a staleness indicator keeps it simple and auditable.
+
+See: `.planning/research/PITFALLS.md`
+
+---
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Based on combined research, suggested three-phase structure for v1.2:
 
-### Phase 1: Newsletter Template Fix
-**Rationale:** Fully isolated — no schema changes, no dependencies on other phases. Quick win that restores a broken feature. The newsletter system is already built; this is an HTML/CSS audit. Should be shipped first to restore user confidence.
-**Delivers:** Correctly rendering HTML emails in Gmail, Outlook, and Apple Mail; `[[trackingImage]]` included; 400 KB limit check added; OpenAI polish prompt refined to not strip filled sections.
-**Addresses features:** Newsletter template rendering correctly (P1 table stakes).
-**Avoids pitfalls:** Newsletter 400 KB limit (Pitfall 5), `[[trackingImage]]` missing, campaign reuse on already-sent campaigns.
-**Research flag:** No additional research needed — HTML email best practices are well-documented; the fix is targeted debugging of `convex/newsletterTemplate.ts`.
+### Phase 1: KB KPI Extraction Backend + Cards
 
-### Phase 2: Dashboard Data Population Fix
-**Rationale:** Unblocks the core value of the dashboard without introducing new infrastructure. Must verify data flow before adding Calendar and Alerts on top. The `undefined`/`null` audit and QB token refresh fix here prevent subtle bugs from propagating into new features.
-**Delivers:** All 7 dashboard sections showing real data; three-state loading pattern applied consistently; QB token refresh properly persisting new tokens; `lastSyncSucceededAt` tracking surfaced in admin; last-sync timestamps visible on data-dependent cards.
-**Addresses features:** KPI cards with real data (P1 table stakes), consistent data refresh, "Connect X" CTAs for non-configured integrations.
-**Uses:** `convex-helpers` `useQueryWithStatus` (new install); `date-fns` (existing) for sync age display.
-**Avoids pitfalls:** `undefined`/`null` conflation (Pitfall 2), QB refresh token rotation (Pitfall 3), silent cron failures (Pitfall 4).
-**Research flag:** No additional research needed — patterns are well-established and the codebase already has `ProfitLoss.tsx` as the correct template for three-state handling.
+**Rationale:** KB features share infrastructure — the `kbSummaryCache` schema, `kbInsightsActions.ts`, `kbInsights.ts`. Building backend and schema first unblocks both KB KPI cards and the AI summary panel. This phase also requires locking in the hardest design decision (Chat Completions vs. Assistants API for extraction) before any UI is built, preventing a costly implementation reversal.
 
-### Phase 3: Google Calendar Integration
-**Rationale:** New schema additions and a new Convex module family, but follows the exact Sheets pattern. No new credentials needed — same service account. Requires Admin tab addition. This phase has the most setup complexity (manual calendar sharing) and must be complete before calendar-sourced alerts in Phase 4.
-**Delivers:** `googleCalendarConfig` + `googleCalendarCache` schema additions; new Convex module family (actions/internal/queries/sync); "Google Calendar" admin tab for configuring calendar IDs; cron sync every 15-60 minutes; `CalendarWidget.tsx` on dashboard showing next 7 days of events grouped by type.
-**Addresses features:** Google Calendar unified view (P1 differentiator), calendar widget on dashboard (P1 table stakes), upcoming deadlines enriched by calendar data.
-**Uses:** `googleapis` (existing); same `GOOGLE_SERVICE_ACCOUNT_EMAIL` / `GOOGLE_PRIVATE_KEY` env vars; Convex crons (built-in).
-**Implements:** Cache-through integration pattern (Pattern 1); Admin tab for new integration config (Pattern 4).
-**Avoids pitfalls:** Service account sharing (Pitfall 1 — verify manually before code), timezone handling (Pitfall 6 — build into data model from start), fetching unbounded event history (Anti-Pattern 3 — 60-day window only), calling Calendar API from Next.js route handlers (Anti-Pattern 1).
-**Research flag:** Needs manual verification of service account calendar sharing behavior before implementation. Calendar sharing must be tested with a real Google Calendar — mock responses will not reveal the silent-empty-result failure mode.
+**Delivers:** `kbSummaryCache` schema deployed; `extractKBKPIs` Chat Completions action working; `KBInsights.tsx` dashboard section visible with real stat cards; source document name + extraction timestamp shown under each KPI value; staleness badge when KB documents have changed since last extraction.
 
-### Phase 4: Proactive Alerts Panel
-**Rationale:** Depends on Phase 2 (QB data available for budget variance) and is enhanced by Phase 3 (calendar events enriching alerts). Grant-deadline and QB-variance alerts can ship before Calendar; calendar-sourced "today's events" alerts can be added once Phase 3 is complete. This phase completes the command center vision.
-**Delivers:** `alerts.ts` pure Convex query computing Alert[] from grants, quickbooksCache, googleCalendarCache; `AlertsPanel.tsx` rendering ranked alerts above KPI cards; `sonner` toast on new critical alerts; tiered severity (7-day = critical/red, 30-day = warning/yellow); "dismissed" state to prevent alert fatigue; alert categories: grant report deadlines, expiring grants, QB budget variance >15%, newsletter drafts ready to review, today's calendar events.
-**Addresses features:** "What Needs Attention" alert panel (P1 differentiator), upcoming deadlines timeline (P2).
-**Uses:** `sonner` (new install); existing grants, quickbooksCache, googleCalendarCache tables; Convex pure query (no schema changes needed).
-**Implements:** Computed alerts via pure queries pattern (Pattern 2).
-**Avoids pitfalls:** Alert fatigue (UX Pitfall 1 — tiered severity + dismiss state); alerts revealing QB data to unauthorized roles (Security Pitfall 3 — RBAC-gate alert data matching underlying data permissions); alert records becoming stale (Anti-Pattern 2 — pure query avoids this).
-**Research flag:** No additional research needed — alert logic derives entirely from existing data with well-understood query patterns. Alert threshold values should be validated with the Executive Director before coding.
+**Features addressed (from FEATURES.md):** KB KPI extraction (P1), KB stat card frontend (P1), staleness detection, source provenance display.
+
+**Pitfalls to avoid:** Hallucination on required fields (nullable schema + explicit null-return prompt instruction), Assistants API misuse for extraction (Chat Completions only), PII exposure (filter KB to aggregate reports, not individual intake forms), missing `DashboardSectionId` type update (add to union before first render).
+
+**Research flag:** Standard patterns — follows existing Convex action + cache pattern with code examples available directly in research files. No additional research-phase needed.
+
+---
+
+### Phase 2: AI Summary Panel
+
+**Rationale:** Shares the `kbSummaryCache` table and `aiDirectorConfig` credentials established in Phase 1. The Assistants API thread pattern (already working in `aiDirectorActions.ts`) is the correct choice here — the summary is a narrative, not structured extraction. The key design challenge is the generation state model (`status` field, duplicate-trigger prevention) which builds directly on Phase 1 infrastructure.
+
+**Delivers:** Dashboard panel showing 3-5 bullet highlights from KB documents; manual Regenerate button with disabled state during generation; "Generated X ago" timestamp; stale cached summary shown during regeneration (not a blank screen); role-gated action preventing runaway cost.
+
+**Features addressed (from FEATURES.md):** AI summary panel with regenerate (P1).
+
+**Pitfalls to avoid:** Cost runaway (manual trigger only, role-gated action), race condition from multiple rapid clicks (`status: "generating"` guard before triggering action), layout congestion from additional dashboard section (verify default section ordering, verify hideable).
+
+**Research flag:** Standard patterns — Assistants API thread + action-on-demand + Convex reactive query is the exact pattern used by `aiDirectorActions.ts` today. No additional research-phase needed.
+
+---
+
+### Phase 3: Donation/Income Performance Charts
+
+**Rationale:** Fully independent of Phases 1-2 — no shared code, different Convex files, different QB data path. Can be built in parallel with Phase 1 or sequentially after Phase 2. Highest backend complexity of the three features due to QB API monthly column parsing, but the `DonationPerformance.tsx` frontend change is minimal (data source swap + label copy update only).
+
+**Delivers:** `DonationPerformance.tsx` shows real QB monthly income data instead of always-null empty state; line chart with 12-month trend via `summarize_column_by=Month` single API call; income breakdown by QB account category when admin has designated accounts in `appSettings`.
+
+**Features addressed (from FEATURES.md):** Donation chart from QB income data (P1), rolling 12-month income trend (P2), income breakdown by source (P2).
+
+**Pitfalls to avoid:** QB account name fragility (build admin account designation before the chart, not after), QB nonprofit-mode label mismatch (log real QB P&L response first — 10 minutes of validation that eliminates the highest-risk parsing failure), monthly fetch strategy (`summarize_column_by=Month` not 12 separate calls), empty state when no accounts have been designated (show "Configure donation accounts in Admin" with link, not a broken chart).
+
+**Research flag:** Moderate uncertainty on QB monthly P&L JSON shape (confirmed via community sources, not official Intuit docs). Recommended validation: before writing the monthly income parser, trigger a real QB P&L API call in DEC's environment and inspect the raw JSON column structure. This is a 10-minute validation step, not a full research phase.
+
+---
 
 ### Phase Ordering Rationale
 
-- **Newsletter first** because it is fully isolated and restores a broken feature with zero risk to existing functionality.
-- **Dashboard fix second** because it is a prerequisite for trusting the data that Calendar and Alerts will build on. Adding alerts on top of broken KPI cards creates compounded confusion.
-- **Calendar third** because it requires schema additions and new infrastructure, but does not depend on Phases 1 or 2 being complete (it is additive). However, placing it after the dashboard fix means the Calendar widget slots into a working dashboard rather than a broken one.
-- **Alerts fourth** because it is the final assembly of all previous work — it reads QB data (Phase 2), grants data (existing), and calendar data (Phase 3) to compute the most valuable surface in the dashboard.
+- Phases 1 and 2 share the same Convex table (`kbSummaryCache`) and action file (`kbInsightsActions.ts`) — build sequentially to avoid write conflicts.
+- Phase 3 (QB income) touches entirely different files (`quickbooks.ts`, `quickbooksActions.ts`, `DonationPerformance.tsx`) — it can run in parallel with Phase 1 if two developers are available, or be built sequentially after Phase 2 with no dependency penalty.
+- Schema deployment must precede any KB backend work — Convex rejects queries against tables that don't exist in the deployed schema.
+- Dashboard registration (constants, types, page.tsx) is always the final step — it depends on component files existing and the schema being deployed.
 
 ### Research Flags
 
-Phases needing extra care during planning/implementation:
-- **Phase 3 (Google Calendar):** Manual verification required before coding. The service account sharing pitfall (Pitfall 1) is a silent failure mode that will make the integration appear broken even when code is correct. Test with a real calendar and real service account sharing before writing sync logic.
-- **Phase 4 (Alerts):** Alert threshold values (30-day deadline window, 15% budget variance) should be validated with the Executive Director before implementation. Alert fatigue is a high-cost recovery (Pitfall 7 — requires full redesign if thresholds are wrong at launch).
+**Phases needing targeted validation during execution:**
+- **Phase 3:** Capture and inspect a real DEC QB P&L JSON response (with `summarize_column_by=Month`) before writing the monthly income parser. The column-to-month mapping structure is confirmed to exist from community sources but not verified against DEC's specific QB configuration. This validation prevents the highest-confidence parse-failure pitfall.
 
-Phases with standard patterns (no additional research needed):
-- **Phase 1 (Newsletter fix):** HTML email best practices are well-documented. The fix is targeted to `convex/newsletterTemplate.ts`.
-- **Phase 2 (Dashboard fix):** Three-state loading pattern is established in the codebase (`ProfitLoss.tsx` is the template). QB token audit is a code review task, not a research task.
+**Phases with well-documented standard patterns (no additional research needed):**
+- **Phase 1:** Convex action + cache + Chat Completions `json_schema` — all established with working code examples in STACK.md and ARCHITECTURE.md research files.
+- **Phase 2:** Assistants API thread + action-on-demand + Convex reactive query — the exact pattern `aiDirectorActions.ts` uses in production today.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Existing stack verified from codebase; new packages (`convex-helpers`, `sonner`) verified via official docs and GitHub. No ambiguity — `googleapis` already handles Calendar with no new packages needed. |
-| Features | HIGH | Features derive from existing working infrastructure; scope is well-defined in PROJECT.md. Anti-features clearly identified. Competitor analysis is directionally accurate (MEDIUM confidence) but doesn't affect implementation decisions. |
-| Architecture | HIGH | Based on direct codebase inspection of `convex/googleSheetsActions.ts`, `convex/crons.ts`, `convex/schema.ts`, and dashboard components. New patterns mirror existing ones exactly. |
-| Pitfalls | HIGH | Critical pitfalls verified via official Google Calendar, Convex, and Constant Contact documentation. QB token rotation pitfall confirmed via Intuit's 2025 policy update. Timezone pitfall is a known class of bug with documented prevention. |
+| Stack | HIGH | Zero new packages; all patterns verified via direct codebase inspection. OpenAI file download restriction confirmed by multiple independent community sources. QB `summarize_column_by=Month` confirmed via developer community (not official Intuit docs — exact JSON column shape is MEDIUM confidence). |
+| Features | HIGH | P1 features derive directly from documented codebase gaps (`getDonations` always null per source comment, no KB extraction mechanism exists today). P2 features are well-understood extensions of the same infrastructure. |
+| Architecture | HIGH | Based on direct inspection of all relevant Convex files, component files, hooks, and the dashboard section registration pattern. Build order is dependency-derived, not speculative. |
+| Pitfalls | HIGH | Hallucination on required schema fields is verified OpenAI model behavior. Assistants API structured output limitation is confirmed via official docs. QB label mismatch is verified via codebase comment and QB nonprofit-mode documentation. Cost runaway math ($0.50–$1.00/call) is calculated from current gpt-4o pricing. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **QB token refresh audit:** The refresh token rotation pitfall (Pitfall 3) is identified but requires a code review of `convex/quickbooksActions.ts` to confirm whether the bug exists. This is the first task of Phase 2 — read the token refresh logic before assuming it works.
-- **`grantsCache` vs `grants` table confusion:** Research identified this as the likely root cause of dashboard data not rendering, but the exact component-to-table mapping must be verified by inspecting each dashboard section component in Phase 2. The hypothesis (Anti-Pattern 4 in ARCHITECTURE.md) is high-confidence but unconfirmed.
-- **Newsletter `[[trackingImage]]` tag:** PITFALLS.md notes this is "currently missing from the template" — this must be confirmed by reading `convex/newsletterTemplate.ts` directly at the start of Phase 1. If it is already present, this pitfall is resolved.
-- **Org timezone for calendar display:** Storing the org timezone in `appSettings` is recommended but the specific field name and admin UI surface need to be designed in Phase 3. This is a design gap, not a technical one.
-- **Alert threshold validation:** The 30-day grant deadline window and 15% budget variance threshold are research-informed defaults. The Executive Director should validate these before Phase 4 implementation to prevent alert fatigue.
+- **QB monthly P&L JSON shape:** The `summarize_column_by=Month` parameter is confirmed to exist, but the exact column-to-row ColData index mapping is from community sources, not official Intuit docs. Validate with one real API call before writing the parser. Fallback if shape differs: 12 separate monthly P&L calls (slower but guaranteed to work with existing single-period fetch logic).
+
+- **DEC's QB income account names:** Research cannot determine how DEC's bookkeeper named their income accounts. The admin account-designation UI (stored in `appSettings`) is the designed mitigation, but it adds a one-time setup step before the donation chart shows real data. Factor this into rollout communication with the Executive Director.
+
+- **KB document content format:** Research assumes KB documents are PDF/text aggregate program reports. If any documents are image-only PDFs or non-OCR spreadsheets, Chat Completions extraction will return null for all metrics (not an error). No code mitigation needed now — document this as a known limitation if extraction returns consistently empty for specific files.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Google Calendar API auth docs: https://developers.google.com/workspace/calendar/api/auth — scope list, service account auth patterns
-- Google Calendar API events reference: https://developers.google.com/workspace/calendar/api/v3/reference/events — API surface, pagination, sync tokens
-- Google Calendar API sharing concepts: https://developers.google.com/workspace/calendar/api/concepts/sharing — service account ACL behavior
-- Convex Cron Jobs docs: https://docs.convex.dev/scheduling/cron-jobs — cron pattern, error handling
-- Convex Scheduled Functions docs: https://docs.convex.dev/scheduling/scheduled-functions — `ctx.scheduler` API
-- Convex `useQuery` undefined vs null: https://docs.convex.dev/client/react — loading state semantics
-- Constant Contact custom code email guidelines: https://developer.constantcontact.com/api_guide/design_code_emails.html — 400 KB limit, `[[trackingImage]]` requirement
-- caniemail.com border-radius: https://www.caniemail.com/features/css-border-radius/ — email client CSS support
-- Existing codebase: `convex/googleSheetsActions.ts`, `convex/crons.ts`, `convex/schema.ts`, `convex/quickbooks.ts`, `convex/newsletterTemplate.ts`, `src/components/dashboard/*.tsx` — direct pattern verification
+- Direct codebase inspection: `convex/aiDirectorActions.ts`, `convex/quickbooks.ts`, `convex/quickbooksActions.ts`, `convex/schema.ts`, `convex/kbInsights.ts` (planned), `src/components/dashboard/DonationPerformance.tsx`, `src/app/(dashboard)/dashboard/page.tsx`, `src/hooks/useQuickBooks.ts`, `convex/crons.ts` — all patterns verified directly against working production code
+- OpenAI file download restriction — https://community.openai.com/t/not-allowed-to-download-files-of-purpose-assistants/528220 (multiple independent community reports)
+- OpenAI Structured Outputs guide — https://platform.openai.com/docs/guides/structured-outputs
+- react-chartjs-2 v5.3.1 docs — https://react-chartjs-2.js.org/
 
 ### Secondary (MEDIUM confidence)
-- convex-helpers GitHub: https://github.com/get-convex/convex-helpers — `useQueryWithStatus` API surface
-- Sonner GitHub: https://github.com/emilkowalski/sonner — React 19 / Next.js 15 compatibility
-- QuickBooks refresh token rotation: https://nango.dev/blog/quickbooks-oauth-refresh-token-invalid-grant — token rotation behavior
-- Intuit 2025 refresh token policy: https://blogs.intuit.com/2025/11/12/important-changes-to-refresh-token-policy/ — expiry timestamp changes
-- Databox/Funraise nonprofit dashboard guides — standard KPI patterns for nonprofit executives
-- Google Developers Node.js Calendar quickstart — setup steps
+- QB `ProfitAndLoss` API `summarize_column_by=Month` parameter — multiple QB developer community sources confirm the parameter exists and returns monthly columns; exact JSON column structure unverified against DEC's QB
+- QB nonprofit-mode label changes — QB Online Help + developer community; codebase `parsePnlTotals` function confirms reliance on "income" string matching which would silently fail in nonprofit mode
+- OpenAI hallucination on required schema fields — OpenAI documented model behavior for Structured Outputs strict mode
 
-### Tertiary (LOW confidence)
-- Alert fatigue patterns (Astronomer blog) — directionally informative; specific threshold values need ED validation
-- Service account calendar sharing (Medium/IceApple) — community confirmation; official Google docs are the authoritative source
+### Tertiary (LOW confidence — validate during execution)
+- Exact JSON column structure of QB monthly P&L response (ColData index-to-month mapping) — developer community discussions; validate with real DEC QB API call before writing the monthly income parser
 
 ---
-*Research completed: 2026-02-28*
+*Research completed: 2026-03-01*
 *Ready for roadmap: yes*

@@ -1,59 +1,69 @@
 # Architecture Research
 
-**Domain:** Nonprofit executive dashboard — adding Google Calendar, dashboard fixes, alerts, newsletter fixes
-**Researched:** 2026-02-28
-**Confidence:** HIGH (based on direct codebase analysis + verified API documentation)
+**Domain:** KB Intelligence + Donation Charts integration into existing nonprofit dashboard
+**Researched:** 2026-03-01
+**Confidence:** HIGH — based on direct codebase inspection of all relevant files
 
-## Standard Architecture
+---
 
-### System Overview
+## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     FRONTEND (Next.js 15)                        │
-├──────────────┬──────────────┬──────────────┬────────────────────┤
-│  Dashboard   │  Newsletter  │  Grants      │  Calendar Widget    │
-│  Page        │  Pages       │  Pages       │  (new)             │
-│  + Sections  │              │              │                    │
-└──────┬───────┴──────┬───────┴──────┬───────┴────────┬───────────┘
-       │              │              │                │
-       │          useQuery / useMutation (Convex React)
-       │              │              │                │
-┌──────▼──────────────▼──────────────▼────────────────▼───────────┐
-│                    CONVEX BACKEND                                 │
-├──────────────┬──────────────┬──────────────┬────────────────────┤
-│  queries/    │  mutations/  │  actions/    │  crons/            │
-│  mutations   │ (write data) │  (external   │  (scheduled        │
-│  (read data) │              │   API calls) │   tasks)           │
-├──────────────┴──────────────┴──────┬─────── ┴────────────────────┤
-│                    CONVEX TABLES                                  │
-│  quickbooksCache  grantsCache  programDataCache                  │
-│  googleCalendarCache (new)     alertsLog (new)                   │
-│  newsletters  grants  clients  programs                          │
-└────────────────────────────────────────────────────────────────  ┘
-       │              │              │                │
-┌──────▼──────┐ ┌─────▼────┐ ┌──────▼────┐ ┌────────▼────────────┐
-│ QuickBooks  │ │ Google   │ │ Constant  │ │ Google Calendar     │
-│ API         │ │ Sheets   │ │ Contact   │ │ API (new)           │
-│ (OAuth)     │ │ (Service │ │ API       │ │ (Service Account)   │
-│             │ │ Account) │ │ (OAuth)   │ │                     │
-└─────────────┘ └──────────┘ └───────────┘ └─────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND (Next.js 15 App Router)                │
+├─────────────────────────────────────────────────────────────────────────┤
+│  dashboard/page.tsx                                                      │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────────────────┐ │
+│  │ ExecutiveSnapshot│  │ DonationPerform. │  │  KBInsights (NEW)      │ │
+│  │ useAccounts()    │  │  useDonations()  │  │  useKBSummary() (NEW)  │ │
+│  │ useProfitAndLoss │  │  [currently null]│  │  useKBKPIs() (NEW)     │ │
+│  └──────────────────┘  └──────────────────┘  └────────────────────────┘ │
+│                                                                          │
+│  hooks/useQuickBooks.ts        hooks/useKnowledgeBase.ts (NEW)          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                         CONVEX BACKEND                                   │
+├──────────────────────────┬──────────────────────┬───────────────────────┤
+│  QUERIES (quickbooks.ts) │  ACTIONS (node)       │  QUERIES              │
+│  getProfitAndLoss        │  fetchIncomeTrend(NEW)│  (kbInsights.ts, NEW) │
+│  getTrends               │  generateKBSummary    │  getKBSummary         │
+│  getDonations [null now] │   (NEW)               │  getKBKPIs            │
+│  getIncomeTrend (NEW)    │  extractKBKPIs (NEW)  │                       │
+├──────────────────────────┴──────────────────────┴───────────────────────┤
+│                         DATA LAYER (Convex Tables)                       │
+│  quickbooksCache (add reportType: "income_trend")                        │
+│  kbSummaryCache (NEW table)                                              │
+│  aiDirectorConfig (assistantId + vectorStoreId — reuse existing)         │
+│  knowledgeBase (openaiFileId — reuse existing)                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                         EXTERNAL SERVICES                                │
+│  QuickBooks API               OpenAI Assistants API / file_search        │
+│  (P&L with summarize_by=Month) (vector store: "DEC Knowledge Base")      │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
+---
 
-| Component | Responsibility | Communicates With |
-|-----------|---------------|-------------------|
-| `convex/googleCalendarActions.ts` (new) | Fetch events from Google Calendar API using `googleapis` | Google Calendar API, internal mutations |
-| `convex/googleCalendarInternal.ts` (new) | Cache calendar events in Convex tables | Convex DB only |
-| `convex/googleCalendar.ts` (new) | Public queries to read calendar cache | Frontend via useQuery |
-| `convex/googleCalendarSync.ts` (new) | Cron entrypoint for periodic Calendar refresh | Internal calendar actions |
-| `convex/alerts.ts` (new) | Query logic that computes alert conditions from existing tables | Frontend only — reads grants, QB, clients |
-| `src/components/dashboard/CalendarWidget.tsx` (new) | Display upcoming events grouped by type | `api.googleCalendar.*` |
-| `src/components/dashboard/AlertsPanel.tsx` (new) | Display proactive alerts ranked by urgency | `api.alerts.*` |
-| Dashboard section components (fix) | Render KPI cards and charts with real data | existing QB/Sheets hooks |
-| `convex/newsletterTemplate.ts` (fix) | Generate correct HTML matching n8n format | newsletterActions |
-| `convex/newsletterActions.ts` (fix) | AI polish pipeline + send pipeline | OpenAI, Constant Contact |
+## Component Responsibilities
+
+| Component | Responsibility | Status |
+|-----------|----------------|--------|
+| `quickbooks.getIncomeTrend` | Parse `income_trend` cache into `{ monthlyTotals, fetchedAt }` | NEW query in `quickbooks.ts` |
+| `quickbooksActions.fetchIncomeTrend` | Fetch QB P&L with `summarize_column_by=Month`, parse and cache | NEW internalAction in `quickbooksActions.ts` |
+| `kbInsightsActions.generateKBSummary` | Call OpenAI via existing `assistantId` + `vectorStoreId`, save summary | NEW action in new `kbInsightsActions.ts` |
+| `kbInsightsActions.extractKBKPIs` | Prompt OpenAI for structured JSON metrics from KB, save result | NEW action in new `kbInsightsActions.ts` |
+| `kbInsights.getKBSummary` | Query `kbSummaryCache` (cacheType: "summary"), return cached text + timestamp | NEW query in new `kbInsights.ts` |
+| `kbInsights.getKBKPIs` | Query `kbSummaryCache` (cacheType: "kpis"), return cached KPI JSON | NEW query in new `kbInsights.ts` |
+| `kbInsights.saveSummary` | Upsert (delete + insert) summary entry in `kbSummaryCache` | NEW mutation in new `kbInsights.ts` |
+| `kbInsights.saveKPIs` | Upsert KPI JSON entry in `kbSummaryCache` | NEW mutation in new `kbInsights.ts` |
+| `DonationPerformance.tsx` | Chart monthly income from QB — switch data source to `useIncomeTrend()` | MODIFY existing component |
+| `KBInsights.tsx` | New dashboard section: AI summary + KPI cards + "Regenerate" button | NEW component |
+| `hooks/useKnowledgeBase.ts` | `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` | NEW hook file |
+| `hooks/useQuickBooks.ts` | Add `useIncomeTrend()` | MODIFY existing file |
+| `convex/schema.ts` | Add `kbSummaryCache` table | MODIFY existing file |
+| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` + wire into `syncAllData` | MODIFY existing file |
+| `src/lib/constants.ts` | Add "kb-insights" to `DEFAULT_DASHBOARD_SECTIONS` | MODIFY existing file |
+| `src/types/index.ts` | Add "kb-insights" to `DashboardSectionId` union | MODIFY existing file |
+| `src/app/(dashboard)/dashboard/page.tsx` | Register `KBInsights` in `SECTION_COMPONENTS` | MODIFY existing file |
 
 ---
 
@@ -61,394 +71,485 @@
 
 ```
 convex/
-├── googleCalendarActions.ts    # "use node" — googleapis calendar.events.list()
-├── googleCalendarInternal.ts   # internalMutation: upsert cached events, clear stale
-├── googleCalendar.ts           # query: getUpcomingEvents, getEventsByType, getConfig
-├── googleCalendarSync.ts       # internalAction: cron entrypoint (runs every 15 min)
-├── alerts.ts                   # query: computeAlerts() — no new table needed
-├── schema.ts                   # Add googleCalendarCache table + googleCalendarConfig
-└── crons.ts                    # Add calendar-sync cron interval
+├── kbInsightsActions.ts     # "use node" — OpenAI calls for KB extraction
+├── kbInsights.ts            # queries + mutations for kbSummaryCache table
 
 src/
-├── components/
-│   └── dashboard/
-│       ├── CalendarWidget.tsx  # Upcoming events — 5-7 items with type badges
-│       └── AlertsPanel.tsx     # Alert list with urgency levels + action links
+├── components/dashboard/
+│   └── KBInsights.tsx       # New dashboard section component
 ├── hooks/
-│   └── useCalendar.ts          # Thin wrappers: useUpcomingEvents, useCalendarConfig
-└── app/
-    └── (dashboard)/
-        └── admin/
-            └── page.tsx        # Add "Google Calendar" tab to Admin console
+│   └── useKnowledgeBase.ts  # Hooks: useKBSummary, useKBKPIs, useRefreshKBSummary
+```
+
+Modified files:
+
+```
+convex/schema.ts             # Add kbSummaryCache table
+convex/quickbooks.ts         # Add getIncomeTrend query
+convex/quickbooksActions.ts  # Add fetchIncomeTrend action + wire to syncAllData
+src/hooks/useQuickBooks.ts   # Add useIncomeTrend hook
+src/components/dashboard/DonationPerformance.tsx  # Switch data source
+src/lib/constants.ts         # Add "kb-insights" to DEFAULT_DASHBOARD_SECTIONS
+src/types/index.ts           # Add "kb-insights" to DashboardSectionId union
+src/app/(dashboard)/dashboard/page.tsx  # Register KBInsights in SECTION_COMPONENTS
 ```
 
 ---
 
 ## Architectural Patterns
 
-### Pattern 1: Cache-Through Integration (existing pattern — use for Calendar)
+### Pattern 1: Cache-then-Query (already established — use for income trend + KB)
 
-**What:** External API (Google Calendar) is never called from the frontend. Convex actions fetch and cache into a Convex table. Frontend queries only read the cache.
+**What:** External service data (QB, OpenAI) is fetched in Convex actions, stored in Convex tables, then served via lightweight queries. React components query Convex tables — never external APIs directly.
 
-**When to use:** Any external API integration. Already used for QB and Google Sheets.
+**When to use:** All new external data. KB summaries and income trend data follow this same flow as QB and Google Sheets already do.
 
-**Why:** Eliminates rate-limit pressure on user actions, tolerates API downtime gracefully, and keeps all data in Convex's reactive query system.
+**Trade-offs:** Slight staleness (seconds on cron refresh, instant on manual trigger), but avoids latency in UI renders and prevents rate-limit spikes on every page load.
 
-**Example:**
+**Application to v1.2:**
 ```typescript
-// convex/googleCalendarActions.ts — "use node" action
-export const syncCalendar = internalAction({
+// convex/kbInsightsActions.ts ("use node")
+export const generateKBSummary = action({
   handler: async (ctx) => {
-    const { google } = await import("googleapis");
-    const config = await ctx.runQuery(internal.googleCalendar.getFullConfig);
-    if (!config) return;
-
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/calendar.events.readonly"],
+    const config = await ctx.runQuery(api.aiDirector.getConfig);
+    if (!config?.assistantId || !config?.vectorStoreId) {
+      throw new Error("AI Director not configured");
+    }
+    const openai = new OpenAI({ apiKey: await getOpenAIApiKey(ctx) });
+    const thread = await openai.beta.threads.create({
+      messages: [{ role: "user", content: KB_SUMMARY_PROMPT }],
     });
-
-    const calendar = google.calendar({ version: "v3", auth });
-    const now = new Date().toISOString();
-    const twoMonthsOut = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString();
-
-    for (const calendarId of config.calendarIds) {
-      const response = await calendar.events.list({
-        calendarId,
-        timeMin: now,
-        timeMax: twoMonthsOut,
-        singleEvents: true,
-        orderBy: "startTime",
-        maxResults: 50,
-      });
-      // upsert to googleCalendarCache via internalMutation
-    }
+    const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
+      assistant_id: config.assistantId,
+    });
+    // extract text, store via mutation
+    await ctx.runMutation(api.kbInsights.saveSummary, {
+      content: summaryText,
+      generatedAt: Date.now(),
+    });
   },
 });
-```
 
-**Reuse decision:** The same `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` env vars used for Google Sheets work for Calendar — no new credentials needed, just share each calendar with the service account email.
-
----
-
-### Pattern 2: Computed Alerts via Pure Queries (no new table needed)
-
-**What:** Alerts are computed on-demand by a Convex query that reads existing tables (grants, quickbooksCache, clients). No separate "alerts" table. The query assembles alert items sorted by urgency and returns them.
-
-**When to use:** When alerts reflect current state of existing data rather than new events. This avoids double-writing and keeps alerts always fresh.
-
-**Trade-offs:**
-- Pro: No sync delay, no staleness, no separate writes, zero schema changes needed
-- Con: Slightly more compute per query, but trivial for this scale (<100 grants, <500 clients)
-
-**Example:**
-```typescript
-// convex/alerts.ts — pure query, no external calls
-export const computeAlerts = query({
+// convex/kbInsights.ts
+export const getKBSummary = query({
   handler: async (ctx) => {
-    const alerts: Alert[] = [];
-    const now = Date.now();
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-
-    // Grant report deadlines
-    const grants = await ctx.db.query("grants").collect();
-    for (const grant of grants) {
-      for (const dateField of ["q1ReportDate", "q2ReportDate", "q3ReportDate", "q4ReportDate"] as const) {
-        const dateStr = grant[dateField];
-        if (!dateStr) continue;
-        const dueMs = new Date(dateStr).getTime();
-        const daysUntil = Math.ceil((dueMs - now) / (24 * 60 * 60 * 1000));
-        if (daysUntil >= 0 && daysUntil <= 30) {
-          alerts.push({
-            type: "grant_report_due",
-            urgency: daysUntil <= 7 ? "high" : "medium",
-            title: `${grant.fundingSource} report due`,
-            detail: `${daysUntil} days — ${dateField.replace("ReportDate", "").toUpperCase()}`,
-            linkTo: `/grants/${grant._id}`,
-            dueDate: dateStr,
-          });
-        }
-      }
-    }
-    // Also: QB cash-on-hand below threshold, upcoming Calendar events, etc.
-    return alerts.sort((a, b) => urgencyOrder(a.urgency) - urgencyOrder(b.urgency));
+    return await ctx.db.query("kbSummaryCache")
+      .withIndex("by_type", q => q.eq("cacheType", "summary"))
+      .first();
   },
 });
 ```
 
----
+### Pattern 2: Three-State Loading (already established — maintain exactly)
 
-### Pattern 3: Dashboard Section as Self-Contained Data Fetcher
+**What:** `undefined` = loading, `null` = not configured / no data, `data` = ready. All dashboard components follow this. It is critical that new components match this exactly to avoid flash-of-wrong-state.
 
-**What:** Each dashboard section component owns its own `useQuery` calls. The parent `DashboardPage` only manages layout/order. No top-down prop drilling of data.
+**When to use:** Every new `useQuery` call on dashboard components.
 
-**When to use:** Already the pattern in this project — maintain it. Do not lift QB/Calendar/alert state into the parent page.
+**Application to v1.2:**
+```typescript
+// KBInsights.tsx
+export default function KBInsights() {
+  const summary = useKBSummary();   // returns undefined | null | { content, generatedAt }
+  const kpis = useKBKPIs();         // returns undefined | null | { content, generatedAt }
 
-**Trade-offs:**
-- Pro: Sections are independently composable, can be hidden without orphaning data
-- Con: Multiple independent Convex subscriptions — acceptable for this scale
+  // Loading: any query still undefined
+  if (summary === undefined || kpis === undefined) {
+    return <KBInsightsSkeleton />;
+  }
 
-**Fix implication:** The data population issue in dashboard sections is likely in the individual component hooks, not the page. Investigate `useGrantTracker.ts` → `api.googleSheets.getGrants` (reads `grantsCache` table) versus `useGrants.ts` → `api.grants.list` (reads `grants` table) — these are different tables and the components may be reading the wrong one.
+  // Empty state: no KB files uploaded or no summary generated yet
+  if (summary === null) {
+    return (
+      <EmptyState
+        message="No KB summary generated yet."
+        action={{ label: "Go to Admin > Knowledge Base", href: "/admin" }}
+      />
+    );
+  }
 
----
+  // Render summary + KPI cards
+}
+```
 
-### Pattern 4: Admin Tab for New Integration Config
+### Pattern 3: Trigger-on-Demand Action (already established by triggerSync)
 
-**What:** Add "Google Calendar" as a new tab in the existing Admin console (`/admin`), matching the existing pattern for QB, CC, and Sheets tabs. Config stored in a new `googleCalendarConfig` Convex table (singleton pattern, `.first()`).
+**What:** Long-running operations (OpenAI calls, ~5-30 seconds) are triggered via `useAction`, not `useQuery`. The result is persisted to a Convex table, and the UI re-renders reactively when that table updates.
 
-**When to use:** Every new external service integration that requires admin setup.
+**When to use:** KB summary regeneration. User clicks "Regenerate" in `KBInsights.tsx` → `useAction(api.kbInsightsActions.generateKBSummary)` → action writes to `kbSummaryCache` → `useQuery(api.kbInsights.getKBSummary)` reactively re-renders.
 
-**Config fields needed:**
-- `calendarIds: string[]` — list of calendar IDs shared with service account
-- `syncedAt: number` — last sync timestamp
-- `configuredBy: Id<"users">` — audit trail
+**Trade-offs:** User sees stale cached data until action completes. Show a spinner on the "Regenerate" button with local `useState` during the action call. Do not disable the entire section.
+
+```typescript
+// hooks/useKnowledgeBase.ts
+export function useRefreshKBSummary() {
+  return useAction(api.kbInsightsActions.generateKBSummary);
+}
+
+// KBInsights.tsx — regenerate handler
+const refreshSummary = useRefreshKBSummary();
+const extractKPIs = useExtractKBKPIs();
+const [isGenerating, setIsGenerating] = useState(false);
+
+const handleRegenerate = async () => {
+  setIsGenerating(true);
+  try {
+    // Run both in parallel
+    await Promise.all([refreshSummary({}), extractKPIs({})]);
+  } finally {
+    setIsGenerating(false);
+  }
+};
+```
+
+### Pattern 4: Singleton Cache with cacheType Index
+
+**What:** `kbSummaryCache` stores two cache types (summary text, KPI JSON) in a single table, discriminated by a `cacheType` field with an index. This mirrors the singleton pattern used by `aiDirectorConfig`, `alertConfig`, and `quickbooksConfig` (all queried with `.first()`).
+
+**When to use:** Small number of cache entries that are replaced wholesale on regeneration. There is one org-wide summary and one org-wide KPI set.
+
+**Trade-offs:** Simple to query. No complex key management. The upsert requires a delete-then-insert pattern since Convex does not have an upsert primitive.
+
+```typescript
+// convex/schema.ts addition:
+kbSummaryCache: defineTable({
+  cacheType: v.union(v.literal("summary"), v.literal("kpis")),
+  content: v.string(),          // summary text OR JSON-stringified KPI object
+  generatedAt: v.number(),
+  fileCount: v.optional(v.number()),  // how many KB files were in scope
+}).index("by_type", ["cacheType"]),
+
+// convex/kbInsights.ts — upsert mutation pattern:
+export const saveSummary = mutation({
+  args: { content: v.string(), generatedAt: v.number(), fileCount: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("kbSummaryCache")
+      .withIndex("by_type", q => q.eq("cacheType", "summary"))
+      .first();
+    if (existing) await ctx.db.delete(existing._id);
+    await ctx.db.insert("kbSummaryCache", { cacheType: "summary", ...args });
+  },
+});
+```
+
+### Pattern 5: Reuse Existing OpenAI Assistant for New Query Types
+
+**What:** `aiDirectorConfig` already stores `assistantId` and `vectorStoreId`. KB extraction actions call `ctx.runQuery(api.aiDirector.getConfig)` to get these — the exact same pattern used by `aiDirectorActions.sendMessage`.
+
+**Why this is correct:** The existing assistant already has `file_search` enabled against the "DEC Knowledge Base" vector store. Creating a new assistant for KB extraction would waste OpenAI quota and add schema complexity with zero benefit.
+
+**Critical implementation detail:** Override the assistant's default behavior via a specific user message rather than relying on the system prompt. Each extraction thread is ephemeral and standalone.
 
 ---
 
 ## Data Flow
 
-### Google Calendar Sync Flow
+### Flow 1: KB Summary Generation (On-Demand)
 
 ```
-crons.ts (every 15 min)
+User clicks "Regenerate Summary" button in KBInsights dashboard section
     ↓
-googleCalendarSync.runSync (internalAction)
-    ↓ checks config exists
-googleCalendarActions.syncCalendar (internalAction, "use node")
-    ↓ googleapis calendar.events.list() for each calendarId
-googleCalendarInternal.upsertEvent (internalMutation)
-    ↓ writes to googleCalendarCache table
-    ↑
-googleCalendar.getUpcomingEvents (query)
-    ↑
-useCalendar.ts (useQuery hook)
-    ↑
-CalendarWidget.tsx (React component)
-    ↑
-Dashboard page (renders as a section)
-```
-
-### Alerts Computation Flow
-
-```
-AlertsPanel.tsx (React component)
-    ↓ useQuery(api.alerts.computeAlerts)
-alerts.ts computeAlerts (pure query)
-    ↓ reads: grants, quickbooksCache, googleCalendarCache, clients
-    ↓ assembles Alert[] sorted by urgency
-    ↑ returns Alert[] to component
-AlertsPanel.tsx renders ranked list with action links
-```
-
-### Dashboard Data Population Fix Flow
-
-The existing sections use two different data sources that need clarification:
-
-```
-ExecutiveSnapshot reads:
-  useGrants() → api.googleSheets.getGrants → grantsCache table (Sheets sync)
-  useActiveGrants() → api.googleSheets.getActiveGrants → grantsCache table
-  useAccounts() → api.quickbooks.getAccounts → quickbooksCache table (QB sync)
-  useProfitAndLoss() → api.quickbooks.getProfitAndLoss → quickbooksCache table
-
-GrantTracking/GrantBudget likely read:
-  Check if these use grantsCache (Sheets) or grants (Excel import) table
-  → These are separate tables; must match to the data source that is populated
-```
-
-**Root cause hypothesis:** Dashboard sections return `null` (not `undefined`) when the cache tables are empty, which means QB/Sheets have not synced yet. The fix is to ensure caches are populated (QB must be connected and synced, Sheets must be configured), and verify components handle the `null` empty state with a clear "Connect X" CTA rather than silently blank.
-
-### Newsletter Template Fix Flow
-
-```
-User fills section editor → saves sections JSON
+KBInsights.tsx → useAction(api.kbInsightsActions.generateKBSummary)
     ↓
-newsletterActions.generateEmailHtml (action, "use node")
-    ↓ calls buildNewsletterHtml() from newsletterTemplate.ts
-    ↓ passes result to OpenAI for polish
-    ↓ saves polished HTML to newsletters.generatedEmailHtml
-    ↑
-NewsletterPreview.tsx renders HTML in sandboxed iframe
-    ↑
-User edits visually via contentEditable → saves outerHTML
+kbInsightsActions.generateKBSummary (Convex action, "use node")
+    ↓ ctx.runQuery(api.aiDirector.getConfig) → { assistantId, vectorStoreId }
+    ↓
+OpenAI Assistants API — creates new thread with KB_SUMMARY_PROMPT
+Runs against existing assistant → file_search retrieves relevant KB docs automatically
+OpenAI returns summary text (bullet points)
+    ↓ ctx.runMutation(api.kbInsights.saveSummary, { content, generatedAt })
+kbSummaryCache table (cacheType: "summary") — delete existing, insert new
+    ↓ Convex reactive query subscription fires automatically
+useQuery(api.kbInsights.getKBSummary) in KBInsights.tsx re-renders with new summary
 ```
 
-**Known template issues to fix:**
-- Verify the `buildNewsletterHtml` output matches n8n "New test" node HTML exactly (check column widths, border-radius values, shadow styles)
-- OpenAI polish prompt must not strip correctly-filled sections; refine system prompt to only remove literal `[PLACEHOLDER]` strings
-- The `contentEditable` iframe edit mode may corrupt head/style tags — verify `documentElement.outerHTML` extraction preserves complete structure
+### Flow 2: KB KPI Extraction (On-Demand, same trigger)
+
+```
+Same "Regenerate" button triggers both generateKBSummary AND extractKBKPIs via Promise.all
+    ↓
+kbInsightsActions.extractKBKPIs (Convex action, "use node")
+    ↓ Same assistantId + vectorStoreId
+    ↓ Prompt: "Extract structured metrics as JSON: { activeClients, ... }"
+OpenAI returns JSON string
+    ↓ Validate JSON parseable (catch parse errors, store raw if invalid)
+    ↓ ctx.runMutation(api.kbInsights.saveKPIs, { content: jsonStr, generatedAt })
+kbSummaryCache table (cacheType: "kpis") — delete existing, insert new
+    ↓ reactive re-render
+KBInsights.tsx parses JSON, renders individual KPI stat cards
+```
+
+### Flow 3: Income Trend Chart (Automated via 15-min Cron)
+
+```
+QB cron fires every 15 min → quickbooksActions.syncAllData (internal action)
+    ↓ Add: ctx.runAction(internal.quickbooksActions.fetchIncomeTrend, {})
+fetchIncomeTrend (new internalAction)
+    ↓ QB API: ProfitAndLoss?summarize_column_by=Month&start_date=YYYY-01-01&end_date=YYYY-12-31
+QB returns month-column P&L report (columns are month labels, rows are account groups)
+    ↓ Parse income rows across month columns → { "YYYY-MM": totalIncome } map
+    ↓ ctx.runMutation(internal.quickbooksInternal.cacheReport,
+        { reportType: "income_trend", data: JSON.stringify(monthlyMap) })
+quickbooksCache table (reportType: "income_trend")
+    ↓ reactive re-render
+DonationPerformance.tsx ← useIncomeTrend() ← api.quickbooks.getIncomeTrend
+    ↓ Renders line chart with real monthly QB income data
+```
+
+### Flow 4: Dashboard Section Registration
+
+```
+1. constants.ts — add "kb-insights" to DEFAULT_DASHBOARD_SECTIONS array
+   (with title: "KB Insights", description: "AI-generated summary from knowledge base")
+2. types/index.ts — add "kb-insights" to DashboardSectionId union
+3. dashboard/page.tsx — add KBInsights component to SECTION_COMPONENTS map
+4. DashboardSection wraps KBInsights with existing move-up/move-down/hide controls (zero new code)
+```
 
 ---
 
-## Schema Additions Required
+## Integration Points — New vs. Modified
+
+### New Convex Files
+
+| File | Type | Purpose |
+|------|------|---------|
+| `convex/kbInsightsActions.ts` | Action file ("use node") | OpenAI calls for summary and KPI extraction |
+| `convex/kbInsights.ts` | Query/mutation file | CRUD for `kbSummaryCache` table |
+
+### Modified Convex Files
+
+| File | Change | Reason |
+|------|--------|--------|
+| `convex/schema.ts` | Add `kbSummaryCache` table | Persist generated summaries and KPI JSON |
+| `convex/quickbooks.ts` | Add `getIncomeTrend` query | Read `income_trend` cache for frontend |
+| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` internalAction | Fetch monthly P&L from QB API |
+| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` call to `syncAllData` | Include in existing 15-min cron |
+
+### New Frontend Files
+
+| File | Purpose |
+|------|---------|
+| `src/components/dashboard/KBInsights.tsx` | Dashboard section: AI summary + KB KPI cards + Regenerate button |
+| `src/hooks/useKnowledgeBase.ts` | `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` |
+
+### Modified Frontend Files
+
+| File | Change | Reason |
+|------|--------|--------|
+| `src/hooks/useQuickBooks.ts` | Add `useIncomeTrend()` | Hook for new QB monthly income data |
+| `src/components/dashboard/DonationPerformance.tsx` | Switch `useDonations()` → `useIncomeTrend()` | `getDonations` always returns null; income trend is the real data source |
+| `src/lib/constants.ts` | Add "kb-insights" to `DEFAULT_DASHBOARD_SECTIONS` | Register for dashboard layout |
+| `src/types/index.ts` | Add "kb-insights" to `DashboardSectionId` union | TypeScript type coverage |
+| `src/app/(dashboard)/dashboard/page.tsx` | Add `KBInsights` to `SECTION_COMPONENTS` | Wire component to section registry |
+
+---
+
+## Donation Chart: The Correct Data Source
+
+The existing `getDonations` query **always returns `null`** — it looks for a `"donations"` reportType cache entry that is never populated. The comment in `convex/quickbooks.ts` (lines 323-327) explicitly states this required a defunct PayPal integration. The `DonationPerformance` component already handles `null` gracefully with an empty state message.
+
+**Solution:** Do not build a separate donations endpoint. Use the QB **P&L report with monthly columns** to produce monthly income totals. This is the same P&L data QB already fetches in `fetchProfitAndLoss`, requested with an additional `summarize_column_by=Month` parameter.
+
+**QB API call for `fetchIncomeTrend`:**
+```
+GET /v3/company/{realmId}/reports/ProfitAndLoss
+  ?start_date={YYYY}-01-01
+  &end_date={YYYY}-12-31
+  &summarize_column_by=Month
+  &minorversion=65
+```
+
+The response has monthly columns instead of a single total column. Parse the Income section rows across each month column to produce a `Record<string, number>` keyed as `"YYYY-MM"`.
+
+**Shape stored in `quickbooksCache` as `reportType: "income_trend"`:**
+```typescript
+// JSON-stringified, same pattern as all other QB cache entries
+{
+  "2025-01": 12500,
+  "2025-02": 9800,
+  "2025-03": 14200,
+  // ... up to 12 months
+}
+```
+
+**`getIncomeTrend` query return shape:**
+```typescript
+{
+  monthlyTotals: Record<string, number>;  // "YYYY-MM" -> total income amount
+  fetchedAt: number;
+}
+```
+
+`DonationPerformance.tsx` already has the line chart rendering logic for `monthlyTotals` — it reads `data.monthlyTotals` and renders the last 12 months. The only required changes to the component are:
+1. Replace `useDonations()` import and call with `useIncomeTrend()` from `useQuickBooks.ts`
+2. Update chart label from "Monthly Donations" to "Monthly Income" (QB income includes grants + other revenue, not just donations)
+3. Keep all existing chart rendering code — the data shape is compatible
+
+---
+
+## KB Extraction: Prompt Design
+
+### Summary Prompt (for `generateKBSummary`)
+
+```
+You are summarizing the DEC (Dads Evoking Change) knowledge base for the Executive Director.
+Review all uploaded documents and write a concise executive summary using 3-5 bullet points.
+Cover: key programs and their status, recent milestones, strategic priorities, impact highlights.
+Format: Start each line with "•". Be specific and factual. Only include information found in the documents.
+Do not fabricate data. If no relevant documents are found, say so.
+```
+
+### KPI Extraction Prompt (for `extractKBKPIs`)
+
+```
+Search the knowledge base documents and extract organizational metrics.
+Return ONLY a valid JSON object with these exact keys (use null for any metric not found):
+
+{
+  "activeClients": <number or null>,
+  "programsOffered": <number or null>,
+  "sessionsCompleted": <number or null>,
+  "familiesServed": <number or null>,
+  "staffCount": <number or null>,
+  "volunteerCount": <number or null>,
+  "customMetric1Label": <string or null>,
+  "customMetric1Value": <string or null>,
+  "customMetric2Label": <string or null>,
+  "customMetric2Value": <string or null>,
+  "sourceDocs": [<document names where data was found>]
+}
+
+Do not fabricate numbers. Return null for any metric not present in the documents.
+```
+
+**KPI JSON parsing in frontend:** Wrap `JSON.parse(kpis.content)` in a try/catch. If parsing fails (OpenAI returned non-JSON), display the raw content as text rather than crashing.
+
+---
+
+## Schema Addition
 
 ```typescript
-// Add to convex/schema.ts
+// convex/schema.ts — add inside defineSchema({...}), after knowledgeBase table
 
-googleCalendarConfig: defineTable({
-  calendarIds: v.array(v.string()),    // calendar IDs shared with service account
-  syncedAt: v.optional(v.number()),
-  configuredBy: v.id("users"),
-}).index("by_configuredBy", ["configuredBy"]),
-
-googleCalendarCache: defineTable({
-  calendarId: v.string(),              // source calendar
-  eventId: v.string(),                 // Google event ID (for dedup)
-  title: v.string(),
-  startTime: v.number(),               // Unix ms
-  endTime: v.number(),                 // Unix ms
-  isAllDay: v.boolean(),
-  eventType: v.union(
-    v.literal("client_session"),
-    v.literal("board_meeting"),
-    v.literal("community_event"),
-    v.literal("grant_deadline"),
-    v.literal("other")
-  ),
-  description: v.optional(v.string()),
-  location: v.optional(v.string()),
-  cachedAt: v.number(),
-})
-  .index("by_startTime", ["startTime"])
-  .index("by_eventType", ["eventType"])
-  .index("by_eventId", ["eventId"]),
-```
-
-**Event type classification:** Events can be classified by calendar (one calendar per type) or by keyword matching in the title. Calendar-per-type is cleaner — Kareem maintains separate "Client Sessions", "Board Meetings", "Community Events" calendars and all are shared with the service account.
-
----
-
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Auth Method | Existing? |
-|---------|---------------------|-------------|-----------|
-| QuickBooks | OAuth tokens stored in `quickbooksConfig`, refreshed by action | OAuth 2.0 | Yes |
-| Google Sheets | Service account via env vars, config in `googleSheetsConfig` | Service Account JWT | Yes |
-| Google Calendar | Service account (same env vars as Sheets), config in `googleCalendarConfig` | Service Account JWT | No — new |
-| Constant Contact | OAuth tokens stored in `constantContactConfig` | OAuth 2.0 | Yes |
-| OpenAI | API key in `appSettings` table (`openai_api_key` key) | API Key | Yes |
-
-### Key Reuse Opportunity
-
-Google Calendar uses the **same service account credentials** (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`) already used for Google Sheets. The only requirement: each Google Calendar must be shared with the service account email at "See all event details" permission level. No new env vars or OAuth flow needed.
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `googleCalendarActions` ↔ `googleCalendarInternal` | `ctx.runMutation(internal.googleCalendarInternal.upsertEvent, ...)` | Same pattern as Sheets |
-| `alerts.ts` ↔ `grants`, `quickbooksCache`, `googleCalendarCache` | Direct `ctx.db.query()` inside query | No cross-module calls; pure DB reads |
-| Dashboard sections ↔ Convex queries | `useQuery` hooks in `src/hooks/` | No props drilling — each section self-sufficient |
-| Newsletter template ↔ OpenAI | `openai.chat.completions.create()` in `newsletterActions.ts` | Already wired; fix is in prompt and template accuracy |
-
----
-
-## Build Order Implications
-
-The features have these dependencies:
-
-```
-1. Newsletter template fix
-   → No dependencies. Isolated to convex/newsletterTemplate.ts + newsletterActions.ts
-   → Build first (quick win, no schema changes)
-
-2. Dashboard data population fix
-   → No schema changes. Fix is in existing components + queries
-   → Requires verifying QB is synced and grantsCache/quickbooksCache are populated
-   → Build second (unblocks core value of the dashboard)
-
-3. Google Calendar integration
-   → Requires schema additions (googleCalendarConfig, googleCalendarCache)
-   → Requires Admin tab addition
-   → Requires new Convex module family (actions/internal/queries/sync)
-   → Build third (all dependencies are new, no risk to existing features)
-
-4. Proactive alerts
-   → Requires googleCalendarCache to exist for calendar-based alerts
-   → But grant deadline alerts can ship before Calendar (use grants table)
-   → Can be split: grant/QB alerts in Phase 3, Calendar event alerts after Calendar sync ships
-   → Build fourth, but grant-only alerts can start in Phase 3
-
-5. Dashboard redesign (command center layout)
-   → Requires alerts (Phase 4) and Calendar widget (Phase 3) to be meaningful
-   → Build last — adds CalendarWidget + AlertsPanel as new sections
+kbSummaryCache: defineTable({
+  cacheType: v.union(v.literal("summary"), v.literal("kpis")),
+  content: v.string(),          // summary text OR JSON-stringified KPI object
+  generatedAt: v.number(),
+  fileCount: v.optional(v.number()),
+}).index("by_type", ["cacheType"]),
 ```
 
 ---
 
-## Anti-Patterns
+## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Calling Google Calendar API from Next.js Route Handlers
+### Anti-Pattern 1: Calling OpenAI from a Convex Query
 
-**What people do:** Create a `/api/calendar/events` Next.js route that calls the Google Calendar API directly on user request.
+**What people do:** Call OpenAI API inside a Convex `query` to generate fresh summaries on every page load.
 
-**Why it's wrong:** Breaks the established caching pattern. Every dashboard load triggers an API call. Hits rate limits under multi-user scenarios. Calendar data is unavailable during API downtime.
+**Why it's wrong:** Convex queries run in a deterministic read-only context — they cannot make network calls. This will throw a runtime error. Additionally, OpenAI file_search runs take 5-30 seconds, which cannot block a dashboard render.
 
-**Do this instead:** Follow the Sheets pattern — Convex action syncs to cache on cron schedule, frontend reads only from `googleCalendarCache` via Convex query.
+**Do this instead:** Actions only for OpenAI calls. Queries only read from Convex tables. The trigger-on-demand action pattern (Pattern 3 above) is correct.
+
+### Anti-Pattern 2: Creating a New OpenAI Assistant for KB Extraction
+
+**What people do:** Create a separate assistant for KB summary/KPI extraction with its own `assistantId` stored in a new config table.
+
+**Why it's wrong:** The existing `aiDirectorConfig.assistantId` already has `file_search` enabled and the "DEC Knowledge Base" vector store attached. A new assistant would duplicate setup, waste OpenAI quota (assistant storage costs), and add schema/config complexity.
+
+**Do this instead:** Reuse `assistantId` and `vectorStoreId` from `aiDirector.getConfig`. Override per-request behavior with specific extraction prompts in the thread message.
+
+### Anti-Pattern 3: Storing KPIs as Individual Table Rows
+
+**What people do:** Create a `kbKPIs` table with one row per metric: `{ metricName: "activeClients", value: "150", generatedAt: number }`.
+
+**Why it's wrong:** Adds schema complexity, requires collecting multiple rows per render, and makes atomic regeneration fragile (partial update leaves stale KPIs mixed with new ones). KB KPIs are regenerated as a set.
+
+**Do this instead:** Store KPI JSON as a single `content` string in `kbSummaryCache` (cacheType: "kpis"). This mirrors how `quickbooksCache.data` stores entire QB reports as JSON strings. Parse in the frontend component.
+
+### Anti-Pattern 4: Adding KB Insights as a New Route
+
+**What people do:** Create a `/kb-insights` page to display the KB summary and KPIs.
+
+**Why it's wrong:** The dashboard uses a reorderable section system — `SECTION_COMPONENTS` map, `DEFAULT_DASHBOARD_SECTIONS` array, `DashboardSection` wrapper. A new route fragments the "single-pane-of-glass" command center model and bypasses the existing hide/reorder user preferences system.
+
+**Do this instead:** Register `KBInsights` as a new entry in `SECTION_COMPONENTS` and `DEFAULT_DASHBOARD_SECTIONS`. It renders inside the existing dashboard with move/hide controls automatically provided by `DashboardSection`.
+
+### Anti-Pattern 5: Auto-Regenerating KB Summary on Every QB Cron Cycle
+
+**What people do:** Add KB summary generation to the 15-minute QB sync cron in `crons.ts`.
+
+**Why it's wrong:** OpenAI file_search threads are slow (5-30 seconds) and cost tokens. KB documents change rarely — typically only when an admin uploads a new file via Admin > Knowledge Base. Running regeneration every 15 minutes wastes OpenAI quota with redundant identical results.
+
+**Do this instead:** Manual trigger only ("Regenerate" button in `KBInsights.tsx`). Optionally, trigger automatically when a new file is uploaded by extending `knowledgeBaseActions.uploadToOpenAI` to call `ctx.runAction(api.kbInsightsActions.generateKBSummary, {})` after the upload completes. This is the correct event boundary: KB changes → summary invalidated → regenerate.
 
 ---
 
-### Anti-Pattern 2: Separate Alert Events Table with Async Writes
+## Build Order (Dependencies First)
 
-**What people do:** Create a separate `alerts` table, have a cron job write alert records, have the frontend read them.
+```
+Step 1: Schema change — Add kbSummaryCache table (schema.ts)
+        Deploy: npx convex dev --once
+        [Required before any kbInsights queries/mutations can be registered]
 
-**Why it's wrong:** Alert records become stale between cron runs. A grant report due in 6 days requires a record written 6 days ago. When grants are edited, old alert records are orphaned. Double-write complexity.
+Step 2: Convex backend for KB (independent of Step 3)
+        convex/kbInsights.ts — queries + mutations for kbSummaryCache
+        convex/kbInsightsActions.ts — generateKBSummary + extractKBKPIs actions
+        [Depends on Step 1]
 
-**Do this instead:** Compute alerts as a pure query from existing live data. The `grants` table is always current (inline editing). The computed alert is always accurate. No sync lag.
+Step 3: Convex backend for income trend (independent of Steps 1-2, can be parallel)
+        convex/quickbooks.ts — add getIncomeTrend query
+        convex/quickbooksActions.ts — add fetchIncomeTrend internalAction
+        convex/quickbooksActions.ts — wire fetchIncomeTrend into syncAllData
+        [Self-contained; no schema changes needed]
 
----
+Step 4: Frontend hooks (depends on Steps 2 and 3)
+        src/hooks/useKnowledgeBase.ts — new hook file
+        src/hooks/useQuickBooks.ts — add useIncomeTrend()
 
-### Anti-Pattern 3: Fetching All Events for All Time in Calendar Sync
+Step 5: KBInsights component (depends on Step 4)
+        src/components/dashboard/KBInsights.tsx
 
-**What people do:** `calendar.events.list({ calendarId })` with no `timeMin`/`timeMax` bounds.
+Step 6: DonationPerformance update (depends on Step 4, independent of Step 5)
+        Switch useDonations() to useIncomeTrend()
+        Update chart title and label copy
 
-**Why it's wrong:** Returns entire calendar history. For an organization with years of events, this is thousands of records, slow, and exceeds API quotas.
-
-**Do this instead:** Set `timeMin: now` and `timeMax: 60-days-out`. Only future events matter for a command center dashboard. Store only the next 60 days, refresh every 15 minutes.
-
----
-
-### Anti-Pattern 4: Mixing grantsCache and grants Tables in Dashboard
-
-**What people do (likely root cause of current bug):** Components call `api.googleSheets.getGrants` (reads `grantsCache` — Sheets sync) when they should call `api.grants.list` (reads `grants` — Excel import with rich data), or vice versa.
-
-**Why it's wrong:** `grantsCache` is populated by the Sheets cron and has limited fields. `grants` is the rich table with Q1-Q4 report dates, contact info, and funding stages. The Executive Snapshot uses `grantsCache` for total amounts (correct — this is Sheets data). The Grant Tracker and Grant Budget sections may be reading the wrong table or reading from an empty cache.
-
-**Do this instead:** Dashboard sections that need stage-pipeline and rich grant data should use `api.grants.*`. Sections that need Sheets-synced totals and spending should use `api.googleSheets.*`. Document which table each section reads.
+Step 7: Dashboard registration (depends on Steps 5 and 6)
+        src/lib/constants.ts — add kb-insights section metadata
+        src/types/index.ts — add kb-insights to DashboardSectionId
+        src/app/(dashboard)/dashboard/page.tsx — add KBInsights to SECTION_COMPONENTS
+```
 
 ---
 
 ## Scaling Considerations
 
-This is a single-organization internal tool. Scale is ~10 concurrent users maximum. Convex's free tier handles this trivially.
+This system serves a single nonprofit with single-digit concurrent users. Scaling is not a near-term concern.
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| Current (1-10 users) | Current architecture is correct. Crons run on Convex infra regardless of user count. |
-| 10-100 users | No changes needed. Convex subscriptions are efficient. Consider cron interval tuning. |
-| Multi-organization | Would require per-org config rows and row-level auth scoping — out of scope. |
-
-### Scaling Priorities (if needed)
-
-1. **First bottleneck:** Convex query fan-out on `computeAlerts` — if grants table grows to thousands. Mitigate with indexes.
-2. **Second bottleneck:** Google Calendar API quota (10,000 requests/day per project, free). At 15-min intervals with 4 calendars = ~384 requests/day — well within limits.
+| Concern | Current Scale | Notes |
+|---------|---------------|-------|
+| OpenAI API calls | On-demand only (manual trigger) | No rate-limit risk at this usage level |
+| KB document count | ~5-20 files expected | File_search works well under 100 files; no change needed |
+| kbSummaryCache rows | 2 rows maximum | One summary entry, one KPI entry |
+| QB income_trend fetch | Added to 15-min cron | One extra API call per sync; QB rate limits are generous |
+| OpenAI cost | Charged per thread token | One thread per regeneration; infrequent = negligible cost |
 
 ---
 
 ## Sources
 
-- Google Calendar API Auth Scopes: https://developers.google.com/workspace/calendar/api/auth (HIGH confidence — official docs)
-- Google Calendar API Events Reference: https://developers.google.com/workspace/calendar/api/v3/reference/events (HIGH confidence — official docs)
-- Convex Scheduled Functions: https://docs.convex.dev/scheduling/scheduled-functions (HIGH confidence — official docs)
-- Existing codebase patterns: `convex/googleSheetsActions.ts`, `convex/quickbooksActions.ts`, `convex/crons.ts` (HIGH confidence — direct source)
-- Service Account calendar sharing: https://developers.google.com/workspace/calendar/api/concepts/sharing (HIGH confidence — official docs)
+- Direct inspection: `convex/schema.ts` (26 tables, all reviewed — kbSummaryCache does not yet exist)
+- Direct inspection: `convex/quickbooks.ts` — `getDonations` comment on lines 323-327 confirms always-null state and reason
+- Direct inspection: `convex/quickbooksActions.ts` — `fetchProfitAndLoss` shows QB API call pattern; `summarize_column_by=Month` is a standard QB Reports API parameter (HIGH confidence from QB API docs + confirmed by existing P&L date param pattern)
+- Direct inspection: `convex/aiDirectorActions.ts` — confirms `assistantId` + `vectorStoreId` reuse pattern in `sendMessage`
+- Direct inspection: `convex/knowledgeBaseActions.ts` — confirms upload pipeline and existing vectorStoreId attachment
+- Direct inspection: `src/components/dashboard/DonationPerformance.tsx` — confirms `monthlyTotals: Record<string, number>` is the expected data shape, chart rendering already implemented
+- Direct inspection: `src/app/(dashboard)/dashboard/page.tsx` — confirms `SECTION_COMPONENTS` map and `DEFAULT_DASHBOARD_SECTIONS` registration pattern
+- Direct inspection: `convex/crons.ts` — confirms 15-min QB sync schedule, `syncAllData` is the entrypoint to extend
+- Direct inspection: `src/hooks/useQuickBooks.ts` — confirms hook pattern for new `useIncomeTrend` addition
 
 ---
 
-*Architecture research for: DEC DASH 2.0 — Google Calendar integration, dashboard fixes, proactive alerts, newsletter fixes*
-*Researched: 2026-02-28*
+*Architecture research for: DEC DASH 2.0 v1.2 Intelligence milestone*
+*Researched: 2026-03-01*

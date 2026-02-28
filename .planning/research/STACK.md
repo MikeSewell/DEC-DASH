@@ -1,169 +1,241 @@
 # Stack Research
 
-**Domain:** Nonprofit Executive Dashboard (Next.js 15 + Convex — milestone additions)
-**Researched:** 2026-02-28
-**Confidence:** MEDIUM-HIGH (existing stack verified from codebase; new additions verified via official docs and WebSearch)
+**Domain:** Nonprofit Executive Dashboard — v1.2 Intelligence (KB extraction, AI summaries, donation charts)
+**Researched:** 2026-03-01
+**Confidence:** HIGH for OpenAI path; HIGH for QB income-by-month path; MEDIUM for file content retrieval limitation
 
 ---
 
-## Context: What Already Exists
+## Context: What Already Exists (Do Not Re-Research)
 
-This is a subsequent milestone on an existing app. The base stack is locked:
+This is a subsequent milestone. The base stack is locked and fully operational:
 
-| Already Installed | Version | Do Not Change |
-|-------------------|---------|---------------|
-| next | 16.1.6 | Core framework |
-| convex | ^1.32.0 | Backend, DB, real-time |
-| googleapis | ^171.4.0 | Google Sheets — **reuse for Calendar** |
-| react / react-dom | 19.2.3 | Client framework |
-| openai | ^6.22.0 | AI features |
-| chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 | Dashboard charts |
-| date-fns | ^4.1.0 | Date utilities |
-| tailwindcss | ^4 | CSS framework |
+| Already Installed | Version | Role in v1.2 |
+|-------------------|---------|--------------|
+| openai | ^6.22.0 | **Central to ALL three v1.2 features** — extend existing patterns |
+| convex | ^1.32.0 | Backend, caching, real-time queries — extend existing tables |
+| chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 | **Donation charts** — already registered and used in ProfitLoss.tsx, DonationPerformance.tsx |
+| next | 16.1.6 | App Router, client components |
+| tailwindcss | ^4 | Design system — no changes |
+| date-fns | ^4.1.0 | Date formatting for chart labels |
+| googleapis | ^171.4.0 | Existing QB/Sheets/Calendar — no role in v1.2 |
+
+**Key insight: v1.2 adds zero new npm packages.** All three features are achievable within the existing openai SDK, Convex backend, and chart.js stack. The work is entirely new Convex actions and frontend components.
 
 ---
 
-## Recommended Stack (New Additions Only)
+## Feature 1: KB-Powered KPI Cards (Structured Extraction from Documents)
 
-### Google Calendar Integration
+### What needs to happen
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| googleapis (existing) | ^171.4.0 | Google Calendar API v3 client | Already installed for Google Sheets. The same `google.calendar({ version: 'v3', auth })` pattern mirrors the existing `google.sheets({ version: 'v4', auth })` pattern in `googleSheetsActions.ts`. No new package needed. |
-| Google Calendar API v3 | N/A | Read calendar events | REST API accessed via googleapis. Service account authentication (already configured with `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY` env vars) works by sharing each calendar with the service account email. |
+The Knowledge Base (KB) files already live in Convex Storage (`knowledgeBase` table) and in the OpenAI vector store. The task is: read the stored documents and extract structured numbers (client counts, program stats, impact metrics) and surface them as dashboard KPI cards.
 
-**Authentication approach (HIGH confidence — mirrors existing pattern):**
+### The File Content Retrieval Constraint
 
-The project already uses a Google service account for Sheets with `google.auth.GoogleAuth` + `credentials: { client_email, private_key }`. The same pattern works for Calendar:
+**CRITICAL — HIGH confidence (verified via OpenAI community, multiple sources):**
+
+Files uploaded with `purpose: "assistants"` **cannot be downloaded** via `openai.files.content()`. The API returns `400 - Not allowed to download files of purpose: assistants`. This is an explicit OpenAI restriction, not a bug.
+
+This rules out: fetch the file → parse the text → send to GPT.
+
+### Recommended Approach: Chat Completions + file_search Tool
+
+Use the existing OpenAI Assistants API thread/run pattern (already working in `aiDirectorActions.ts`) to ask a structured extraction question, then parse the response as JSON.
+
+**Why this approach (HIGH confidence):**
+- The vector store already indexes all KB documents via file_search
+- The existing `aiDirectorActions.ts` already does `openai.beta.threads.runs.createAndPoll()` with `assistant_id` and gets back text
+- Structured Outputs (`response_format: { type: "json_object" }`) works with gpt-4o and gpt-4o-mini — both already in use
+- No new authentication, no new API endpoints
+
+**Structured extraction pattern using existing openai SDK v6:**
 
 ```typescript
-// In a new convex/googleCalendarActions.ts — "use node" required
-const auth = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  },
-  scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+// In a new convex/kbActions.ts — "use node" required
+// Uses the existing vector store + assistant config
+
+const thread = await openai.beta.threads.create({
+  messages: [{
+    role: "user",
+    content: `Search the knowledge base documents and extract these metrics as JSON.
+    Return ONLY valid JSON matching this structure:
+    {
+      "totalClientsServed": number | null,
+      "activeProgramCount": number | null,
+      "impactMetrics": [{ "label": string, "value": string }],
+      "summaryText": string
+    }
+    Use null for any metric not found in the documents.`
+  }]
 });
-const calendar = google.calendar({ version: "v3", auth });
+
+const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
+  assistant_id: config.assistantId,
+  // response_format does NOT apply to Assistants API runs
+});
+
+// Parse the assistant's text response as JSON
+const text = assistantMsg.content[0].text.value;
+const extracted = JSON.parse(text); // wrap in try/catch
 ```
 
-**Required one-time setup:** Each Google Calendar (client sessions, board meetings, community events, grant deadlines) must be shared with the service account email via Google Calendar settings > Share with specific people > "See all event details" permission.
+**Why NOT `response_format: json_schema` with the Assistants API:**
+The Assistants API runs do NOT support `response_format` with `json_schema` type — that parameter applies to Chat Completions only, not thread runs. Instead, the system prompt instructs the model to return JSON, and the application parses the text response.
 
-**Scope to use:** `https://www.googleapis.com/auth/calendar.readonly` — read-only is sufficient, matches least-privilege principle. (MEDIUM confidence — verified via official Google Calendar API auth docs and multiple community sources.)
+**Why NOT Chat Completions with `tool_resources`:**
+The `file_search` tool resource is only available on the Assistants API, not on standalone `chat.completions.create()` calls. To search the vector store, you must use the Assistants API threads/runs path.
 
-**Do NOT use** `@googleapis/calendar` (separate scoped package, v14.2.0) — it's a lighter alternative, but the project already has the full `googleapis` package and using it avoids introducing another dependency for the same API surface.
+**Why NOT Zod for schema enforcement:**
+Zod (`zodResponseFormat`) adds a runtime dependency and only works with `chat.completions.parse()`, not the Assistants API runs path. Since the extraction prompt instructs JSON output and we validate with try/catch + null fallbacks, Zod is unnecessary overhead.
 
-### Convex Integration Pattern for Calendar
+### Caching Pattern
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Convex crons (built-in) | convex ^1.32.0 | Sync Calendar events on schedule | Exact same pattern as the existing `sheets-sync` cron. Add a `calendar-sync` interval to `convex/crons.ts`. |
-| Convex googleCalendarCache table | schema addition | Cache fetched events | Following the `quickbooksCache` / `grantsCache` pattern. Store events as JSON string, sync every 15-30 min. Avoids Google API rate limits. Real-time reactivity from Convex `useQuery`. |
+Store extracted KB metrics in a new `kbInsights` Convex table to avoid redundant OpenAI API calls on every page load.
 
-### Dashboard Data Population Fix
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| convex-helpers | ^0.1.x (latest) | `useQueryWithStatus` hook | The root cause of dashboard widgets showing "--" is that `useQuery` returns `undefined` during load and `null` when QB/Sheets data isn't configured. `convex-helpers` provides `makeUseQueryWithStatus` which returns `{ status, data, isSuccess, isPending, isError }` — making loading vs. empty vs. configured-but-empty states distinct. |
-
-**Install:** `npm install convex-helpers`
-
-**Pattern:**
 ```typescript
-import { makeUseQueryWithStatus } from "convex-helpers/react";
-import { useQueries } from "convex/react";
-export const useQueryWithStatus = makeUseQueryWithStatus(useQueries);
-
-// In component:
-const { isSuccess, isPending, data } = useQueryWithStatus(api.quickbooks.getProfitAndLoss);
+// Schema addition in convex/schema.ts
+kbInsights: defineTable({
+  extractedAt: v.number(),
+  totalClientsServed: v.optional(v.number()),
+  activeProgramCount: v.optional(v.number()),
+  impactMetrics: v.string(),   // JSON array of { label, value }
+  summaryText: v.optional(v.string()),
+  triggeredBy: v.id("users"),
+}),
 ```
 
-**Alternative considered:** `useStableQuery` via `useRef` (custom implementation). Rejected because `convex-helpers` is maintained by the Convex team, well-tested, and avoids bespoke boilerplate. (MEDIUM confidence — verified via Convex docs and official convex-helpers GitHub.)
-
-### Proactive Alerts / Notifications
-
-**Two-layer pattern: storage (Convex) + display (in-app toast).**
-
-#### Storage Layer — Convex alerts table
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Convex schema addition (`alerts` table) | convex ^1.32.0 | Persist alert records | Store generated alerts (grant deadline approaching, no QB sync in 24h, client with overdue follow-up). The dashboard queries this table via `useQuery` for real-time reactive display. Alerts generated by cron jobs, not pushed externally. |
-| Convex cron (daily) | built-in | Generate alerts | A daily `checkAlerts` internal mutation scans grants for upcoming deadlines, checks `quickbooksCache.fetchedAt` for stale data, surfaces anomalies. Writes to `alerts` table. This is the existing cron pattern — same `convex/crons.ts` file. |
-
-**Alert generation cron pattern (HIGH confidence — documented in Convex cron docs):**
-```typescript
-// convex/crons.ts
-crons.daily("check-alerts", { hourUTC: 8, minuteUTC: 0 }, internal.alerts.checkAndGenerate);
-```
-
-#### Display Layer — In-app toast notification
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| sonner | ^1.x | Toast notification display | The standard in 2025 for Next.js + React 19 toast notifications. Shadcn UI ships sonner by default. Works in Server Components (Toaster in layout), called from client components. 5KB, no peer dependency conflicts. The alternative (react-hot-toast) has the same pattern but sonner is more actively maintained and better aligned with React 19. |
-
-**Install:** `npm install sonner`
-
-**Pattern for Convex-driven alerts:**
-```tsx
-// In dashboard layout — place <Toaster /> once in (dashboard)/layout.tsx
-import { Toaster } from "sonner";
-
-// In dashboard page — watch alerts table, toast on new items
-const newAlerts = useQuery(api.alerts.getUnread);
-useEffect(() => {
-  newAlerts?.forEach(alert => toast.warning(alert.message));
-}, [newAlerts]);
-```
-
-**What NOT to use for notifications:**
-- External push notification services (OneSignal, Pusher) — overkill for a single-user executive dashboard, adds cost and complexity
-- Email notifications for proactive alerts — the dashboard IS the notification surface; email adds latency and noise
-- Browser Push API — requires service workers, complex permissions, not worth it for an internal tool
-
-### Newsletter Template Formatting Fix
-
-No new libraries needed. This is a debugging task on existing code in `convex/newsletterTemplate.ts`.
-
-**Key findings from research (MEDIUM confidence — verified via caniemail.com and multiple sources):**
-
-| CSS Property | Gmail | Outlook Desktop | Apple Mail | Notes |
-|--------------|-------|-----------------|------------|-------|
-| `border-radius` | Supported (2019+) | Partially (VML fallback needed) | Full support | The template uses `border-radius: 8px 8px 0 0` — this works in Gmail but fails in Outlook desktop |
-| `box-shadow` | NOT supported | NOT supported | Supported | The template uses `box-shadow: 0 2px 10px rgba(0,0,0,0.1)` — silently ignored in Gmail and Outlook |
-| `display: flex` | Partial | No | Yes | The template correctly uses tables, not flex — good |
-| Inline `style=` | Required | Required | Required | All styling must be inline — no `<style>` tags |
-
-**Fix approach:** The template in `newsletterTemplate.ts` already uses table-based layout (correct). The fixes are:
-1. Remove `box-shadow` from the main container table — it won't render in Gmail/Outlook (the most common clients). Use border as fallback.
-2. Ensure all CSS is inline (already done). The `<style>` tag in `<head>` is ignored by Gmail.
-3. The `border-radius` on the header (`border-radius: 8px 8px 0 0`) is acceptable — it degrades gracefully in unsupported clients (renders as square corners).
-
-**Tool for verification:** Use [Litmus](https://www.litmus.com/) or [Email on Acid](https://www.emailonacid.com/) for cross-client preview if needed. Neither requires installation.
+**Trigger:** Manual button ("Refresh KB Insights") in the dashboard panel — NOT a cron. Document content changes infrequently; automatic polling would waste OpenAI API credits.
 
 ---
 
-## Supporting Libraries
+## Feature 2: AI Summary Panel
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| convex-helpers | ^0.1.x | `useQueryWithStatus`, query caching | Dashboard components needing distinct loading/empty/error states |
-| sonner | ^1.x | In-app toast notifications | Alert display layer for proactive notifications |
-| date-fns (existing) | ^4.1.0 | Calendar event date formatting, deadline countdown | Already installed — use `formatDistanceToNow`, `isBefore`, `addDays` for deadline logic |
+### What needs to happen
+
+A dashboard panel that shows 3-5 key organizational takeaways ("AI Summary") derived from KB documents. Manually regenerated by the admin. Stored in Convex so it loads instantly on subsequent visits.
+
+### Approach: Same Assistants API Thread Pattern
+
+This is a simpler variant of Feature 1 — same OpenAI call, different prompt asking for narrative takeaways rather than structured numbers.
+
+**Prompt strategy:**
+```
+Search the knowledge base and write 3-5 bullet point takeaways about
+organizational health, program impact, or notable trends. Be specific.
+Use numbers from the documents where available. Return as plain text.
+```
+
+**Why same pattern as Feature 1 (HIGH confidence):**
+- The vector store file_search is the only way to query KB document contents programmatically
+- The response is plain text (no JSON needed), so no structured output formatting required
+- Same `aiDirectorActions.ts` pattern — create thread, run with assistant_id, read message
+
+**Storage:** Reuse the `kbInsights` table — add `summaryText v.string()` column (included above).
+
+**Display:** A card on the dashboard with a "Regenerate" button (calls the Convex action), showing last-generated timestamp. The card is read from `useQuery(api.kbInsights.getLatest)`.
+
+---
+
+## Feature 3: Donation Performance Charts from QB Income Accounts
+
+### Current State
+
+`DonationPerformance.tsx` exists but shows an empty state because `quickbooks.getDonations` always returns `null` — the `"donations"` cache key is never populated. The comment in `quickbooks.ts` confirms: "QB doesn't have a dedicated donations entity."
+
+### Recommended Approach: QB P&L Income by Month
+
+Use the existing QuickBooks `ProfitAndLoss` report API with `summarize_column_by=Month` to get monthly income broken down by income account category (donations, grants, program revenue, etc.).
+
+**API call (MEDIUM confidence — confirmed via multiple QB developer community sources):**
+```
+GET /v3/company/{realmId}/reports/ProfitAndLoss
+  ?start_date=2025-01-01
+  &end_date=2025-12-31
+  &summarize_column_by=Month
+  &minorversion=65
+```
+
+**Response structure:** The `Columns.Column` array contains one entry per month. Income rows under the `Income` group section contain `ColData` arrays where each index maps to a month column. The existing `extractCategories()` helper in `quickbooks.ts` works on the row structure — it needs to be extended to handle multi-column (monthly) data instead of the single-column (YTD total) format.
+
+**Why this over separate-month queries (HIGH confidence):**
+- One API call returns 12 months of data vs. 12 separate calls — avoids hitting QB rate limits
+- The `quickbooksActions.ts` already calls `fetchProfitAndLoss` with start/end dates — extend it with a new `fetchProfitAndLossByMonth` variant
+- The `profit_loss_by_month` cache key follows the existing `profit_loss` / `profit_loss_prior_year` naming pattern
+
+**New Convex internalAction:**
+```typescript
+// In convex/quickbooksActions.ts — add alongside existing fetchProfitAndLoss
+export const fetchProfitAndLossByMonth = internalAction({
+  handler: async (ctx) => {
+    const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
+    const startDate = `${new Date().getFullYear()}-01-01`;
+    const endDate = getToday();
+
+    const response = await fetch(
+      `${baseUrl}/v3/company/${realmId}/reports/ProfitAndLoss` +
+      `?start_date=${startDate}&end_date=${endDate}` +
+      `&summarize_column_by=Month&minorversion=65`,
+      { headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" } }
+    );
+
+    const data = await response.json();
+    await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
+      reportType: "profit_loss_by_month",
+      data: JSON.stringify(data),
+      periodStart: startDate,
+      periodEnd: endDate,
+    });
+  },
+});
+```
+
+**Frontend chart (HIGH confidence — already using Chart.js):**
+The existing `DonationPerformance.tsx` already registers `Line`, `CategoryScale`, `LinearScale`, etc. from chart.js. The donation chart needs the same chart type (Line, already implemented) with month labels on X-axis and income category amounts on Y-axis. The existing chart configuration patterns from `ProfitLoss.tsx` and `DonationPerformance.tsx` are directly reusable.
+
+**Income category filtering:** The monthly P&L response groups income rows under the `Income` section. Parse the row names to find donation-relevant categories (e.g., rows named "Donations", "Contributions", "Individual Giving") vs. grant income. This filtering uses the existing `extractCategories` helper logic.
+
+---
+
+## New Convex Tables Required
+
+| Table | Purpose | When Populated |
+|-------|---------|----------------|
+| `kbInsights` | Cache KB extraction results + AI summary | Manual trigger (user clicks "Refresh") |
+
+No other schema additions needed. The QB monthly data uses the existing `quickbooksCache` table with a new `profit_loss_by_month` report type key.
+
+---
+
+## New Convex Functions Required
+
+| File | Function | Type | Purpose |
+|------|----------|------|---------|
+| `convex/kbActions.ts` (new) | `extractKbInsights` | action | Queries vector store, extracts structured metrics + summary |
+| `convex/kbInsights.ts` (new) | `saveInsights`, `getLatest` | mutation + query | Persist and read KB extraction results |
+| `convex/quickbooksActions.ts` (extend) | `fetchProfitAndLossByMonth` | internalAction | Fetch QB P&L with summarize_column_by=Month |
+| `convex/quickbooks.ts` (extend) | `getProfitAndLossByMonth` | query | Read and parse monthly income data from cache |
+
+---
+
+## Installation
+
+```bash
+# No new packages needed.
+# All v1.2 features use existing: openai ^6.22.0, convex ^1.32.0, chart.js ^4.5.1
+```
 
 ---
 
 ## Alternatives Considered
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| googleapis (existing, reuse) | @googleapis/calendar v14.2.0 | Only if you want to drop the full googleapis package; not appropriate here since Sheets already uses it |
-| Service account auth (reuse existing) | OAuth 2.0 user auth (next-auth flow) | Only if you need to read a private personal Google Calendar that cannot be shared — service account requires the calendar to be explicitly shared |
-| Convex cron + alerts table | External scheduler (cron.job, Upstash QStash) | Only if Convex backend were not the primary data store; unnecessary since crons.ts already runs QB and Sheets syncs |
-| sonner | react-hot-toast | Both are equivalent; sonner has better Next.js 15 App Router docs and React 19 compatibility |
-| convex-helpers useQueryWithStatus | Custom useStableQuery via useRef | Custom is fine but convex-helpers is Convex-team-maintained and avoids bespoke code |
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| Assistants API thread + file_search | `openai.files.content()` then parse | Files uploaded with purpose "assistants" cannot be downloaded — API returns 400 error. Confirmed by multiple community sources. |
+| Assistants API thread + file_search | Chat Completions with `file_ids` in messages | `file_ids` in message content only works for "vision" purpose files (images), not assistants-purpose documents |
+| QB `summarize_column_by=Month` (one call) | 12 separate P&L calls, one per month | Rate limit risk, slower sync, more complex caching — one call is cleaner |
+| `response_format: { type: "json_object" }` in prompt | `zodResponseFormat` with Zod schema | Assistants API runs don't support response_format parameter; Zod not needed when parsing text response with try/catch + null fallbacks |
+| Manual trigger for KB refresh | Cron-based automatic KB extraction | KB documents change infrequently (admin uploads them); polling wastes OpenAI credits; manual trigger is explicit and auditable |
+| Convex `kbInsights` table | `appSettings` KV store | Structured table allows future multiple snapshots, timestamps, user attribution; KV would serialize as a JSON blob |
 
 ---
 
@@ -171,31 +243,12 @@ No new libraries needed. This is a debugging task on existing code in `convex/ne
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| `react-big-calendar` or `@fullcalendar/react` | Full calendar UI component — not needed. Kareem needs a widget showing upcoming events, not a calendar editor | Custom event list component reading from the Convex `calendarCache` table |
-| `node-google-calendar` npm package | Unmaintained wrapper, last release 2019 | `googleapis` (existing) |
-| External notification service (OneSignal, Pusher, Knock) | Adds external dependency, cost, and configuration overhead for a single-user internal tool | Convex `alerts` table + sonner toast |
-| CSS `@media` queries inside email `<head>` | Stripped by Gmail | Use inline styles only; `border-radius` and `box-shadow` fallback gracefully |
-| `react-email` or MJML | Full email templating systems — the newsletter template is already written and working | Fix existing `newsletterTemplate.ts` inline |
-
----
-
-## Stack Patterns by Variant
-
-**For Google Calendar sync (read-only, service account, multiple calendars):**
-- Use one `calendarCache` Convex table with a `calendarId` field (to distinguish client sessions / board meetings / community events / grant deadlines calendars)
-- Sync all calendars in one `syncCalendars` internalAction (mirrors `syncProgramData` pattern)
-- Store events as JSON-stringified array per calendar, or individual rows per event
-- Fetch next 60 days of events: `timeMin: new Date().toISOString()`, `timeMax: new Date(Date.now() + 60*24*60*60*1000).toISOString()`
-
-**For dashboard data population fix:**
-- Debug each component individually: check if the underlying Convex query returns data in the dashboard or returns `null` (QB not connected vs. connected but empty)
-- Use `useQueryWithStatus` to surface distinct states: "QB not configured", "Loading", "No data for period", "Data ready"
-- The `quickbooksCache` table and `grantsCache` table have data — the issue is likely in how components handle the `undefined` → `null` transition
-
-**For proactive alerts:**
-- Store alerts with: `{ type, message, severity: "info"|"warning"|"critical", entityId?, createdAt, readAt? }`
-- Daily cron checks: grants with report due in ≤14 days, QB sync age >2 hours, grants with 0 spending against budget
-- Dashboard AlertBanner component queries unread alerts, renders inline (above KPI cards) + sonner toast on new items
+| `pdf-parse`, `pdfjs-dist`, or similar PDF parsing libraries | Cannot access KB files directly — they're in OpenAI's vector store, not readable via Convex Storage download | Assistants API file_search which already has them indexed |
+| LangChain or LlamaIndex | Full RAG frameworks — massive overhead for a single-purpose extraction action already using OpenAI SDK directly | Raw openai SDK calls (already installed, already used) |
+| Separate vector store or embedding pipeline | OpenAI vector store already indexes KB files automatically on upload | Reuse existing `vectorStoreId` from `aiDirectorConfig` table |
+| `zod` package | Optional but adds a new runtime dependency; not needed for the Assistants API path | Prompt engineering for JSON output + try/catch parsing |
+| Recharts or D3.js | Adding a second charting library when chart.js is already registered and used | chart.js + react-chartjs-2 (existing) |
+| GoFundMe / PayPal API | Out of scope per PROJECT.md; QB income accounts capture donation totals adequately | QB ProfitAndLoss with summarize_column_by=Month |
 
 ---
 
@@ -203,41 +256,40 @@ No new libraries needed. This is a debugging task on existing code in `convex/ne
 
 | Package A | Compatible With | Notes |
 |-----------|-----------------|-------|
-| googleapis ^171.4.0 | Google Calendar API v3 | Calendar API accessed same way as Sheets — `google.calendar({ version: 'v3', auth })` |
-| convex ^1.32.0 | convex-helpers ^0.1.x | convex-helpers is a peer of convex, matches the installed version |
-| sonner ^1.x | React 19, Next.js 15+ | Verified — sonner works with React Server Components; `<Toaster />` in server layout, `toast()` in client components |
-| @convex-dev/auth ^0.0.90 | convex ^1.32.0 | Existing — no changes needed |
+| openai ^6.22.0 | Assistants API v2 (beta) | `openai.beta.threads`, `openai.beta.threads.runs.createAndPoll` — all used in existing `aiDirectorActions.ts` |
+| openai ^6.22.0 | `json_object` response_format | Works with gpt-4o and gpt-4o-mini for Chat Completions; NOT applicable to Assistants API runs |
+| chart.js ^4.5.1 + react-chartjs-2 ^5.3.1 | Monthly income line/bar charts | Same component pattern as existing `ProfitLoss.tsx` and `DonationPerformance.tsx` |
+| convex ^1.32.0 | New `kbInsights` table schema | Schema addition via `npx convex dev --once` |
+| date-fns ^4.1.0 | Month label formatting for charts | `format(new Date(year, month - 1), 'MMM yy')` for chart X-axis labels |
 
 ---
 
-## Installation
+## Integration Points with Existing Code
 
-```bash
-# New packages needed for this milestone
-npm install convex-helpers sonner
-
-# No new packages needed for:
-# - Google Calendar (googleapis already installed)
-# - Alerts storage (Convex schema extension)
-# - Newsletter fix (no new deps)
-```
+| New Code | Existing Code It Touches | How |
+|----------|--------------------------|-----|
+| `kbActions.ts` | `aiDirectorConfig` table | Reads `assistantId` + `vectorStoreId` via `api.aiDirector.getConfig` |
+| `kbActions.ts` | `openaiHelpers.ts` | Reuses `getOpenAIApiKey(ctx)` — exact same helper |
+| `fetchProfitAndLossByMonth` | `quickbooksInternal.cacheReport` | Stores into `quickbooksCache` with new report type key |
+| `fetchProfitAndLossByMonth` | `getAuthenticatedConfig()` | Uses existing private helper already in `quickbooksActions.ts` |
+| `getProfitAndLossByMonth` query | `quickbooksCache` table | Reads `by_reportType` index with key `"profit_loss_by_month"` |
+| `syncAllData` in `quickbooksActions.ts` | Add `fetchProfitAndLossByMonth` call | Add to the existing sequential sync chain — runs on 15-min cron automatically |
+| `DonationPerformance.tsx` | Convex `useQuery(api.quickbooks.getProfitAndLossByMonth)` | Replace the non-functional `useDonations()` hook |
+| New KB dashboard panel | `dashboardPrefs` section order | Add `"kb-insights"` as a new section ID in `DEFAULT_DASHBOARD_SECTIONS` |
 
 ---
 
 ## Sources
 
-- **Official Google Calendar API auth docs** — https://developers.google.com/workspace/calendar/api/auth — scope list, authentication patterns (HIGH confidence)
-- **Official Google Calendar API Node.js quickstart** — https://developers.google.com/workspace/calendar/api/quickstart/nodejs — setup steps, package requirements (HIGH confidence)
-- **Convex Cron Jobs docs** — https://docs.convex.dev/scheduling/cron-jobs — cron pattern, database mutation from crons (HIGH confidence)
-- **Convex Scheduled Functions docs** — https://docs.convex.dev/scheduling/scheduled-functions — `ctx.scheduler` API (HIGH confidence)
-- **convex-helpers GitHub** — https://github.com/get-convex/convex-helpers — `useQueryWithStatus`, utility hooks (MEDIUM confidence — GitHub README reviewed)
-- **caniemail.com border-radius** — https://www.caniemail.com/features/css-border-radius/ — email client CSS support data (HIGH confidence)
-- **Sonner GitHub** — https://github.com/emilkowalski/sonner — React 19 / Next.js 15 compatibility (MEDIUM confidence — WebSearch verified)
-- **Existing codebase** — `convex/googleSheetsActions.ts`, `convex/crons.ts`, `convex/schema.ts` — pattern verification (HIGH confidence — read directly)
-- **WebSearch: "Google Calendar service account share calendar permissions"** — multiple sources confirming share-with-service-account approach (MEDIUM confidence)
-- **WebSearch: "@googleapis/calendar npm version"** — confirmed v14.2.0 for scoped package; full googleapis at ^171 sufficient (MEDIUM confidence)
+- **OpenAI community: "Not allowed to download files of purpose: assistants"** — https://community.openai.com/t/not-allowed-to-download-files-of-purpose-assistants/528220 — file download restriction confirmed (HIGH confidence — multiple independent community reports + portkey.ai error library)
+- **OpenAI Structured Outputs guide** — https://platform.openai.com/docs/guides/structured-outputs — `json_schema` response_format for Chat Completions; Assistants API runs use prompt engineering (HIGH confidence)
+- **OpenAI Node SDK DeepWiki: Structured Outputs** — https://deepwiki.com/openai/openai-node/5.4-structured-outputs-and-parsing — Zod is optional peer dep; raw JSON schema passable (MEDIUM confidence)
+- **QB ProfitAndLoss API `summarize_column_by` parameter** — Multiple QB community sources confirm `summarize_column_by=Month` is a valid API parameter returning monthly columns in the report structure (MEDIUM confidence — Intuit dev docs not directly fetchable; confirmed via multiple third-party developer discussions)
+- **react-chartjs-2 v5.3.1 docs** — https://react-chartjs-2.js.org/ — version confirmed, ESM/CJS both supported, compatible with chart.js v4 (HIGH confidence)
+- **Existing codebase read** — `convex/aiDirectorActions.ts`, `convex/knowledgeBase.ts`, `convex/quickbooks.ts`, `convex/schema.ts`, `src/components/dashboard/DonationPerformance.tsx` — pattern verification (HIGH confidence — read directly)
+- **WebSearch: "QuickBooks API summarize_column_by Month income"** — confirmed parameter exists; response has Column array with month entries and Row ColData indexed by month (MEDIUM confidence — WebSearch only, not official doc)
 
 ---
 
-*Stack research for: DEC DASH 2.0 — Google Calendar integration, dashboard data fix, alerts, newsletter template fix*
-*Researched: 2026-02-28*
+*Stack research for: DEC DASH 2.0 v1.2 Intelligence — KB data extraction, AI summary, donation charts*
+*Researched: 2026-03-01*
