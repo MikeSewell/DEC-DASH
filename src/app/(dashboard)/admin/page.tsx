@@ -9,6 +9,7 @@ import UserManagement from "@/components/admin/UserManagement";
 import QuickBooksConnect from "@/components/admin/QuickBooksConnect";
 import ConstantContactConnect from "@/components/admin/ConstantContactConnect";
 import GoogleSheetsConfig from "@/components/admin/GoogleSheetsConfig";
+import GoogleCalendarConfig from "@/components/admin/GoogleCalendarConfig";
 import KnowledgeBaseManager from "@/components/ai-director/KnowledgeBaseManager";
 import AuditLog from "@/components/admin/AuditLog";
 
@@ -17,6 +18,7 @@ type AdminTab =
   | "quickbooks"
   | "constant-contact"
   | "google-sheets"
+  | "google-calendar"
   | "knowledge-base"
   | "audit-log"
   | "ai-config";
@@ -55,6 +57,15 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M10.875 12c-.621 0-1.125.504-1.125 1.125M12 12c.621 0 1.125.504 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-2.25 0c-.621 0-1.125.504-1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M13.125 12h-2.25" />
+      </svg>
+    ),
+  },
+  {
+    id: "google-calendar",
+    label: "Google Calendar",
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
       </svg>
     ),
   },
@@ -116,6 +127,8 @@ export default function AdminPage() {
         return <ConstantContactConnect />;
       case "google-sheets":
         return <GoogleSheetsConfig />;
+      case "google-calendar":
+        return <GoogleCalendarConfig />;
       case "knowledge-base":
         return (
           <div className="space-y-4">
