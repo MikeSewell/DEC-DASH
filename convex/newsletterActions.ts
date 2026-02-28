@@ -18,9 +18,22 @@ export const generateEmailHtml = action({
     if (!newsletter) throw new Error("Newsletter not found");
 
     const sections = JSON.parse(newsletter.sections);
+    // juice is a CommonJS module; in the Convex node runtime, dynamic import wraps it as a namespace.
+    // We cast to any to handle both CJS-default and ESM-default interop patterns safely.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const juiceMod: any = await import("juice");
+    const juice: (html: string, options?: Record<string, unknown>) => string =
+      juiceMod.default ?? juiceMod;
 
     // Step 1: Inject content into branded template
     const rawHtml = buildNewsletterHtml(newsletter.title, sections);
+
+    // Step 1.5: Inline any <style> blocks (safety net for AI-introduced styles)
+    const inlinedHtml = juice(rawHtml, {
+      removeStyleTags: true,
+      preserveMediaQueries: false,
+      applyStyleTags: true,
+    });
 
     // Step 2: Polish with OpenAI (ported from n8n workflow)
     const completion = await openai.chat.completions.create({
@@ -60,7 +73,7 @@ Output Format:
         },
         {
           role: "user",
-          content: rawHtml,
+          content: inlinedHtml,
         },
       ],
       temperature: 0.3,
@@ -81,6 +94,13 @@ Output Format:
     if (html.startsWith("```")) {
       html = html.replace(/^```html?\n?/, "").replace(/\n?```$/, "");
     }
+
+    // Final safety: inline any <style> blocks the AI polish introduced
+    html = juice(html, {
+      removeStyleTags: true,
+      preserveMediaQueries: false,
+      applyStyleTags: true,
+    });
 
     // Save generated HTML back to newsletter
     await ctx.runMutation(api.newsletters.update, {
