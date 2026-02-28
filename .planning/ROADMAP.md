@@ -23,7 +23,7 @@ Full details: `milestones/v1.0-ROADMAP.md`
 
 - [x] **Phase 5: Dashboard KPI Trends** — Year-over-year trend indicators on KPI cards from QB historical data (completed 2026-02-28)
 - [x] **Phase 6: Calendar Enhancements** — Color-coded events, countdown badges, and toast notifications for imminent events (completed 2026-02-28)
-- [ ] **Phase 7: Alert Configuration & Persistence** — Configurable thresholds, dismissal persistence, and sonner toast notifications
+- [ ] **Phase 7: Alert Configuration & Persistence** — Configurable thresholds, dismissal persistence, and toast notifications
 
 ## Phase Details
 
@@ -61,7 +61,7 @@ Plans:
   1. Admin console has an "Alerts" tab where admin/manager users can edit deadline window days, budget variance percentage, and sync staleness hours
   2. A gear icon on the WhatNeedsAttention panel links directly to the Alerts admin config tab
   3. Dismissed alerts do not reappear on subsequent dashboard loads or sessions (dismissal stored per-user in Convex)
-  4. Newly surfaced or changed alerts trigger a sonner toast notification so Kareem is aware without looking at the panel
+  4. Newly surfaced or changed alerts trigger a toast notification (via existing custom toast system) so Kareem is aware without looking at the panel
   5. Alert config changes take effect on the next alert query without requiring a page reload
 **Plans**: 2 plans
 Plans:

@@ -22,7 +22,7 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **ALRT-01**: Admin console "Alerts" config section with editable thresholds (deadline window days, budget variance %, sync staleness hours) + gear icon shortcut on attention panel
 - [ ] **ALRT-02**: Alerts can be dismissed/acknowledged with persistence across sessions (stored in Convex per user)
-- [ ] **ALRT-03**: New/changed alerts trigger in-app toast notifications via sonner
+- [ ] **ALRT-03**: New/changed alerts trigger in-app toast notifications via the existing toast system
 
 ## v2 Requirements
 
