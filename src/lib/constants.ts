@@ -35,6 +35,11 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Revenue, expenses, and net income",
   },
   {
+    id: "client-activity",
+    title: "Client Activity",
+    description: "Active clients and program breakdown",
+  },
+  {
     id: "programs-coparent",
     title: "Programs — Co-Parent",
     description: "Co-parent program enrollment and outcomes",

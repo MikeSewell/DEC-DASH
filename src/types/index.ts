@@ -43,7 +43,8 @@ export type DashboardSectionId =
   | "donation-performance"
   | "profit-loss"
   | "programs-coparent"
-  | "programs-legal";
+  | "programs-legal"
+  | "client-activity";
 
 // Newsletter sections shape
 export interface NewsletterSections {

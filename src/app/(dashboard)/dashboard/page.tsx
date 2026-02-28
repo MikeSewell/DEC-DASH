@@ -14,6 +14,8 @@ import DonationPerformance from "@/components/dashboard/DonationPerformance";
 import ProfitLoss from "@/components/dashboard/ProfitLoss";
 import ProgramsCoparent from "@/components/dashboard/ProgramsCoparent";
 import ProgramsLegal from "@/components/dashboard/ProgramsLegal";
+import ClientActivity from "@/components/dashboard/ClientActivity";
+import WhatNeedsAttention from "@/components/dashboard/WhatNeedsAttention";
 import Spinner from "@/components/ui/Spinner";
 
 // Map section IDs to their component and metadata
@@ -23,6 +25,7 @@ const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
   "grant-tracking": GrantTracking,
   "donation-performance": DonationPerformance,
   "profit-loss": ProfitLoss,
+  "client-activity": ClientActivity,
   "programs-coparent": ProgramsCoparent,
   "programs-legal": ProgramsLegal,
 };
@@ -196,6 +199,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* What Needs Attention — always visible */}
+      <WhatNeedsAttention />
 
       {/* Dashboard Sections */}
       <div className="space-y-6 stagger-children">
