@@ -151,31 +151,6 @@ export const getAlerts = query({
       // Section D failed — skip without crashing the entire query
     }
 
-    // ─── Section E: ALRT-03 — Google Sheets sync staleness ───────────────────
-    try {
-      const sheetsConfigs = await ctx.db.query("googleSheetsConfig").collect();
-
-      if (sheetsConfigs.length > 0) {
-        const latestSheetSync = Math.max(
-          ...sheetsConfigs.map((c) => c.lastSyncAt ?? 0)
-        );
-
-        if (latestSheetSync > 0 && now - latestSheetSync > config.sheetsStalenessHours * 60 * 60 * 1000) {
-          alerts.push({
-            id: "sync-sheets-stale",
-            type: "sync",
-            severity: "info",
-            title: "Google Sheets Data Is Stale",
-            description: `Last synced ${Math.floor((now - latestSheetSync) / 3600000)}h ago (threshold: ${config.sheetsStalenessHours}h)`,
-            action: { label: "Admin", href: "/admin" },
-            urgencyScore: 300,
-          });
-        }
-      }
-    } catch {
-      // Section E failed — skip without crashing the entire query
-    }
-
     // ─── Section F: ALRT-03 — Google Calendar sync staleness ─────────────────
     try {
       const calConfig = await ctx.db.query("googleCalendarConfig").first();

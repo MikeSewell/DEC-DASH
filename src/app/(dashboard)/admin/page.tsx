@@ -9,7 +9,6 @@ import UserManagement from "@/components/admin/UserManagement";
 import QuickBooksConnect from "@/components/admin/QuickBooksConnect";
 import { useIncomeAccounts } from "@/hooks/useQuickBooks";
 import ConstantContactConnect from "@/components/admin/ConstantContactConnect";
-import GoogleSheetsConfig from "@/components/admin/GoogleSheetsConfig";
 import GoogleCalendarConfig from "@/components/admin/GoogleCalendarConfig";
 import KnowledgeBaseManager from "@/components/ai-director/KnowledgeBaseManager";
 import AuditLog from "@/components/admin/AuditLog";
@@ -19,7 +18,6 @@ type AdminTab =
   | "users"
   | "quickbooks"
   | "constant-contact"
-  | "google-sheets"
   | "google-calendar"
   | "knowledge-base"
   | "audit-log"
@@ -51,15 +49,6 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-      </svg>
-    ),
-  },
-  {
-    id: "google-sheets",
-    label: "Google Sheets",
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M10.875 12c-.621 0-1.125.504-1.125 1.125M12 12c.621 0 1.125.504 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m-2.25 0c-.621 0-1.125.504-1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M13.125 12h-2.25" />
       </svg>
     ),
   },
@@ -143,8 +132,6 @@ export default function AdminPage() {
         );
       case "constant-contact":
         return <ConstantContactConnect />;
-      case "google-sheets":
-        return <GoogleSheetsConfig />;
       case "google-calendar":
         return <GoogleCalendarConfig />;
       case "knowledge-base":
@@ -548,10 +535,6 @@ function SettingsPanel() {
           <div>
             <p className="text-sm font-medium text-foreground">QuickBooks Sync Interval</p>
             <p className="text-sm text-muted mt-1">Every 15 minutes</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Google Sheets Sync Interval</p>
-            <p className="text-sm text-muted mt-1">Every 30 minutes</p>
           </div>
         </div>
       </div>
