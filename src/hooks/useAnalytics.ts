@@ -22,3 +22,15 @@ export function useAllDemographics() {
 export function useZipCodeStats() {
   return useQuery(api.clients.getZipCodeStats);
 }
+
+export function useSessionTrends() {
+  return useQuery(api.analytics.getSessionTrends);
+}
+
+export function useGoalStats() {
+  return useQuery(api.analytics.getGoalStats);
+}
+
+export function useIntakeVolume() {
+  return useQuery(api.analytics.getIntakeVolume);
+}
