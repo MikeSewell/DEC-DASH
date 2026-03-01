@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
 status: in_progress
-last_updated: "2026-03-01T04:52:00.000Z"
+last_updated: "2026-03-01T04:57:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 3
   total_plans: 10
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 12 of 15 (Demographics Tab)
-Plan: 1 of 2 in current phase (in progress)
+Plan: 2 of 2 in current phase (complete)
 Status: In progress
-Last activity: 2026-03-01 — 12-01 complete: demographics tab with gender/age/ethnicity/referral charts
+Last activity: 2026-03-01 — 12-02 complete: demographics tab extended with program outcomes doughnut and zip code coverage bar chart
 
-Progress: [███░░░░░░░] 30% (v1.3) — 3/10 plans complete
+Progress: [████░░░░░░] 40% (v1.3) — 4/10 plans complete
 
 ## Performance Metrics
 
@@ -41,10 +41,17 @@ Progress: [███░░░░░░░] 30% (v1.3) — 3/10 plans complete
 | 11    | 01   | 2min     | 2     | 4     |
 | 11    | 02   | 2min     | 2     | 6     |
 | 12    | 01   | 3min     | 2     | 5     |
+| 12    | 02   | 3min     | 1     | 2     |
 
 ## Accumulated Context
 
 ### Decisions
+
+From 12-02:
+- IIFE inside JSX for sortedZips computation — keeps derived data local without component-scope variables
+- Zip code card always renders container so empty state message has proper visual framing
+- OUTCOME_COLORS Record<string, string> with fallback to PALETTE[0] for unknown statuses
+- makeOutcomeData at module level for consistency with makeDoughnutData/makeBarData
 
 From 12-01:
 - Used Doughnut (not Pie) for gender and age charts — cutout 55% for modern look
@@ -84,5 +91,5 @@ Carried from v1.2:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 12-01-PLAN.md — demographics tab with gender/age doughnuts, ethnicity/referral bars live
+Stopped at: Completed 12-02-PLAN.md — demographics tab complete with 6 charts (gender, age, ethnicity, referral, outcomes, zip coverage)
 Resume file: None

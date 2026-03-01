@@ -24,8 +24,8 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 - [x] **DEMO-02**: User can view ethnicity distribution chart on the Demographics tab
 - [x] **DEMO-03**: User can view age group distribution chart on the Demographics tab
 - [x] **DEMO-04**: User can view top referral sources on the Demographics tab
-- [ ] **DEMO-05**: User can view program outcome rates (completed/in-progress/dropped) on the Demographics tab
-- [ ] **DEMO-06**: User can view zip code coverage breakdown on the Demographics tab
+- [x] **DEMO-05**: User can view program outcome rates (completed/in-progress/dropped) on the Demographics tab
+- [x] **DEMO-06**: User can view zip code coverage breakdown on the Demographics tab
 
 ### Client Activity
 
@@ -87,8 +87,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEMO-02 | Phase 12 | Complete |
 | DEMO-03 | Phase 12 | Complete |
 | DEMO-04 | Phase 12 | Complete |
-| DEMO-05 | Phase 12 | Pending |
-| DEMO-06 | Phase 12 | Pending |
+| DEMO-05 | Phase 12 | Complete |
+| DEMO-06 | Phase 12 | Complete |
 | ACT-01 | Phase 13 | Pending |
 | ACT-02 | Phase 13 | Pending |
 | ACT-03 | Phase 13 | Pending |
