@@ -91,6 +91,53 @@
 
 ---
 
+## Milestone: v1.3 — Analytics
+
+**Shipped:** 2026-03-01
+**Phases:** 5 | **Plans:** 10 | **Commits:** 39
+
+### What Was Built
+- /analytics page with role-gated sidebar entry and tab navigation (Demographics, Client Activity, Operations)
+- 3 dashboard KPI summary cards — active clients, session volume, intake trend with month-over-month delta
+- Demographics tab with 6 charts — gender/ethnicity doughnuts, age groups, referral sources, outcome rates, zip code coverage
+- Client Activity tab — 12-month session trend line chart, goal status cards with completion rate, intake volume grouped bar
+- Operations tab — staff activity feed with timeAgo, per-user action count table, categorization acceptance rate and category distribution
+- DonationPerformance rewrite — real QB income data via fetchIncomeTrend, multi-line chart with per-account breakdown, admin designation UI, empty states
+
+### What Worked
+- **Additive analytics module pattern** — convex/analytics.ts grew from 3 queries (Phase 11) to 10 queries (Phase 14) without conflicts or refactoring
+- **Consistent tab patterns** — each analytics tab followed the same skeleton → hooks → chart component pattern, making Phases 12-14 nearly formulaic
+- **Hooks file extension** — useAnalytics.ts grew to 10 hooks cleanly via simple additive exports
+- **QB sync cycle reuse** — fetchIncomeTrend piggybacked on existing syncAllData cron rather than needing a separate schedule
+- **Admin designation UI** — IncomeAccountConfig reused existing appSettings pattern for a clean read/write loop
+
+### What Was Inefficient
+- **SUMMARY.md one-liner extraction still broken** — CLI returns null for all 10 summaries; accomplishments had to be manually curated (3rd milestone in a row)
+- **SUMMARY frontmatter requirements_completed** not populated in Phases 11, 12, 15 — bookkeeping gap flagged in audit as INFO severity
+- **Phase numbering gap** — Phase 10 deferred from v1.2 left a numbering gap (11-15 instead of 10-14); cosmetic but slightly confusing
+- **getSessionVolume full-table scan** — sessions table has no by_sessionDate index; works now but will degrade at scale
+
+### Patterns Established
+- **Analytics tab pattern**: skeleton guard → 2-3 hooks → chart components with Chart.js options → ChartSkeleton shared loading
+- **Additive module growth**: analytics.ts and useAnalytics.ts extended via pure additions — no refactoring needed across 4 phases
+- **timeAgo helper**: module-level utility in OperationsTab for human-readable relative timestamps
+- **Show-more toggle**: useState(false) with slice-to-20 pattern for long audit log feeds
+- **Configured/unconfigured empty states**: DonationPerformance checks `configured` flag to show instructive admin prompt vs chart
+
+### Key Lessons
+1. **Chart.js grouped bar requires stacked:false on BOTH axes** — declaring it on only x or y axis still stacks bars
+2. **IIFE inside JSX** works well for derived data that's only used in one render branch (zip code sorting)
+3. **Horizontal bar chart needs top-N cap** (8 categories) to prevent overflow on mobile
+4. **TypeScript union types with Chart.js fill property** need explicit typing to avoid inference issues
+5. **Admin designation UI should show immediate feedback** — closed-loop pattern (write config → read config → render chart) prevents stale-state confusion
+
+### Cost Observations
+- Model mix: ~60% opus, ~30% sonnet, ~10% haiku (estimated)
+- Sessions: ~3 across planning, execution, audit, completion
+- Notable: 5 phases (10 plans) completed in a single session — analytics tabs were highly formulaic after Phase 11 established the pattern
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -99,6 +146,7 @@
 |-----------|----------|--------|------------|
 | v1.0 | ~8 | 4 | First milestone — established GSD workflow patterns |
 | v1.1 | ~4 | 3 | Lean polish milestone — reused established patterns for fast delivery |
+| v1.3 | ~3 | 5 | Largest milestone by phase count — formulaic tab pattern enabled rapid execution |
 
 ### Cumulative Quality
 
@@ -106,6 +154,7 @@
 |-----------|-------------|-------------|-----------|
 | v1.0 | 22/22 | 100% satisfied | 3 INFO items, 1 orphaned export |
 | v1.1 | 13/13 truths (Ph 5+6) | 8/8 requirements (code verified) | 1 dead export, missing Ph 07 VERIFICATION.md |
+| v1.3 | 22/22 | 100% satisfied | 5 INFO items (skeleton mismatch, full-table scan, frontmatter bookkeeping, type gap) |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -113,3 +162,5 @@
 2. Three-state loading prevents UX flash states and should be the default pattern for all data-dependent UI
 3. Singleton config table pattern is highly replicable — new config tables can follow `.first()` / upsert in minutes
 4. Always create VERIFICATION.md after phase execution — even when code is correct, missing docs create audit gaps
+5. Formulaic UI patterns (skeleton → hooks → chart component) compound across phases — Phase 14 was nearly copy-paste from Phase 12
+6. SUMMARY frontmatter fields must be populated during execution — 3 milestones of broken one-liner extraction confirms the CLI depends on it

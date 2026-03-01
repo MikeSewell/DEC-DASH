@@ -1,5 +1,32 @@
 # Milestones
 
+## v1.3 Analytics (Shipped: 2026-03-01)
+
+**Phases:** 5 | **Plans:** 10 | **Commits:** 39 | **Files:** 42 | **LOC:** 24,548 TS
+**Timeline:** 1 day (Mar 1, 2026)
+**Git range:** `feat(11-01)..feat(15-02)` | **Tag:** `v1.3`
+
+**Delivered:** Added a full analytics layer — dedicated /analytics page with Demographics, Client Activity, and Operations tabs plus dashboard summary cards and real QB income trend charts with admin account designation.
+
+**Key accomplishments:**
+- /analytics page with tab navigation and role-gated sidebar entry (admin/manager/staff)
+- 3 dashboard KPI summary cards — active clients, session volume, intake trend with month-over-month comparison
+- Demographics tab with 6 charts — gender, ethnicity, age group, referral sources, outcome rates, zip code coverage
+- Client Activity tab — 12-month session trend line chart, goal status breakdown with completion rate, intake volume by program
+- Operations tab — staff activity feed with timeAgo, per-user action counts, expense categorization acceptance rate and distribution
+- DonationPerformance rewrite — real QB income data via fetchIncomeTrend, multi-line chart with account breakdown, admin designation UI, proper empty states
+
+**Phases:**
+1. Analytics Foundation + Dashboard Cards (2 plans) — /analytics route scaffold, sidebar nav, AnalyticsCards KPI section
+2. Demographics Tab (2 plans) — getAllDemographics query, 6 chart components (doughnut, bar, horizontal bar)
+3. Client Activity Tab (2 plans) — getSessionTrends/getGoalStats/getIntakeVolume queries, line chart + grouped bar chart UI
+4. Operations Tab (2 plans) — getAuditFeed/getStaffActionStats/getCategorizationStats queries, activity feed + stats + category chart UI
+5. Donation Performance Charts (2 plans) — fetchIncomeTrend QB action, income cache, admin IncomeAccountConfig, DonationPerformance rewrite
+
+**Archives:** `milestones/v1.3-ROADMAP.md` | `milestones/v1.3-REQUIREMENTS.md` | `milestones/v1.3-MILESTONE-AUDIT.md`
+
+---
+
 ## v1.2 Intelligence (Shipped: 2026-03-01)
 
 **Phases:** 2 (of 3 planned) | **Plans:** 4 | **Files:** 8

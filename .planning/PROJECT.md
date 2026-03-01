@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An executive command center for the Dads' Education Center (DEC) nonprofit. A single-pane-of-glass dashboard that connects financial data (QuickBooks), client/program management, grant tracking, AI-powered tools, newsletter creation (Constant Contact), and organizational scheduling (Google Calendar) — with proactive alerts that surface what needs the Executive Director's attention each day, complete with trend indicators, color-coded calendar events, and configurable alert thresholds.
+An executive command center for the Dads' Education Center (DEC) nonprofit. A single-pane-of-glass dashboard that connects financial data (QuickBooks), client/program management, grant tracking, AI-powered tools, newsletter creation (Constant Contact), organizational scheduling (Google Calendar), and data analytics — with proactive alerts, trend indicators, and a dedicated analytics page surfacing demographics, client activity, operational health, and donation trends.
 
 ## Core Value
 
@@ -38,25 +38,15 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ In-app toast notifications for new alerts — v1.1
 - ✓ KB-powered KPI cards — Chat Completions extraction from KB docs, stat cards with provenance — v1.2
 - ✓ AI-generated summary panel — 3-5 bullet organizational highlights, manual regeneration — v1.2
+- ✓ Dashboard summary KPI cards — active clients, session volume, intake trend — v1.3
+- ✓ /analytics page with Demographics tab — gender, ethnicity, age group, referral sources, outcomes, zip codes — v1.3
+- ✓ /analytics page with Client Activity tab — session trends, goal status, intake volume — v1.3
+- ✓ /analytics page with Operations tab — staff activity feed, per-user stats, categorization metrics — v1.3
+- ✓ Donation Performance Charts — QB income trends, multi-line chart, admin account designation — v1.3
 
 ### Active
 
-## Current Milestone: v1.3 Analytics
-
-**Goal:** Surface all untapped data across a dashboard summary layer and a dedicated /analytics page — demographics, client activity, operational health, and donation trends.
-
-**Target features:**
-- Dashboard summary cards — active clients, session volume, intake trends
-- Analytics page with Demographics tab — gender, ethnicity, age group, referral source charts
-- Analytics page with Client Activity tab — session trends, goals progress, intake volume
-- Analytics page with Operations tab — expense categorization accuracy, staff activity feed + stats
-- Donation Performance Charts — QB income trends with admin account designation UI (deferred from v1.2)
-
-- [ ] Dashboard summary KPI cards/sparklines for active clients, session volume, intake trends
-- [ ] /analytics page with Demographics tab (gender, ethnicity, age group, referral source visualizations)
-- [ ] /analytics page with Client Activity tab (session trends, goals in-progress vs completed, intake volume)
-- [ ] /analytics page with Operations tab (expense categorization accuracy, staff activity feed + per-user stats)
-- [ ] Donation Performance Charts — QB income trend chart with account breakdown and admin designation UI
+(No active requirements — define next milestone with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -70,20 +60,25 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - Google Calendar webhooks — cron polling is simpler and sufficient for infrequently-changing event data
 - Real-time push notifications (browser/mobile) — in-app alerts panel sufficient; push is v2+
 - Newsletter mobile-responsive template — low priority vs dashboard/alert/calendar polish
+- Interactive geographic map for zip codes — simple table/list sufficient
+- Exportable analytics reports (PDF/CSV) — defer to future; screen visualization is priority
+- Cross-tab linked filtering on analytics — each tab is self-contained
 
 ## Context
 
-Shipped v1.2 Intelligence milestone (KB KPI extraction + AI summary panel). Starting v1.3 Analytics — surfacing program demographics, client sessions/goals, intake analytics, operational health, and deferred donation charts.
-Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API, Google Calendar API, OpenAI Assistants API.
-26 database tables, 100+ backend functions, 13 routes, 4 AI systems, 5 third-party integrations.
+Shipped v1.3 Analytics milestone — dedicated /analytics page with 3 tabs (Demographics, Client Activity, Operations), 3 dashboard KPI summary cards, and real QB income trend charts with admin account designation.
 
-Dashboard renders live financial data from QuickBooks with year-over-year trend arrows on KPI cards, color-coded calendar events with live countdown badges, and a configurable proactive alerts panel with per-user dismissal persistence. Newsletter HTML renders correctly across major email clients.
+Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API, Google Calendar API, OpenAI Assistants API.
+26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
+Codebase: 24,548 LOC TypeScript across 94+ files.
+
+Dashboard renders live financial data from QuickBooks with year-over-year trend arrows, color-coded calendar events with countdown badges, configurable proactive alerts with dismissal persistence, KB-powered KPI stat cards, AI-generated summary panel, analytics summary cards, and real QB income trend charts. Analytics page surfaces demographics from Google Sheets, client session/goal/intake trends from Convex tables, and operational metrics from audit logs and allocation data.
 
 Known operational notes:
 - Google Calendar service account must be manually shared with each calendar for events to sync (silent empty-result failure mode)
 - `npx convex dev --once` must be run interactively to deploy schema changes
-- CALENDAR_DOT_COLORS in constants.ts is dead code (superseded by EVENT_TYPE_CONFIG in v1.1)
 - Pre-existing TypeScript errors in 6 Convex files (allocationActions.ts, grants.ts, newsletterActions.ts, auth.ts, seedPrograms.ts, constantContactActions.ts) — `npm run build` still passes
+- `getSessionVolume` does a full-table scan on sessions (no by_sessionDate index) — works at current scale
 
 ## Constraints
 
@@ -116,6 +111,11 @@ Known operational notes:
 | alertConfig as singleton table | Typed fields, structured schema, native Convex patch semantics vs KV store | ✓ Good — consistent with QB/CC config pattern |
 | Client-side dismissal filtering | getAlerts stays public/unauthenticated; getMyDismissals handles auth separately | ✓ Good — clean separation of concerns |
 | Inline ?? fallbacks for thresholds | alerts.ts uses `configRow?.field ?? default` instead of cross-file constant imports | ✓ Good — self-contained, avoids circular deps |
+| Separate analytics.ts module | New Convex file for analytics queries vs adding to existing modules | ✓ Good — clean separation, grew to 10 queries without conflicts |
+| Doughnut charts for proportional data | Cutout 55% for modern look, Doughnut over Pie for demographics | ✓ Good — consistent visual language |
+| Single ChartSkeleton loading guard | One skeleton covers all hooks in each tab vs partial renders | ✓ Good — simpler code, consistent across all 3 analytics tabs |
+| fetchIncomeTrend in QB sync cycle | Income data refreshes every 15 min with other QB data | ✓ Good — no separate cron needed |
+| Admin account designation for donations | appSettings key stores designated income accounts | ✓ Good — closed read/write loop, instructive empty state |
 
 ---
-*Last updated: 2026-03-01 after v1.3 milestone start*
+*Last updated: 2026-03-01 after v1.3 milestone*
