@@ -1,6 +1,22 @@
 import { query } from "./_generated/server";
 
 /**
+ * Returns the last 12 calendar months as bucket descriptors,
+ * ordered chronologically oldest → newest.
+ */
+function getLast12Months(): Array<{ label: string; start: number; end: number }> {
+  const now = new Date();
+  const months: Array<{ label: string; start: number; end: number }> = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    const label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    months.push({ label, start: d.getTime(), end: next.getTime() });
+  }
+  return months;
+}
+
+/**
  * Returns the count of active clients across all programs.
  */
 export const getActiveClientCount = query({
@@ -121,5 +137,70 @@ export const getAllDemographics = query({
       outcomeDistribution,
       referralSource,
     };
+  },
+});
+
+/**
+ * Returns session counts grouped by the last 12 calendar months.
+ * Sessions are collected in-memory (no createdAt index on sessions table)
+ * and bucketed by sessionDate.
+ */
+export const getSessionTrends = query({
+  args: {},
+  handler: async (ctx) => {
+    const buckets = getLast12Months();
+    const allSessions = await ctx.db.query("sessions").collect();
+    const months = buckets.map(({ label, start, end }) => {
+      const count = allSessions.filter(
+        (s) => s.sessionDate >= start && s.sessionDate < end
+      ).length;
+      return { label, count };
+    });
+    return { months };
+  },
+});
+
+/**
+ * Returns aggregate goal status counts and overall completion rate.
+ */
+export const getGoalStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const goals = await ctx.db.query("clientGoals").collect();
+    const total = goals.length;
+    const inProgress = goals.filter((g) => g.status === "in_progress").length;
+    const completed = goals.filter((g) => g.status === "completed").length;
+    const notStarted = goals.filter((g) => g.status === "not_started").length;
+    const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { inProgress, completed, notStarted, total, completionRate };
+  },
+});
+
+/**
+ * Returns legal and co-parent intake counts grouped by the last 12 calendar months.
+ * Uses the by_createdAt index for efficient range queries.
+ */
+export const getIntakeVolume = query({
+  args: {},
+  handler: async (ctx) => {
+    const buckets = getLast12Months();
+    const months = await Promise.all(
+      buckets.map(async ({ label, start, end }) => {
+        const legalForms = await ctx.db
+          .query("legalIntakeForms")
+          .withIndex("by_createdAt", (q) =>
+            q.gte("createdAt", start).lt("createdAt", end)
+          )
+          .collect();
+        const coparentForms = await ctx.db
+          .query("coparentIntakeForms")
+          .withIndex("by_createdAt", (q) =>
+            q.gte("createdAt", start).lt("createdAt", end)
+          )
+          .collect();
+        return { label, legal: legalForms.length, coparent: coparentForms.length };
+      })
+    );
+    return { months };
   },
 });
