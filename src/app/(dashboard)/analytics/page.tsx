@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { AnalyticsTab } from "@/types";
 import DemographicsTab from "@/components/analytics/DemographicsTab";
 import ClientActivityTab from "@/components/analytics/ClientActivityTab";
+import OperationsTab from "@/components/analytics/OperationsTab";
 
 const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
   { id: "demographics", label: "Demographics" },
@@ -12,33 +13,6 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
   { id: "operations", label: "Operations" },
 ];
 
-function PlaceholderContent({ tab }: { tab: AnalyticsTab }) {
-  const messages: Record<AnalyticsTab, string> = {
-    demographics: "Demographics charts coming soon",
-    "client-activity": "Client Activity charts coming soon",
-    operations: "Operations charts coming soon",
-  };
-
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-12 flex flex-col items-center justify-center gap-4">
-      {/* Bar chart placeholder icon */}
-      <svg
-        className="w-12 h-12 text-muted/40"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 3v18h18M7 16v-5m4 5V8m4 8v-3"
-        />
-      </svg>
-      <p className="text-sm text-muted font-medium">{messages[tab]}</p>
-    </div>
-  );
-}
 
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("demographics");
@@ -78,7 +52,7 @@ export default function AnalyticsPage() {
       {/* Tab content */}
       {activeTab === "demographics" && <DemographicsTab />}
       {activeTab === "client-activity" && <ClientActivityTab />}
-      {activeTab === "operations" && <PlaceholderContent tab="operations" />}
+      {activeTab === "operations" && <OperationsTab />}
     </div>
   );
 }
