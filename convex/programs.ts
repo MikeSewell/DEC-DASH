@@ -116,13 +116,13 @@ export const remove = mutation({
     const existing = await ctx.db.get(args.programId);
     if (!existing) throw new Error("Program not found");
 
-    const linkedClients = await ctx.db
-      .query("clients")
+    const linkedEnrollment = await ctx.db
+      .query("enrollments")
       .withIndex("by_programId", (q) => q.eq("programId", args.programId))
       .first();
 
-    if (linkedClients) {
-      throw new Error("Cannot delete program with linked clients. Reassign clients first.");
+    if (linkedEnrollment) {
+      throw new Error("Cannot delete program with linked enrollments. Remove enrollments first.");
     }
 
     await ctx.db.delete(args.programId);
@@ -147,12 +147,16 @@ export const getStats = query({
 
     const stats = await Promise.all(
       programs.map(async (program) => {
-        const clients = await ctx.db
-          .query("clients")
+        const programEnrollments = await ctx.db
+          .query("enrollments")
           .withIndex("by_programId", (q) => q.eq("programId", program._id))
           .collect();
 
-        const activeClients = clients.filter((c) => c.status === "active").length;
+        const activeClients = new Set(
+          programEnrollments
+            .filter((e) => e.status === "active")
+            .map((e) => e.clientId)
+        ).size;
 
         const sessions = await ctx.db
           .query("sessions")

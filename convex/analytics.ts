@@ -180,15 +180,35 @@ function topN(
 export const getAllDemographics = query({
   args: { programId: v.optional(v.id("programs")) },
   handler: async (ctx, { programId }) => {
-    const clients = programId
+    let clients = await ctx.db.query("clients").collect();
+
+    // If programId provided, filter clients via enrollments join
+    let scopedEnrollments = programId
       ? await ctx.db
-          .query("clients")
+          .query("enrollments")
           .withIndex("by_programId", (q) => q.eq("programId", programId))
           .collect()
-      : await ctx.db.query("clients").collect();
+      : null;
+
+    if (programId && scopedEnrollments) {
+      const enrolledClientIds = new Set(scopedEnrollments.map((e) => e.clientId));
+      clients = clients.filter((c) => enrolledClientIds.has(c._id));
+    }
+
     const total = clients.length;
-    const active = clients.filter((c) => c.status === "active").length;
-    const completed = clients.filter((c) => c.status === "completed").length;
+
+    // Active/completed counts from enrollments (scoped to programId if provided)
+    const allEnrollments = scopedEnrollments
+      ? scopedEnrollments
+      : await ctx.db.query("enrollments").collect();
+    const activeClientIds = new Set(
+      allEnrollments.filter((e) => e.status === "active").map((e) => e.clientId)
+    );
+    const completedClientIds = new Set(
+      allEnrollments.filter((e) => e.status === "completed").map((e) => e.clientId)
+    );
+    const active = clients.filter((c) => activeClientIds.has(c._id)).length;
+    const completed = clients.filter((c) => completedClientIds.has(c._id)).length;
 
     const toSortedDistribution = (field: (c: (typeof clients)[0]) => string) => {
       const map: Record<string, number> = {};

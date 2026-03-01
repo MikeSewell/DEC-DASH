@@ -5,36 +5,12 @@ import { requireRole } from "./users";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
- * List clients with optional filters by programId and/or status.
+ * List all clients (no args — legacy programId/status filters removed in Phase 21).
  */
 export const list = query({
-  args: {
-    programId: v.optional(v.id("programs")),
-    status: v.optional(
-      v.union(
-        v.literal("active"),
-        v.literal("completed"),
-        v.literal("withdrawn")
-      )
-    ),
-  },
-  handler: async (ctx, args) => {
-    let clients;
-
-    if (args.programId) {
-      clients = await ctx.db
-        .query("clients")
-        .withIndex("by_programId", (q) => q.eq("programId", args.programId))
-        .collect();
-    } else {
-      clients = await ctx.db.query("clients").collect();
-    }
-
-    if (args.status) {
-      clients = clients.filter((c) => c.status === args.status);
-    }
-
-    return clients;
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("clients").collect();
   },
 });
 
@@ -45,7 +21,6 @@ export const listWithPrograms = query({
   args: {
     programType: v.optional(v.string()),
     search: v.optional(v.string()),
-    status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -100,11 +75,6 @@ export const listWithPrograms = query({
       clients = clients.filter((c) => clientIdsWithType.has(c._id));
     }
 
-    // Status filter
-    if (args.status) {
-      clients = clients.filter((c) => c.status === args.status);
-    }
-
     // Search filter
     if (args.search) {
       const term = args.search.toLowerCase();
@@ -115,12 +85,25 @@ export const listWithPrograms = query({
       );
     }
 
+    // Derive program info from enrollments (first active enrollment per client)
+    const clientProgramInfo = new Map<string, { programName: string; programType: string }>();
+    for (const e of allActiveEnrollments) {
+      const cKey = e.clientId as string;
+      if (!clientProgramInfo.has(cKey)) {
+        const prog = programMap.get(e.programId);
+        clientProgramInfo.set(cKey, {
+          programName: prog?.name ?? "Unknown",
+          programType: prog?.type ?? "other",
+        });
+      }
+    }
+
     return clients.map((c) => {
-      const program = c.programId ? programMap.get(c.programId) : undefined;
+      const info = clientProgramInfo.get(c._id as string);
       return {
         ...c,
-        programName: program?.name ?? "\u2014",
-        programType: program?.type ?? "other",
+        programName: info?.programName ?? "\u2014",
+        programType: info?.programType ?? "other",
       };
     });
   },
@@ -140,18 +123,20 @@ export const getStats = query({
     const programs = await ctx.db.query("programs").collect();
     let clients = await ctx.db.query("clients").collect();
 
+    // Fetch all active enrollments — used for both RBAC and active count
+    const allActiveEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+
     // Role-based filtering — enrollment-based (replaces legacy clients.programId check)
     if (user.role === "lawyer" || user.role === "psychologist") {
       const requiredType = user.role === "lawyer" ? "legal" : "coparent";
       const qualifyingProgramIds = new Set(
         programs.filter((p) => p.type === requiredType).map((p) => p._id)
       );
-      const activeEnrollments = await ctx.db
-        .query("enrollments")
-        .withIndex("by_status", (q) => q.eq("status", "active"))
-        .collect();
       const eligibleClientIds = new Set(
-        activeEnrollments
+        allActiveEnrollments
           .filter((e) => qualifyingProgramIds.has(e.programId))
           .map((e) => e.clientId)
       );
@@ -159,7 +144,9 @@ export const getStats = query({
     }
 
     const total = clients.length;
-    const active = clients.filter((c) => c.status === "active").length;
+    // Active count from enrollments (not legacy clients.status)
+    const activeClientIds = new Set(allActiveEnrollments.map((e) => e.clientId));
+    const active = clients.filter((c) => activeClientIds.has(c._id)).length;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
     const newThisMonth = clients.filter((c) => c.createdAt >= startOfMonth).length;
@@ -216,8 +203,9 @@ export const getStatsByProgram = query({
       clientEnrollmentTypes.get(clientKey)!.add(pType);
     }
 
-    // Count active clients by program type using enrollment data
-    const activeClients = clients.filter((c) => c.status === "active");
+    // Active client IDs from enrollments (not legacy clients.status)
+    const activeClientIds = new Set(allActiveEnrollments.map((e) => e.clientId));
+    const activeClients = clients.filter((c) => activeClientIds.has(c._id));
     const byType: Record<string, number> = {};
     for (const client of activeClients) {
       const types = clientEnrollmentTypes.get(client._id as string);
@@ -227,9 +215,8 @@ export const getStatsByProgram = query({
           byType[type] = (byType[type] ?? 0) + 1;
         }
       } else {
-        // Client has no active enrollments — fall back to legacy programId
-        const type = client.programId ? (programTypeMap.get(client.programId) ?? "other") : "other";
-        byType[type] = (byType[type] ?? 0) + 1;
+        // Client has no active enrollments — count as "other"
+        byType["other"] = (byType["other"] ?? 0) + 1;
       }
     }
 
@@ -262,8 +249,6 @@ export const getByIdWithIntake = query({
     const client = await ctx.db.get(args.clientId);
     if (!client) return null;
 
-    const program = client.programId ? await ctx.db.get(client.programId) : null;
-
     const legalIntake = await ctx.db
       .query("legalIntakeForms")
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
@@ -294,8 +279,7 @@ export const getByIdWithIntake = query({
 
     return {
       ...client,
-      program,                             // Keep for backward compat (legacy, removed Phase 21)
-      enrollments: enrollmentsWithProgram, // NEW — enrollment-based source of truth
+      enrollments: enrollmentsWithProgram, // enrollment-based source of truth
       legalIntake,
       coparentIntake,
     };
@@ -309,13 +293,6 @@ export const create = mutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    programId: v.optional(v.id("programs")),
-    enrollmentDate: v.optional(v.number()),
-    status: v.union(
-      v.literal("active"),
-      v.literal("completed"),
-      v.literal("withdrawn")
-    ),
     zipCode: v.optional(v.string()),
     ageGroup: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
@@ -327,9 +304,6 @@ export const create = mutation({
     const clientId = await ctx.db.insert("clients", {
       firstName: args.firstName,
       lastName: args.lastName,
-      programId: args.programId,
-      enrollmentDate: args.enrollmentDate,
-      status: args.status,
       zipCode: args.zipCode,
       ageGroup: args.ageGroup,
       ethnicity: args.ethnicity,
@@ -357,15 +331,6 @@ export const update = mutation({
     clientId: v.id("clients"),
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
-    programId: v.optional(v.id("programs")),
-    enrollmentDate: v.optional(v.number()),
-    status: v.optional(
-      v.union(
-        v.literal("active"),
-        v.literal("completed"),
-        v.literal("withdrawn")
-      )
-    ),
     zipCode: v.optional(v.string()),
     ageGroup: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
@@ -380,9 +345,6 @@ export const update = mutation({
     const updates: Record<string, unknown> = {};
     if (args.firstName !== undefined) updates.firstName = args.firstName;
     if (args.lastName !== undefined) updates.lastName = args.lastName;
-    if (args.programId !== undefined) updates.programId = args.programId;
-    if (args.enrollmentDate !== undefined) updates.enrollmentDate = args.enrollmentDate;
-    if (args.status !== undefined) updates.status = args.status;
     if (args.zipCode !== undefined) updates.zipCode = args.zipCode;
     if (args.ageGroup !== undefined) updates.ageGroup = args.ageGroup;
     if (args.ethnicity !== undefined) updates.ethnicity = args.ethnicity;
@@ -425,11 +387,10 @@ export const remove = mutation({
 
 /**
  * Public batch import for legal clients (no auth, for CLI import scripts).
- * Creates a client + legalIntakeForm for each row. Dedupes by firstName+lastName.
+ * Creates a client + legalIntakeForm for each row. Dedupes by firstName+lastName across all clients.
  */
 export const importLegalBatch = mutation({
   args: {
-    programId: v.id("programs"),
     rows: v.array(v.object({
       firstName: v.string(),
       lastName: v.string(),
@@ -464,14 +425,14 @@ export const importLegalBatch = mutation({
     let created = 0;
     let skipped = 0;
 
+    // Fetch all clients once outside the loop for deduplication
+    const allClients = await ctx.db.query("clients").collect();
+
     for (const row of args.rows) {
       const { firstName, lastName, zipCode, ethnicity, age, ...intakeFields } = row;
 
-      // Check for existing client with same name in same program
-      const existing = await ctx.db.query("clients")
-        .withIndex("by_programId", (q) => q.eq("programId", args.programId))
-        .collect();
-      const dupe = existing.find(
+      // Dedup across all clients by name
+      const dupe = allClients.find(
         (c) => c.firstName.toLowerCase() === firstName.toLowerCase()
           && c.lastName.toLowerCase() === lastName.toLowerCase()
       );
@@ -479,8 +440,6 @@ export const importLegalBatch = mutation({
 
       const clientId = await ctx.db.insert("clients", {
         firstName, lastName,
-        programId: args.programId,
-        status: "active",
         zipCode, ethnicity,
         ageGroup: age,
         createdAt: Date.now(),
@@ -503,11 +462,10 @@ export const importLegalBatch = mutation({
 
 /**
  * Public batch import for co-parent clients (no auth, for CLI import scripts).
- * Creates a client + coparentIntakeForm for each row. Dedupes by fullName.
+ * Creates a client + coparentIntakeForm for each row. Dedupes by fullName across all clients.
  */
 export const importCoparentBatch = mutation({
   args: {
-    programId: v.id("programs"),
     rows: v.array(v.object({
       firstName: v.string(),
       lastName: v.string(),
@@ -538,14 +496,14 @@ export const importCoparentBatch = mutation({
     let created = 0;
     let skipped = 0;
 
+    // Fetch all clients once outside the loop for deduplication
+    const allClients = await ctx.db.query("clients").collect();
+
     for (const row of args.rows) {
       const { firstName, lastName, fullName, zipCode, ethnicity, age, ...intakeFields } = row;
 
-      // Check for existing client with same name in same program
-      const existing = await ctx.db.query("clients")
-        .withIndex("by_programId", (q) => q.eq("programId", args.programId))
-        .collect();
-      const dupe = existing.find(
+      // Dedup across all clients by name
+      const dupe = allClients.find(
         (c) => c.firstName.toLowerCase() === firstName.toLowerCase()
           && c.lastName.toLowerCase() === lastName.toLowerCase()
       );
@@ -553,8 +511,6 @@ export const importCoparentBatch = mutation({
 
       const clientId = await ctx.db.insert("clients", {
         firstName, lastName,
-        programId: args.programId,
-        status: "active",
         zipCode, ethnicity,
         ageGroup: age,
         createdAt: Date.now(),
@@ -582,9 +538,6 @@ export const internalCreate = internalMutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    programId: v.optional(v.id("programs")),
-    enrollmentDate: v.optional(v.number()),
-    status: v.union(v.literal("active"), v.literal("completed"), v.literal("withdrawn")),
     zipCode: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
   },
@@ -594,17 +547,20 @@ export const internalCreate = internalMutation({
 });
 
 /**
- * Get clients by program.
+ * Get clients enrolled in a program (via enrollments table).
  */
 export const getByProgram = query({
   args: {
     programId: v.id("programs"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("clients")
+    const enrollments = await ctx.db
+      .query("enrollments")
       .withIndex("by_programId", (q) => q.eq("programId", args.programId))
       .collect();
+    const clientIds = [...new Set(enrollments.map((e) => e.clientId))];
+    const clients = await Promise.all(clientIds.map((id) => ctx.db.get(id)));
+    return clients.filter((c): c is NonNullable<typeof c> => c !== null);
   },
 });
 
