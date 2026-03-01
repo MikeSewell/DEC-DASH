@@ -35,10 +35,10 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
 ### Operations
 
-- [ ] **OPS-01**: User can view recent staff activity feed with human-readable descriptions on the Operations tab
-- [ ] **OPS-02**: User can view per-staff action counts and most-active-user summary on the Operations tab
-- [ ] **OPS-03**: User can view expense categorization acceptance rate on the Operations tab
-- [ ] **OPS-04**: User can view expense category distribution chart on the Operations tab
+- [x] **OPS-01**: User can view recent staff activity feed with human-readable descriptions on the Operations tab
+- [x] **OPS-02**: User can view per-staff action counts and most-active-user summary on the Operations tab
+- [x] **OPS-03**: User can view expense categorization acceptance rate on the Operations tab
+- [x] **OPS-04**: User can view expense category distribution chart on the Operations tab
 
 ### Donation Performance
 
@@ -92,10 +92,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ACT-01 | Phase 13 | Complete |
 | ACT-02 | Phase 13 | Complete |
 | ACT-03 | Phase 13 | Complete |
-| OPS-01 | Phase 14 | Pending |
-| OPS-02 | Phase 14 | Pending |
-| OPS-03 | Phase 14 | Pending |
-| OPS-04 | Phase 14 | Pending |
+| OPS-01 | Phase 14 | Complete |
+| OPS-02 | Phase 14 | Complete |
+| OPS-03 | Phase 14 | Complete |
+| OPS-04 | Phase 14 | Complete |
 | DON-01 | Phase 15 | Pending |
 | DON-02 | Phase 15 | Pending |
 | DON-03 | Phase 15 | Pending |

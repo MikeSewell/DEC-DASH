@@ -151,5 +151,5 @@ Plans:
 | 11. Analytics Foundation + Dashboard Cards | 2/2 | Complete    | 2026-03-01 | - |
 | 12. Demographics Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 13. Client Activity Tab | 2/2 | Complete    | 2026-03-01 | - |
-| 14. Operations Tab | v1.3 | 0/2 | Not started | - |
+| 14. Operations Tab | 1/2 | In Progress|  | - |
 | 15. Donation Performance Charts | v1.3 | 0/2 | Not started | - |

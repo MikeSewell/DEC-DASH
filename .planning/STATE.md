@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
 status: unknown
-last_updated: "2026-03-01T05:40:01.374Z"
+last_updated: "2026-03-01T06:59:00.027Z"
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 12
+  completed_plans: 11
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 13 of 15 (Client Activity Tab) — COMPLETE
-Plan: 2 of 2 in current phase (complete)
+Phase: 14 of 15 (Operations Tab) — In Progress
+Plan: 1 of 2 in current phase (complete)
 Status: In progress
-Last activity: 2026-03-01 — 13-02 complete: Client Activity tab UI (session trend line chart, goal status cards, intake volume grouped bar chart)
+Last activity: 2026-03-01 — 14-01 complete: Operations tab data layer (getAuditFeed, getStaffActionStats, getCategorizationStats Convex queries + React hooks)
 
-Progress: [██████░░░░] 60% (v1.3) — 6/10 plans complete
+Progress: [███████░░░] 70% (v1.3) — 7/10 plans complete
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [██████░░░░] 60% (v1.3) — 6/10 plans complete
 | 12    | 02   | 3min     | 1     | 2     |
 | 13    | 01   | 2min     | 2     | 2     |
 | 13    | 02   | 3min     | 2     | 2     |
+| 14    | 01   | 2min     | 2     | 2     |
 
 ## Accumulated Context
 
@@ -84,6 +85,9 @@ Carried from v1.2:
 - [Phase 13]: getGoalStats returns completionRate: 0 when total=0 to avoid NaN division
 - [Phase 13]: Single ChartSkeleton loading state covers all three hooks — simpler than partial renders, consistent with DemographicsTab
 - [Phase 13]: Grouped bar chart uses stacked:false on both axes — Chart.js requires both declarations for side-by-side display
+- [Phase 14]: formatAction helper placed inside getAuditFeed handler (not module-level) since only used there
+- [Phase 14]: getCategorizationStats acceptance rate uses totalCategorized (status !== error) as denominator — pending/approved/submitted/skipped all count as categorized
+- [Phase 14]: getStaffActionStats resolves all unique userIds via Promise.all after counting to avoid N+1 per log entry
 
 ### Pending Todos
 
@@ -99,5 +103,5 @@ Carried from v1.2:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 13-02-PLAN.md — Client Activity tab UI: session trend line chart, goal status cards, intake volume grouped bar chart
+Stopped at: Completed 14-01-PLAN.md — Operations tab data layer: getAuditFeed, getStaffActionStats, getCategorizationStats queries and hooks
 Resume file: None
