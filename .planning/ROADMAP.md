@@ -68,7 +68,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
   3. Dashboard shows an active client count card with a live total across all programs
   4. Dashboard shows a session volume card with sessions logged in the last 30 days
   5. Dashboard shows an intake trend indicator comparing new intakes this month vs. last month
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
 - [ ] 11-01: Analytics route scaffold (/analytics page, tab nav component, sidebar nav registration with role gating)
