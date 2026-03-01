@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { useParams, useRouter } from "next/navigation";
-import { formatDate, capitalize } from "@/lib/utils";
+import { formatDate, capitalize, cn } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -405,7 +405,8 @@ export default function ClientDetailPage() {
   }
 
   const isAdmin = currentUser?.role === "admin";
-  const programType = data.program?.type;
+  const hasLegalEnrollment = data.enrollments?.some((e: { programType: string }) => e.programType === "legal");
+  const hasCoparentEnrollment = data.enrollments?.some((e: { programType: string }) => e.programType === "coparent");
 
   // ── Reusable form field renderer ───────────────────────────────────
 
@@ -531,7 +532,15 @@ export default function ClientDetailPage() {
             {data.firstName} {data.lastName}
           </h1>
           <p className="text-sm text-muted mt-1">
-            {data.program?.name ?? "No program"} &middot; Created {formatDate(data.createdAt)}
+            {(() => {
+              const activeEnrollment = data.enrollments?.find((e: { status: string }) => e.status === "active");
+              const firstEnrollment = data.enrollments?.[0];
+              const enrollmentName = (activeEnrollment as { programName?: string })?.programName
+                ?? (firstEnrollment as { programName?: string })?.programName
+                ?? data.program?.name
+                ?? "No program";
+              return enrollmentName;
+            })()} &middot; Created {formatDate(data.createdAt)}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -576,7 +585,11 @@ export default function ClientDetailPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">Program</p>
-              <p className="text-sm text-foreground">{data.program?.name ?? "\u2014"}</p>
+              <p className="text-sm text-foreground">
+                {data.enrollments && data.enrollments.length > 0
+                  ? data.enrollments.map((e: { programName: string }) => e.programName).join(", ")
+                  : data.program?.name ?? "\u2014"}
+              </p>
             </div>
             <div>
               <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">Status</p>
@@ -701,8 +714,58 @@ export default function ClientDetailPage() {
         )}
       </Card>
 
+      {/* ─── Section: Enrollments ──────────────────────────── */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-4">
+          Enrollments
+        </h2>
+        {data.enrollments && data.enrollments.length > 0 ? (
+          <div className="space-y-3">
+            {data.enrollments.map((enrollment: { _id: string; programName: string; programType: string; status: string; enrollmentDate?: number; exitDate?: number; notes?: string }) => (
+              <div
+                key={enrollment._id}
+                className="flex items-center justify-between p-3 rounded-xl bg-surface-hover/50 border border-border"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      enrollment.status === "active"
+                        ? "bg-green-500"
+                        : enrollment.status === "completed"
+                        ? "bg-blue-500"
+                        : enrollment.status === "withdrawn"
+                        ? "bg-red-500"
+                        : "bg-yellow-500"
+                    )}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {enrollment.programName}
+                    </p>
+                    <p className="text-xs text-muted">
+                      {enrollment.enrollmentDate
+                        ? formatDate(enrollment.enrollmentDate)
+                        : "No date"}
+                      {enrollment.exitDate
+                        ? ` \u2014 ${formatDate(enrollment.exitDate)}`
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={statusVariant[enrollment.status] ?? "default"}>
+                  {capitalize(enrollment.status)}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">No enrollments found.</p>
+        )}
+      </Card>
+
       {/* ─── Section B: Legal Intake Form ───────────────────── */}
-      {programType === "legal" && (
+      {hasLegalEnrollment && (
         <>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-fraunces)]">
@@ -762,7 +825,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* ─── Section C: Co-Parent Intake Form ──────────────── */}
-      {programType === "coparent" && (
+      {hasCoparentEnrollment && (
         <>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground font-[family-name:var(--font-fraunces)]">
