@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T17:44:08.470Z"
+last_updated: "2026-03-01T17:52:30.678Z"
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -69,6 +69,8 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 21-01]: [21-01] ProgramsLegal and ProgramsCoparent rewritten to use getAllDemographics from clients table — programDataCache no longer used for dashboard demographics
 - [Phase 21-01]: [21-01] avgSessions replaced with zipDistribution.length in stat cards — getAllDemographics does not compute session averages
 - [Phase 21-schema-cleanup]: [21-01] clearProgramDataCache ran (deleted: 0) confirming table was already drained; schema deployed cleanly without programDataCache table
+- [Phase 21-schema-cleanup]: [21-02] clients table has no indexes — by_programId was the only one and it is removed
+- [Phase 21-schema-cleanup]: [21-02] importLegalBatch/importCoparentBatch programId arg removed — callers must create enrollments separately after client creation
 
 ### Pending Todos
 

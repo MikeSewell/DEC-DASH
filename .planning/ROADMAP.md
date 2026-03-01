@@ -69,7 +69,7 @@ Full details: `milestones/v1.3-ROADMAP.md`
 - [x] **Phase 18: Data Migration** — Run dry-run then execute migration from existing client records to enrollment model; backfill demographics (completed 2026-03-01)
 - [x] **Phase 19: Analytics Backend Rewrite** — Rewrite Demographics and session analytics queries to read Convex directly, verified before Sheets removal (completed 2026-03-01)
 - [x] **Phase 20: Frontend and Sheets Removal** — Unified client list, enrollment-based RBAC, remove Sheets program sync, admin UI cleanup, alerts staleness check removal (completed 2026-03-01)
-- [ ] **Phase 21: Schema Cleanup** — Remove legacy fields and deprecated tables after documents cleared
+- [x] **Phase 21: Schema Cleanup** — Remove legacy fields and deprecated tables after documents cleared (completed 2026-03-01)
 - [ ] **Phase 22: Data Export** — Admin CSV and Excel export of full client + enrollment + session dataset
 
 ## Phase Details
@@ -187,5 +187,5 @@ Plans:
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
 | 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | 2/2 | Complete    | 2026-03-01 | - |
-| 21. Schema Cleanup | 1/2 | In Progress|  | - |
+| 21. Schema Cleanup | 2/2 | Complete   | 2026-03-01 | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |
