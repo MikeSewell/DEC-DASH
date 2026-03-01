@@ -21,7 +21,6 @@ export const getAlerts = query({
       deadlineWindowDays: configRow?.deadlineWindowDays ?? 30,
       budgetVariancePct: configRow?.budgetVariancePct ?? 90,
       qbStalenessHours: configRow?.qbStalenessHours ?? 1,
-      sheetsStalenessHours: configRow?.sheetsStalenessHours ?? 2,
       calendarStalenessHours: configRow?.calendarStalenessHours ?? 2,
     };
 

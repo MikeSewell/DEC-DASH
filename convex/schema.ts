@@ -112,25 +112,6 @@ export default defineSchema({
     lastSyncAt: v.number(),
   }).index("by_sheetRowId", ["sheetRowId"]),
 
-  programDataCache: defineTable({
-    sheetRowId: v.string(),
-    programType: v.string(),
-    firstName: v.optional(v.string()),
-    lastName: v.optional(v.string()),
-    gender: v.optional(v.string()),
-    ageGroup: v.optional(v.string()),
-    ethnicity: v.optional(v.string()),
-    zipCode: v.optional(v.string()),
-    enrollmentDate: v.optional(v.string()),
-    status: v.optional(v.string()),
-    referralSource: v.optional(v.string()),
-    reasonForVisit: v.optional(v.string()),
-    programOutcome: v.optional(v.string()),
-    sessionCount: v.optional(v.number()),
-    lastSyncAt: v.number(),
-  }).index("by_sheetRowId", ["sheetRowId"])
-    .index("by_programType", ["programType"]),
-
   programs: defineTable({
     name: v.string(),
     type: v.union(
@@ -419,7 +400,6 @@ export default defineSchema({
     deadlineWindowDays: v.number(),     // default 30
     budgetVariancePct: v.number(),      // default 90 (means 90%)
     qbStalenessHours: v.number(),       // default 1
-    sheetsStalenessHours: v.number(),   // default 2
     calendarStalenessHours: v.number(), // default 2
     updatedAt: v.number(),
     updatedBy: v.optional(v.id("users")),

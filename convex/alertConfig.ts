@@ -7,7 +7,6 @@ export const ALERT_DEFAULTS = {
   deadlineWindowDays: 30,
   budgetVariancePct: 90,
   qbStalenessHours: 1,
-  sheetsStalenessHours: 2,
   calendarStalenessHours: 2,
 } as const;
 
@@ -23,7 +22,6 @@ export const get = query({
       deadlineWindowDays: config.deadlineWindowDays,
       budgetVariancePct: config.budgetVariancePct,
       qbStalenessHours: config.qbStalenessHours,
-      sheetsStalenessHours: config.sheetsStalenessHours,
       calendarStalenessHours: config.calendarStalenessHours,
     };
   },
@@ -38,7 +36,6 @@ export const update = mutation({
     deadlineWindowDays: v.number(),
     budgetVariancePct: v.number(),
     qbStalenessHours: v.number(),
-    sheetsStalenessHours: v.number(),
     calendarStalenessHours: v.number(),
   },
   handler: async (ctx, args) => {

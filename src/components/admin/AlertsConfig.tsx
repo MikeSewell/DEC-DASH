@@ -9,7 +9,6 @@ const DEFAULTS = {
   deadlineWindowDays: 30,
   budgetVariancePct: 90,
   qbStalenessHours: 1,
-  sheetsStalenessHours: 2,
   calendarStalenessHours: 2,
 };
 
@@ -20,7 +19,6 @@ export default function AlertsConfig() {
   const [deadlineWindowDays, setDeadlineWindowDays] = useState(DEFAULTS.deadlineWindowDays);
   const [budgetVariancePct, setBudgetVariancePct] = useState(DEFAULTS.budgetVariancePct);
   const [qbStalenessHours, setQbStalenessHours] = useState(DEFAULTS.qbStalenessHours);
-  const [sheetsStalenessHours, setSheetsStalenessHours] = useState(DEFAULTS.sheetsStalenessHours);
   const [calendarStalenessHours, setCalendarStalenessHours] = useState(DEFAULTS.calendarStalenessHours);
 
   const [loaded, setLoaded] = useState(false);
@@ -33,7 +31,6 @@ export default function AlertsConfig() {
       setDeadlineWindowDays(config.deadlineWindowDays);
       setBudgetVariancePct(config.budgetVariancePct);
       setQbStalenessHours(config.qbStalenessHours);
-      setSheetsStalenessHours(config.sheetsStalenessHours);
       setCalendarStalenessHours(config.calendarStalenessHours);
       setLoaded(true);
     }
@@ -43,7 +40,6 @@ export default function AlertsConfig() {
     setDeadlineWindowDays(DEFAULTS.deadlineWindowDays);
     setBudgetVariancePct(DEFAULTS.budgetVariancePct);
     setQbStalenessHours(DEFAULTS.qbStalenessHours);
-    setSheetsStalenessHours(DEFAULTS.sheetsStalenessHours);
     setCalendarStalenessHours(DEFAULTS.calendarStalenessHours);
   }
 
@@ -55,7 +51,6 @@ export default function AlertsConfig() {
         deadlineWindowDays,
         budgetVariancePct,
         qbStalenessHours,
-        sheetsStalenessHours,
         calendarStalenessHours,
       });
       setSaveMessage("Alert thresholds saved successfully.");
@@ -132,25 +127,6 @@ export default function AlertsConfig() {
           />
           <p className="mt-1 text-xs text-muted">
             Alert when QuickBooks data has not synced within this many hours
-          </p>
-        </div>
-
-        {/* Sheets Staleness */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Google Sheets Staleness (hours)
-          </label>
-          <input
-            type="number"
-            min={0.5}
-            max={48}
-            step={0.5}
-            value={sheetsStalenessHours}
-            onChange={(e) => setSheetsStalenessHours(Number(e.target.value))}
-            className="w-full sm:w-48 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <p className="mt-1 text-xs text-muted">
-            Alert when Sheets data has not synced within this many hours
           </p>
         </div>
 
