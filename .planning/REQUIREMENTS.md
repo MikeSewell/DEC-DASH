@@ -32,9 +32,9 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 
 ### Analytics
 
-- [ ] **ANLY-01**: Demographics tab queries Convex clients table instead of Sheets programDataCache
-- [ ] **ANLY-02**: Session analytics queries use by_sessionDate index instead of full table scan
-- [ ] **ANLY-03**: Active client count derived from enrollments with status=active
+- [x] **ANLY-01**: Demographics tab queries Convex clients table instead of Sheets programDataCache
+- [x] **ANLY-02**: Session analytics queries use by_sessionDate index instead of full table scan
+- [x] **ANLY-03**: Active client count derived from enrollments with status=active
 
 ### Infrastructure
 
@@ -99,9 +99,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MIGR-02 | Phase 18 | Complete |
 | MIGR-03 | Phase 18 | Complete |
 | MIGR-04 | Phase 18 | Complete |
-| ANLY-01 | Phase 19 | Pending |
-| ANLY-02 | Phase 19 | Pending |
-| ANLY-03 | Phase 19 | Pending |
+| ANLY-01 | Phase 19 | Complete |
+| ANLY-02 | Phase 19 | Complete |
+| ANLY-03 | Phase 19 | Complete |
 | INFR-01 | Phase 20 | Pending |
 | INFR-02 | Phase 21 | Pending |
 | INFR-03 | Phase 21 | Pending |

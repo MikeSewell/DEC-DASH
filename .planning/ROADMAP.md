@@ -67,7 +67,7 @@ Full details: `milestones/v1.3-ROADMAP.md`
 - [x] **Phase 16: Schema Foundation** — Deploy enrollments table, add demographic fields to clients, add attendance status and enrollment link to sessions, add all new indexes (completed 2026-03-01)
 - [x] **Phase 17: Enrollment and Sessions Backend** — Build enrollment CRUD and session backend with attendanceStatus support (completed 2026-03-01)
 - [x] **Phase 18: Data Migration** — Run dry-run then execute migration from existing client records to enrollment model; backfill demographics (completed 2026-03-01)
-- [ ] **Phase 19: Analytics Backend Rewrite** — Rewrite Demographics and session analytics queries to read Convex directly, verified before Sheets removal
+- [x] **Phase 19: Analytics Backend Rewrite** — Rewrite Demographics and session analytics queries to read Convex directly, verified before Sheets removal (completed 2026-03-01)
 - [ ] **Phase 20: Frontend and Sheets Removal** — Unified client list, enrollment-based RBAC, remove Sheets program sync, admin UI cleanup, alerts staleness check removal
 - [ ] **Phase 21: Schema Cleanup** — Remove legacy fields and deprecated tables after documents cleared
 - [ ] **Phase 22: Data Export** — Admin CSV and Excel export of full client + enrollment + session dataset
@@ -179,7 +179,7 @@ Plans:
 | 16. Schema Foundation | 1/1 | Complete    | 2026-03-01 | - |
 | 17. Enrollment and Sessions Backend | 1/1 | Complete    | 2026-03-01 | - |
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
-| 19. Analytics Backend Rewrite | v2.0 | 0/TBD | Not started | - |
+| 19. Analytics Backend Rewrite | 1/1 | Complete   | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | v2.0 | 0/TBD | Not started | - |
 | 21. Schema Cleanup | v2.0 | 0/TBD | Not started | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |

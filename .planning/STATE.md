@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T13:56:53.715Z"
+last_updated: "2026-03-01T15:26:00Z"
 progress:
   total_phases: 5
   completed_phases: 5
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 18 — Data Migration (v2.0 Data Foundation)
+**Current focus:** Phase 20 — Sheets Removal (v2.0 Data Foundation)
 
 ## Current Position
 
-Phase: 18 of 22 (Data Migration — complete)
+Phase: 19 of 22 (Analytics Backend Rewrite — complete)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 18 complete — 350 enrollments created, 345 demographics backfilled, migration verified idempotent; ready for Phase 19
-Last activity: 2026-03-01 — 18-01 migration executed: 350 enrollment records created, 345 client records demographics-backfilled, idempotency confirmed
+Status: Phase 19 complete — analytics queries rewritten to use index scans, demographics decoupled from Sheets/programDataCache, Programs page redesigned with filter pills; ready for Phase 20
+Last activity: 2026-03-01 — 19-01 executed: 4 queries rewritten, DemographicsTab Sheets guard removed, human verification passed, Programs page redesigned
 
-Progress: [███░░░░░░░] 12% (v2.0 — 3/26 plans complete)
+Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
 ## Accumulated Context
 
@@ -52,6 +52,11 @@ Progress: [███░░░░░░░] 12% (v2.0 — 3/26 plans complete)
 - [Phase 18-01]: Demographics backfill priority: legalIntake ?? coparentIntake (legal preferred); phone only from coparentIntake
 - [Phase 18-01]: enrollmentDate fallback: client.enrollmentDate ?? client.createdAt for clients missing enrollment date
 - [Phase 18-01]: Migration results — 350/350 clients had programId (skipped=0), all received enrollment records; 345/350 had intake form demographics available for backfill
+- [Phase 19-01]: getAllDemographics reads clients table directly — programDataCache no longer used for demographics
+- [Phase 19-01]: outcomeDistribution returns [] (no programOutcome on clients) — UI length > 0 guard hides chart automatically
+- [Phase 19-01]: Ethnicity normalization at query time via ETHNICITY_MAP (not at migration time) — preserves flexibility
+- [Phase 19-01]: programId filter added to getAllDemographics for All/Legal/CoParent drill-down
+- [Phase 19-01]: Analytics page renamed to Programs, Operations tab removed
 
 ### Pending Todos
 
@@ -68,5 +73,5 @@ Progress: [███░░░░░░░] 12% (v2.0 — 3/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 18-01-PLAN.md — data migration executed (350 enrollments created, 345 demographics backfilled, idempotency verified)
+Stopped at: Completed 19-01-PLAN.md — analytics queries rewritten, DemographicsTab decoupled from Sheets, Programs page redesigned, human verification passed
 Resume file: None
