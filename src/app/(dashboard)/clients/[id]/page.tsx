@@ -180,7 +180,6 @@ export default function ClientDetailPage() {
     clientId: clientId as Id<"clients">,
   });
   const currentUser = useQuery(api.users.getCurrentUser);
-  const programs = useQuery(api.programs.list);
 
   const updateClient = useMutation(api.clients.update);
   const removeClient = useMutation(api.clients.remove);
@@ -192,8 +191,8 @@ export default function ClientDetailPage() {
   // Client editing state
   const [editingClient, setEditingClient] = useState(false);
   const [clientFormState, setClientFormState] = useState({
-    firstName: "", lastName: "", status: "active" as string,
-    zipCode: "", ageGroup: "", ethnicity: "", notes: "", programId: "",
+    firstName: "", lastName: "",
+    zipCode: "", ageGroup: "", ethnicity: "", notes: "",
   });
   const [savingClient, setSavingClient] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -219,12 +218,10 @@ export default function ClientDetailPage() {
       setClientFormState({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
-        status: data.status || "active",
         zipCode: data.zipCode || "",
         ageGroup: data.ageGroup || "",
         ethnicity: data.ethnicity || "",
         notes: data.notes || "",
-        programId: data.programId || "",
       });
     }
   }, [data, editingClient]);
@@ -297,14 +294,10 @@ export default function ClientDetailPage() {
         clientId: clientId as Id<"clients">,
         firstName: clientFormState.firstName || undefined,
         lastName: clientFormState.lastName || undefined,
-        status: clientFormState.status as "active" | "completed" | "withdrawn",
         zipCode: clientFormState.zipCode || undefined,
         ageGroup: clientFormState.ageGroup || undefined,
         ethnicity: clientFormState.ethnicity || undefined,
         notes: clientFormState.notes || undefined,
-        programId: clientFormState.programId
-          ? (clientFormState.programId as Id<"programs">)
-          : undefined,
       });
       setEditingClient(false);
     } catch (err) {
@@ -537,7 +530,6 @@ export default function ClientDetailPage() {
               const firstEnrollment = data.enrollments?.[0];
               const enrollmentName = (activeEnrollment as { programName?: string })?.programName
                 ?? (firstEnrollment as { programName?: string })?.programName
-                ?? data.program?.name
                 ?? "No program";
               return enrollmentName;
             })()} &middot; Created {formatDate(data.createdAt)}
@@ -588,19 +580,30 @@ export default function ClientDetailPage() {
               <p className="text-sm text-foreground">
                 {data.enrollments && data.enrollments.length > 0
                   ? data.enrollments.map((e: { programName: string }) => e.programName).join(", ")
-                  : data.program?.name ?? "\u2014"}
+                  : "\u2014"}
               </p>
             </div>
             <div>
               <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">Status</p>
-              <Badge variant={statusVariant[data.status] || "default"}>
-                {capitalize(data.status)}
-              </Badge>
+              {(() => {
+                const primaryStatus = data.enrollments?.length > 0
+                  ? (data.enrollments.find((e: { status: string }) => e.status === "active")?.status
+                    ?? data.enrollments[0]?.status
+                    ?? "unknown")
+                  : "unknown";
+                return (
+                  <Badge variant={statusVariant[primaryStatus] || "default"}>
+                    {capitalize(primaryStatus)}
+                  </Badge>
+                );
+              })()}
             </div>
             <div>
               <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1">Enrolled</p>
               <p className="text-sm text-foreground">
-                {data.enrollmentDate ? formatDate(data.enrollmentDate) : "\u2014"}
+                {data.enrollments?.[0]?.enrollmentDate
+                  ? formatDate(data.enrollments[0].enrollmentDate)
+                  : "\u2014"}
               </p>
             </div>
             <div>
@@ -634,33 +637,6 @@ export default function ClientDetailPage() {
               value={clientFormState.lastName}
               onChange={(e) => setClientFormState((p) => ({ ...p, lastName: e.target.value }))}
             />
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Program</label>
-              <select
-                value={clientFormState.programId}
-                onChange={(e) => setClientFormState((p) => ({ ...p, programId: e.target.value }))}
-                className="w-full px-4 py-2.5 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-              >
-                <option value="">No program</option>
-                {programs?.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} ({capitalize(p.type)})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Status</label>
-              <select
-                value={clientFormState.status}
-                onChange={(e) => setClientFormState((p) => ({ ...p, status: e.target.value }))}
-                className="w-full px-4 py-2.5 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-              >
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="withdrawn">Withdrawn</option>
-              </select>
-            </div>
             <Input
               label="Zip Code"
               value={clientFormState.zipCode}

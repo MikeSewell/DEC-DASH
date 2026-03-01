@@ -128,13 +128,6 @@ export default defineSchema({
   clients: defineTable({
     firstName: v.string(),
     lastName: v.string(),
-    programId: v.optional(v.id("programs")),
-    enrollmentDate: v.optional(v.number()),
-    status: v.union(
-      v.literal("active"),
-      v.literal("completed"),
-      v.literal("withdrawn")
-    ),
     zipCode: v.optional(v.string()),
     ageGroup: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
@@ -146,7 +139,7 @@ export default defineSchema({
     dateOfBirth: v.optional(v.string()),    // ISO "YYYY-MM-DD"
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
-  }).index("by_programId", ["programId"]),
+  }),
 
   enrollments: defineTable({
     clientId: v.id("clients"),

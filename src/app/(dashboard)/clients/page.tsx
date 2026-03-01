@@ -4,13 +4,12 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import type { ClientStatus, ProgramType } from "@/types";
-import { cn, formatDate, capitalize } from "@/lib/utils";
+import type { ProgramType } from "@/types";
+import { cn, capitalize } from "@/lib/utils";
 import { ROLE_PROGRAM_TYPE_MAP } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
@@ -26,17 +25,9 @@ const PAGE_VIEWS: { id: PageView; label: string }[] = [
   { id: "client-activity", label: "Client Activity" },
 ];
 
-const statusVariant: Record<ClientStatus, "success" | "info" | "danger"> = {
-  active: "success",
-  completed: "info",
-  withdrawn: "danger",
-};
-
 interface ClientFormData {
   firstName: string;
   lastName: string;
-  programId: string;
-  status: ClientStatus;
   zipCode: string;
   ageGroup: string;
   ethnicity: string;
@@ -46,8 +37,6 @@ interface ClientFormData {
 const emptyClientForm: ClientFormData = {
   firstName: "",
   lastName: "",
-  programId: "",
-  status: "active",
   zipCode: "",
   ageGroup: "",
   ethnicity: "",
@@ -140,13 +129,6 @@ export default function ClientsPage() {
     }
   }, [lockedType, activeTab]);
 
-  // Filter programs for the Add Client dropdown based on role
-  const availablePrograms = useMemo(() => {
-    if (!programs) return [];
-    if (lockedType) return programs.filter((p) => p.type === lockedType);
-    return programs;
-  }, [programs, lockedType]);
-
   async function handleAddClient() {
     if (!clientForm.firstName.trim() || !clientForm.lastName.trim()) return;
     setSavingClient(true);
@@ -154,11 +136,6 @@ export default function ClientsPage() {
       await createClient({
         firstName: clientForm.firstName.trim(),
         lastName: clientForm.lastName.trim(),
-        programId: clientForm.programId
-          ? (clientForm.programId as Id<"programs">)
-          : undefined,
-        status: clientForm.status,
-        enrollmentDate: Date.now(),
         zipCode: clientForm.zipCode || undefined,
         ageGroup: clientForm.ageGroup || undefined,
         ethnicity: clientForm.ethnicity || undefined,
@@ -204,13 +181,8 @@ export default function ClientsPage() {
     }
   }
 
-  // Open Add Client modal with auto-selected program for locked roles
   function openAddClientModal() {
-    const form = { ...emptyClientForm };
-    if (lockedType && availablePrograms.length > 0) {
-      form.programId = availablePrograms[0]._id;
-    }
-    setClientForm(form);
+    setClientForm({ ...emptyClientForm });
     setShowAddClientModal(true);
   }
 
@@ -237,26 +209,6 @@ export default function ClientsPage() {
       header: "Program",
       render: (item: Record<string, unknown>) =>
         (item.programName as string) || "\u2014",
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (item: Record<string, unknown>) => {
-        const status = item.status as ClientStatus;
-        return (
-          <Badge variant={statusVariant[status] || "default"}>
-            {capitalize(status)}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: "enrollmentDate",
-      header: "Enrolled",
-      render: (item: Record<string, unknown>) =>
-        item.enrollmentDate
-          ? formatDate(item.enrollmentDate as number)
-          : "\u2014",
     },
     {
       key: "zipCode",
@@ -445,46 +397,6 @@ export default function ClientsPage() {
               placeholder="Last name"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Program
-            </label>
-            <select
-              value={clientForm.programId}
-              onChange={(e) =>
-                setClientForm((prev) => ({ ...prev, programId: e.target.value }))
-              }
-              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            >
-              <option value="">Select a program...</option>
-              {availablePrograms.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name} ({capitalize(p.type)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Status
-            </label>
-            <select
-              value={clientForm.status}
-              onChange={(e) =>
-                setClientForm((prev) => ({
-                  ...prev,
-                  status: e.target.value as ClientStatus,
-                }))
-              }
-              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            >
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="withdrawn">Withdrawn</option>
-            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
