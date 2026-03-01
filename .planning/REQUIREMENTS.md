@@ -3,39 +3,59 @@
 **Defined:** 2026-03-01
 **Core Value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
 
-## v1.2 Requirements
+## v1.3 Requirements
 
-Requirements for v1.2 Intelligence milestone. Each maps to roadmap phases.
+Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
-### KB Extraction
+### Dashboard Cards
 
-- [x] **KB-01**: Admin can trigger extraction of organizational metrics (client counts, program stats, impact numbers) from KB documents via Chat Completions with json_schema
-- [x] **KB-02**: Extracted KPI values display as dashboard stat cards with the source document name and extraction timestamp
-- [x] **KB-03**: All extraction schema fields are nullable — returns null when a metric is not explicitly found in documents (no hallucinated values)
-- [x] **KB-04**: Extraction results are cached in Convex kbSummaryCache table and served reactively to the dashboard
+- [ ] **DASH-01**: User sees an active client count card on the dashboard showing total active clients across all programs
+- [ ] **DASH-02**: User sees a session volume card on the dashboard showing sessions logged in the last 30 days
+- [ ] **DASH-03**: User sees an intake trend indicator on the dashboard showing new intakes this month vs. last month
 
-### AI Summary
+### Analytics Page
 
-- [x] **SUM-01**: Admin/manager can generate a 3-5 bullet organizational summary from KB documents via the Assistants API file_search
-- [x] **SUM-02**: Manual Regenerate button triggers summary refresh, gated to admin/manager roles
-- [x] **SUM-03**: Generation status indicator shows current state (idle/generating/ready/failed) with "Generated X ago" timestamp
-- [x] **SUM-04**: Stale cached summary remains visible during regeneration (no blank screen)
+- [ ] **PAGE-01**: User can navigate to /analytics from the sidebar (visible to admin, manager, staff roles)
+- [ ] **PAGE-02**: Analytics page has tab navigation between Demographics, Client Activity, and Operations
 
-### Donation Charts
+### Demographics
 
-- [ ] **DON-01**: Monthly income trend chart displays 12-month QB income data via summarize_column_by=Month single API call
-- [ ] **DON-02**: Income breakdown shows revenue by QB account category (grants, program fees, contributions, etc.)
+- [ ] **DEMO-01**: User can view gender distribution chart on the Demographics tab
+- [ ] **DEMO-02**: User can view ethnicity distribution chart on the Demographics tab
+- [ ] **DEMO-03**: User can view age group distribution chart on the Demographics tab
+- [ ] **DEMO-04**: User can view top referral sources on the Demographics tab
+- [ ] **DEMO-05**: User can view program outcome rates (completed/in-progress/dropped) on the Demographics tab
+- [ ] **DEMO-06**: User can view zip code coverage breakdown on the Demographics tab
+
+### Client Activity
+
+- [ ] **ACT-01**: User can view session volume trends over time (monthly chart) on the Client Activity tab
+- [ ] **ACT-02**: User can view client goal status breakdown and completion rate on the Client Activity tab
+- [ ] **ACT-03**: User can view intake volume trends (legal vs co-parent, monthly) on the Client Activity tab
+
+### Operations
+
+- [ ] **OPS-01**: User can view recent staff activity feed with human-readable descriptions on the Operations tab
+- [ ] **OPS-02**: User can view per-staff action counts and most-active-user summary on the Operations tab
+- [ ] **OPS-03**: User can view expense categorization acceptance rate on the Operations tab
+- [ ] **OPS-04**: User can view expense category distribution chart on the Operations tab
+
+### Donation Performance
+
+- [ ] **DON-01**: Monthly income trend chart displays 12 months of QB income data on the dashboard
+- [ ] **DON-02**: Income chart breaks down revenue by QB account category
 - [ ] **DON-03**: Admin can designate which QB income accounts represent donation/income categories via admin settings
-- [ ] **DON-04**: DonationPerformance.tsx reads real QB monthly income data instead of always-null getDonations query
+- [ ] **DON-04**: When no accounts are designated, chart shows a "Configure donation accounts in Admin" prompt
 
 ## Future Requirements
 
-### KB Intelligence Enhancements
+### Analytics Enhancements
 
-- **KB-05**: Staleness badge when KB documents change since last extraction
-- **KB-06**: Automated KB re-extraction on document upload
-- **KB-07**: Configurable extraction fields via admin UI
-- **KB-08**: KB summary history with compare-over-time
+- **DEMO-07**: Interactive program type filter on Demographics tab (legal vs co-parent vs all)
+- **ACT-04**: Drill-down from session chart to individual client sessions
+- **ACT-05**: Goal time-to-completion trend analysis
+- **OPS-05**: Peak activity time heatmap on Operations tab
+- **OPS-06**: Allocation confidence score histogram
 
 ### Donation Enhancements
 
@@ -46,10 +66,11 @@ Requirements for v1.2 Intelligence milestone. Each maps to roadmap phases.
 
 | Feature | Reason |
 |---------|--------|
-| Streaming KB summary generation | Convex actions do not support streaming to client; 5-30 second extraction time acceptable with spinner |
-| Per-card AI narrative explanations | Adds cost per card; AI Director chat already handles "explain this" queries |
-| PayPal/GoFundMe integration for donation data | Out of scope per PROJECT.md; QB income accounts capture donation totals |
-| Automated summary on dashboard load | Cost runaway risk ($0.50-$1.00/call at gpt-4o rates); manual trigger is safer |
+| Interactive geographic map for zip codes | High complexity, simple table/list sufficient for v1.3 |
+| Real-time activity feed via WebSockets | Convex reactivity handles this natively; no custom WebSocket needed |
+| Exportable analytics reports (PDF/CSV) | Defer to v1.4; screen visualization is the priority |
+| Cross-tab linked filtering | Adds complexity; each tab is self-contained for v1.3 |
+| Session scheduling/booking | DEC uses external tools for scheduling; out of product scope |
 
 ## Traceability
 
@@ -57,24 +78,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| KB-01 | Phase 8 | Complete |
-| KB-02 | Phase 8 | Complete |
-| KB-03 | Phase 8 | Complete |
-| KB-04 | Phase 8 | Complete |
-| SUM-01 | Phase 9 | Complete |
-| SUM-02 | Phase 9 | Complete |
-| SUM-03 | Phase 9 | Complete |
-| SUM-04 | Phase 9 | Complete |
-| DON-01 | Phase 10 | Pending |
-| DON-02 | Phase 10 | Pending |
-| DON-03 | Phase 10 | Pending |
-| DON-04 | Phase 10 | Pending |
+| DASH-01 | — | Pending |
+| DASH-02 | — | Pending |
+| DASH-03 | — | Pending |
+| PAGE-01 | — | Pending |
+| PAGE-02 | — | Pending |
+| DEMO-01 | — | Pending |
+| DEMO-02 | — | Pending |
+| DEMO-03 | — | Pending |
+| DEMO-04 | — | Pending |
+| DEMO-05 | — | Pending |
+| DEMO-06 | — | Pending |
+| ACT-01 | — | Pending |
+| ACT-02 | — | Pending |
+| ACT-03 | — | Pending |
+| OPS-01 | — | Pending |
+| OPS-02 | — | Pending |
+| OPS-03 | — | Pending |
+| OPS-04 | — | Pending |
+| DON-01 | — | Pending |
+| DON-02 | — | Pending |
+| DON-03 | — | Pending |
+| DON-04 | — | Pending |
 
 **Coverage:**
-- v1.2 requirements: 12 total
-- Mapped to phases: 12
-- Unmapped: 0
+- v1.3 requirements: 22 total
+- Mapped to phases: 0
+- Unmapped: 22 ⚠️
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after roadmap creation*
+*Last updated: 2026-03-01 after initial definition*
