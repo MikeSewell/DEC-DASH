@@ -85,38 +85,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DMOD-01 | — | Pending |
-| DMOD-02 | — | Pending |
-| DMOD-03 | — | Pending |
-| DMOD-04 | — | Pending |
-| DMOD-05 | — | Pending |
-| CLNT-01 | — | Pending |
-| CLNT-02 | — | Pending |
-| CLNT-03 | — | Pending |
-| CLNT-04 | — | Pending |
-| CLNT-05 | — | Pending |
-| MIGR-01 | — | Pending |
-| MIGR-02 | — | Pending |
-| MIGR-03 | — | Pending |
-| MIGR-04 | — | Pending |
-| ANLY-01 | — | Pending |
-| ANLY-02 | — | Pending |
-| ANLY-03 | — | Pending |
-| INFR-01 | — | Pending |
-| INFR-02 | — | Pending |
-| INFR-03 | — | Pending |
-| INFR-04 | — | Pending |
-| INFR-05 | — | Pending |
-| INFR-06 | — | Pending |
-| XPRT-01 | — | Pending |
-| XPRT-02 | — | Pending |
-| XPRT-03 | — | Pending |
+| DMOD-01 | Phase 16 | Pending |
+| DMOD-02 | Phase 16 | Pending |
+| DMOD-03 | Phase 16 | Pending |
+| DMOD-04 | Phase 16 | Pending |
+| DMOD-05 | Phase 16 | Pending |
+| CLNT-01 | Phase 20 | Pending |
+| CLNT-02 | Phase 20 | Pending |
+| CLNT-03 | Phase 20 | Pending |
+| CLNT-04 | Phase 17 | Pending |
+| CLNT-05 | Phase 17 | Pending |
+| MIGR-01 | Phase 18 | Pending |
+| MIGR-02 | Phase 18 | Pending |
+| MIGR-03 | Phase 18 | Pending |
+| MIGR-04 | Phase 18 | Pending |
+| ANLY-01 | Phase 19 | Pending |
+| ANLY-02 | Phase 19 | Pending |
+| ANLY-03 | Phase 19 | Pending |
+| INFR-01 | Phase 20 | Pending |
+| INFR-02 | Phase 21 | Pending |
+| INFR-03 | Phase 21 | Pending |
+| INFR-04 | Phase 20 | Pending |
+| INFR-05 | Phase 20 | Pending |
+| INFR-06 | Phase 20 | Pending |
+| XPRT-01 | Phase 22 | Pending |
+| XPRT-02 | Phase 22 | Pending |
+| XPRT-03 | Phase 22 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 26 total
-- Mapped to phases: 0
-- Unmapped: 26 ⚠️
+- Mapped to phases: 26
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after initial definition*
+*Last updated: 2026-03-01 after roadmap creation*
