@@ -18,3 +18,7 @@ export function useIntakeTrend() {
 export function useAllDemographics() {
   return useQuery(api.analytics.getAllDemographics);
 }
+
+export function useZipCodeStats() {
+  return useQuery(api.clients.getZipCodeStats);
+}

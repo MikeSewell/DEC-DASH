@@ -10,7 +10,7 @@ import {
   LinearScale,
   BarElement,
 } from "chart.js";
-import { useAllDemographics } from "@/hooks/useAnalytics";
+import { useAllDemographics, useZipCodeStats } from "@/hooks/useAnalytics";
 import { useSheetsConfig } from "@/hooks/useGrantTracker";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 
@@ -86,6 +86,27 @@ const doughnutOptions = {
   plugins: { legend: PIE_LEGEND, tooltip: CHART_TOOLTIP },
 };
 
+const OUTCOME_COLORS: Record<string, string> = {
+  "Completed": "#2D6A4F",
+  "Active": "#1B5E6B",
+  "In Progress": "#6BBF59",
+  "Dropped": "#DC6B4A",
+  "Withdrawn": "#D4A843",
+  "Unknown": "#9CA3AF",
+};
+
+const makeOutcomeData = (dist: { name: string; count: number }[]) => ({
+  labels: dist.map((d) => d.name),
+  datasets: [
+    {
+      data: dist.map((d) => d.count),
+      backgroundColor: dist.map((d) => OUTCOME_COLORS[d.name] ?? PALETTE[0]),
+      borderWidth: 2,
+      borderColor: "rgba(255,254,249,0.9)",
+    },
+  ],
+});
+
 const makeBarData = (dist: { name: string; count: number }[], color: string) => ({
   labels: dist.map((d) => d.name),
   datasets: [
@@ -101,8 +122,9 @@ const makeBarData = (dist: { name: string; count: number }[], color: string) => 
 export default function DemographicsTab() {
   const demographics = useAllDemographics();
   const sheetsConfig = useSheetsConfig();
+  const zipCodeStats = useZipCodeStats();
 
-  if (demographics === undefined || sheetsConfig === undefined) {
+  if (demographics === undefined || sheetsConfig === undefined || zipCodeStats === undefined) {
     return <ChartSkeleton height={200} />;
   }
 
@@ -220,6 +242,51 @@ export default function DemographicsTab() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Outcomes & Geography */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Chart 5: Program Outcomes (Doughnut) */}
+        {demographics.outcomeDistribution.length > 0 && (
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+            <h4 className="text-sm font-semibold text-foreground mb-3">Program Outcomes</h4>
+            <div style={{ height: 220 }}>
+              <Doughnut data={makeOutcomeData(demographics.outcomeDistribution)} options={doughnutOptions} />
+            </div>
+          </div>
+        )}
+
+        {/* Chart 6: Zip Code Coverage (Horizontal Bar) */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+          <h4 className="text-sm font-semibold text-foreground mb-3">Client Zip Codes</h4>
+          {zipCodeStats.length > 0 ? (
+            (() => {
+              const sortedZips = [...zipCodeStats]
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 15);
+              const zipBarData = {
+                labels: sortedZips.map((z) => z.zipCode),
+                datasets: [
+                  {
+                    label: "Clients",
+                    data: sortedZips.map((z) => z.count),
+                    backgroundColor: "#1B5E6B",
+                    borderRadius: 8,
+                  },
+                ],
+              };
+              return (
+                <div style={{ height: Math.max(200, sortedZips.length * 28) }}>
+                  <Bar data={zipBarData} options={makeHorizontalBarOptions("Zip Code")} />
+                </div>
+              );
+            })()
+          ) : (
+            <p className="text-xs text-muted mt-2">
+              No zip code data available. Zip codes are captured during client intake.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
