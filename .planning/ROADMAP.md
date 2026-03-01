@@ -99,11 +99,11 @@ Plans:
   1. Client Activity tab renders a monthly session volume chart showing trend over the past 12 months
   2. Client Activity tab renders a goal status breakdown showing counts for in-progress vs. completed goals and an overall completion rate percentage
   3. Client Activity tab renders an intake volume chart with separate series for legal and co-parent intakes by month
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 13-01: Backend queries (getSessionTrends, getGoalStats, getIntakeVolume aggregate queries on sessions/clientGoals/legalIntakeForms/coparentIntakeForms tables)
-- [ ] 13-02: ClientActivityTab.tsx with session trend chart, goal status breakdown, and intake volume chart components
+- [ ] 13-01-PLAN.md — Convex aggregate queries (getSessionTrends, getGoalStats, getIntakeVolume) + React hooks
+- [ ] 13-02-PLAN.md — ClientActivityTab.tsx with session trend line chart, goal status cards, and intake volume grouped bar chart
 
 ### Phase 14: Operations Tab
 **Goal**: Users can review staff activity, per-user action counts, and expense categorization health metrics on the Operations tab
