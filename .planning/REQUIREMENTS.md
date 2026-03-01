@@ -16,10 +16,10 @@ Requirements for v1.2 Intelligence milestone. Each maps to roadmap phases.
 
 ### AI Summary
 
-- [ ] **SUM-01**: Admin/manager can generate a 3-5 bullet organizational summary from KB documents via the Assistants API file_search
+- [x] **SUM-01**: Admin/manager can generate a 3-5 bullet organizational summary from KB documents via the Assistants API file_search
 - [ ] **SUM-02**: Manual Regenerate button triggers summary refresh, gated to admin/manager roles
-- [ ] **SUM-03**: Generation status indicator shows current state (idle/generating/ready/failed) with "Generated X ago" timestamp
-- [ ] **SUM-04**: Stale cached summary remains visible during regeneration (no blank screen)
+- [x] **SUM-03**: Generation status indicator shows current state (idle/generating/ready/failed) with "Generated X ago" timestamp
+- [x] **SUM-04**: Stale cached summary remains visible during regeneration (no blank screen)
 
 ### Donation Charts
 
@@ -61,10 +61,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | KB-02 | Phase 8 | Complete |
 | KB-03 | Phase 8 | Complete |
 | KB-04 | Phase 8 | Complete |
-| SUM-01 | Phase 9 | Pending |
+| SUM-01 | Phase 9 | Complete |
 | SUM-02 | Phase 9 | Pending |
-| SUM-03 | Phase 9 | Pending |
-| SUM-04 | Phase 9 | Pending |
+| SUM-03 | Phase 9 | Complete |
+| SUM-04 | Phase 9 | Complete |
 | DON-01 | Phase 10 | Pending |
 | DON-02 | Phase 10 | Pending |
 | DON-03 | Phase 10 | Pending |

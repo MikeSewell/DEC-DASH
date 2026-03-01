@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** v1.2 Intelligence — Phase 8: KB KPI Extraction
+**Current focus:** v1.2 Intelligence — Phase 9: AI Summary Panel
 
 ## Current Position
 
-Phase: 8 of 10 (KB KPI Extraction) — COMPLETE
-Plan: 2 of 2 in current phase (08-02 complete — KBInsights.tsx dashboard section live)
-Status: Phase 8 complete — ready for Phase 9 (AI Summary Panel)
-Last activity: 2026-03-01 — 08-02 complete (KBInsights.tsx + registration committed)
+Phase: 9 of 10 (AI Summary Panel) — IN PROGRESS
+Plan: 1 of 2 in current phase (09-01 auto tasks complete — schema + backend; awaiting npx convex dev --once)
+Status: 09-01 checkpoint:human-action — user must run npx convex dev --once to deploy schema
+Last activity: 2026-03-01 — 09-01 schema extended, mutations and generateSummary action added
 
-Progress: [##░░░░░░░░] 33% (2/6 plans)
+Progress: [###░░░░░░░] 50% (3/6 plans)
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Progress: [##░░░░░░░░] 33% (2/6 plans)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 8. KB KPI Extraction | 2/2 | 22 min | 11 min |
-| 9. AI Summary Panel | 0/2 | — | — |
+| 9. AI Summary Panel | 1/2 | 3 min | 3 min |
 | 10. Donation Performance Charts | 0/2 | — | — |
 
 *Updated after each plan completion*
@@ -50,6 +50,7 @@ Progress: [##░░░░░░░░] 33% (2/6 plans)
 |------|----------|-------|-------|
 | Phase 08 P01 | 20 min | 3 tasks | 4 files |
 | Phase 08 P02 | 2 | 2 tasks | 4 files |
+| Phase 09 P01 | 3 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,12 @@ Key decisions affecting v1.2:
 - AI summary uses manual Regenerate only — no auto-trigger on load (cost runaway risk $0.50-$1.00/call)
 - QB income designation admin UI required before donation chart (account names are org-specific, can't hardcode)
 
+From 09-01 execution:
+- saveSummary uses ctx.db.patch() (not delete-insert) — preserves existing metrics row during regeneration (SUM-04)
+- summaryGenerating and extracting are separate Convex flags — independent pipelines, no cross-contamination
+- generateSummary injects extracted KPI metrics as LLM context — prevents bullets contradicting stat cards
+- Plain-text Chat Completions at temperature 0.3 — no json_schema needed for bullet list output
+
 From 08-01 execution:
 - Convex uses v.null() not v.null_() — this version's API differs from plan spec; auto-fixed during Task 1
 - kbSummaryCache singleton table uses no index (queried with .first(), like quickbooksConfig pattern)
@@ -73,7 +80,8 @@ From 08-01 execution:
 
 ### Pending Todos
 
-- Execute Phase 9 (AI Summary Panel) — 09-01 backend, 09-02 frontend
+- Run npx convex dev --once to deploy kbSummaryCache schema changes (summaryBullets, summaryGeneratedAt, summaryGenerating)
+- Execute Phase 9 09-02 (AI Summary Panel frontend — KBInsights.tsx AI summary section)
 - Validate real QB P&L JSON shape (summarize_column_by=Month) before writing income parser in Phase 10-01
 - Deploy to production after milestone: npm run build + rsync + pm2 restart
 
@@ -86,5 +94,5 @@ From 08-01 execution:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 08-02-PLAN.md — KBInsights.tsx created, kb-insights registered in types/constants/dashboard
+Stopped at: 09-01 checkpoint:human-action — schema extension + generateSummary action committed; user must run npx convex dev --once
 Resume file: None
