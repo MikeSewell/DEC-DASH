@@ -19,25 +19,36 @@ function getLast12Months(): Array<{ label: string; start: number; end: number }>
 
 /**
  * Returns the count of active clients across all programs.
+ * Uses the enrollments by_status index for an efficient equality scan,
+ * then deduplicates by clientId (a client may have active enrollments
+ * in multiple programs).
  */
 export const getActiveClientCount = query({
   args: {},
   handler: async (ctx) => {
-    const clients = await ctx.db.query("clients").collect();
-    const active = clients.filter((c) => c.status === "active");
-    return { count: active.length };
+    const activeEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+    // Deduplicate: a client may have active enrollments in multiple programs
+    const uniqueClientIds = new Set(activeEnrollments.map((e) => e.clientId));
+    return { count: uniqueClientIds.size };
   },
 });
 
 /**
  * Returns the count of sessions logged in the last 30 days.
+ * Uses the by_sessionDate index for an efficient range scan instead of
+ * a full table collect + in-memory filter.
  */
 export const getSessionVolume = query({
   args: {},
   handler: async (ctx) => {
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const allSessions = await ctx.db.query("sessions").collect();
-    const recent = allSessions.filter((s) => s.sessionDate >= thirtyDaysAgo);
+    const recent = await ctx.db
+      .query("sessions")
+      .withIndex("by_sessionDate", (q) => q.gte("sessionDate", thirtyDaysAgo))
+      .collect();
     return { count: recent.length, periodLabel: "Last 30 days" };
   },
 });
@@ -99,22 +110,26 @@ export const getIntakeTrend = query({
 });
 
 /**
- * Returns aggregate demographics across ALL program types in programDataCache.
+ * Returns aggregate demographics across ALL clients from the clients table.
  * Used by the Demographics tab on the Analytics page.
+ * Replaces the former programDataCache query — demographics now come directly
+ * from migrated client records (Phase 18 backfilled gender, ethnicity, ageGroup,
+ * referralSource for 345 of 350 clients).
+ * outcomeDistribution returns [] — no programOutcome field on clients table;
+ * the UI has a length > 0 guard that hides the chart automatically.
  */
 export const getAllDemographics = query({
   args: {},
   handler: async (ctx) => {
-    const participants = await ctx.db.query("programDataCache").collect();
+    const clients = await ctx.db.query("clients").collect();
+    const total = clients.length;
+    const active = clients.filter((c) => c.status === "active").length;
+    const completed = clients.filter((c) => c.status === "completed").length;
 
-    const total = participants.length;
-    const active = participants.filter((p) => p.status?.toLowerCase() === "active").length;
-    const completed = participants.filter((p) => p.status?.toLowerCase() === "completed").length;
-
-    const toSortedDistribution = (field: (p: (typeof participants)[0]) => string | undefined) => {
+    const toSortedDistribution = (field: (c: (typeof clients)[0]) => string | undefined) => {
       const map: Record<string, number> = {};
-      for (const p of participants) {
-        const val = field(p) || "Unknown";
+      for (const c of clients) {
+        const val = field(c) || "Unknown";
         map[val] = (map[val] ?? 0) + 1;
       }
       return Object.entries(map)
@@ -122,41 +137,39 @@ export const getAllDemographics = query({
         .sort((a, b) => b.count - a.count);
     };
 
-    const genderDistribution = toSortedDistribution((p) => p.gender);
-    const ethnicityDistribution = toSortedDistribution((p) => p.ethnicity);
-    const ageDistribution = toSortedDistribution((p) => p.ageGroup);
-    const outcomeDistribution = toSortedDistribution((p) => p.programOutcome);
-    const referralSource = toSortedDistribution((p) => p.referralSource).slice(0, 10);
-
     return {
       total,
       active,
       completed,
-      genderDistribution,
-      ethnicityDistribution,
-      ageDistribution,
-      outcomeDistribution,
-      referralSource,
+      genderDistribution: toSortedDistribution((c) => c.gender),
+      ethnicityDistribution: toSortedDistribution((c) => c.ethnicity),
+      ageDistribution: toSortedDistribution((c) => c.ageGroup),
+      outcomeDistribution: [] as Array<{ name: string; count: number }>,
+      referralSource: toSortedDistribution((c) => c.referralSource).slice(0, 10),
     };
   },
 });
 
 /**
  * Returns session counts grouped by the last 12 calendar months.
- * Sessions are collected in-memory (no createdAt index on sessions table)
- * and bucketed by sessionDate.
+ * Uses Promise.all + per-bucket by_sessionDate index range scans,
+ * mirroring the proven getIntakeVolume pattern (no full table scan).
  */
 export const getSessionTrends = query({
   args: {},
   handler: async (ctx) => {
     const buckets = getLast12Months();
-    const allSessions = await ctx.db.query("sessions").collect();
-    const months = buckets.map(({ label, start, end }) => {
-      const count = allSessions.filter(
-        (s) => s.sessionDate >= start && s.sessionDate < end
-      ).length;
-      return { label, count };
-    });
+    const months = await Promise.all(
+      buckets.map(async ({ label, start, end }) => {
+        const sessions = await ctx.db
+          .query("sessions")
+          .withIndex("by_sessionDate", (q) =>
+            q.gte("sessionDate", start).lt("sessionDate", end)
+          )
+          .collect();
+        return { label, count: sessions.length };
+      })
+    );
     return { months };
   },
 });
