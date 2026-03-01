@@ -87,9 +87,12 @@ export default function KBInsights() {
   const cache = useQuery(api.kbInsights.getCache);
   const currentUser = useQuery(api.users.getCurrentUser);
   const extractAction = useAction(api.kbInsightsActions.extractMetrics);
+  const summaryAction = useAction(api.kbInsightsActions.generateSummary);
 
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   // Role gate — admin and manager can trigger extraction
   const canExtract =
@@ -104,6 +107,11 @@ export default function KBInsights() {
     (m): m is MetricEntry & { value: string } => m.value !== null
   );
 
+  // Summary state — independent from extraction state
+  const isGenerating = generating || (cache?.summaryGenerating ?? false);
+  const canRegenerate = currentUser?.role === "admin" || currentUser?.role === "manager";
+  const hasSummary = cache?.summaryBullets && cache.summaryBullets.length > 0;
+
   const handleExtract = async () => {
     setExtracting(true);
     setError(null);
@@ -113,6 +121,18 @@ export default function KBInsights() {
       setError(err instanceof Error ? err.message : "Extraction failed");
     } finally {
       setExtracting(false);
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    setGenerating(true);
+    setSummaryError(null);
+    try {
+      await summaryAction({});
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : "Summary generation failed");
+    } finally {
+      setGenerating(false);
     }
   };
 
