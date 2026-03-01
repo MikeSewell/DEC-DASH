@@ -1,5 +1,31 @@
 # Milestones
 
+## v1.2 Intelligence (Shipped: 2026-03-01)
+
+**Phases:** 2 (of 3 planned) | **Plans:** 4 | **Files:** 8
+**Timeline:** 1 day (Mar 1, 2026)
+**Git range:** `feat(08-01)..feat(09-02)`
+
+**Delivered:** Added AI-powered organizational intelligence to the dashboard — KB-extracted KPI stat cards and AI-generated summary panel give Kareem data-driven insights from uploaded documents.
+
+**Key accomplishments:**
+- Chat Completions extraction pipeline with json_schema for structured KPI metrics from KB documents
+- Nullable schema fields prevent hallucinated values — returns null when metric not found
+- KPI stat cards on dashboard with source document name, extraction timestamp, and staleness detection
+- AI summary panel with 3-5 bullet organizational highlights and manual Regenerate button
+- Role-gated generation (admin/manager only) to control API costs
+- Previous summary persists during regeneration — no blank screen mid-refresh
+
+**Phases:**
+1. KB KPI Extraction (2 plans) — kbSummaryCache schema, Chat Completions action, KBInsights.tsx stat cards
+2. AI Summary Panel (2 plans) — Summary fields + generateSummary action, bullet panel + Regenerate UI
+
+**Deferred:** Phase 10 (Donation Performance Charts) moved to v1.3 — QB income account names unknown, admin designation UI prerequisite
+
+**Archives:** `milestones/v1.2-ROADMAP.md` | `milestones/v1.2-REQUIREMENTS.md`
+
+---
+
 ## v1.1 Polish (Shipped: 2026-02-28)
 
 **Phases:** 3 | **Plans:** 4 | **Commits:** 7 | **Files:** 24 | **LOC:** 22,027 TS

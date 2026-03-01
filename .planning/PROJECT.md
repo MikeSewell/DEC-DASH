@@ -36,21 +36,27 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ Configurable alert thresholds — Admin console Alerts section + gear icon shortcut on panel — v1.1
 - ✓ Alert dismissal with persistence — acknowledge alerts across sessions — v1.1
 - ✓ In-app toast notifications for new alerts — v1.1
+- ✓ KB-powered KPI cards — Chat Completions extraction from KB docs, stat cards with provenance — v1.2
+- ✓ AI-generated summary panel — 3-5 bullet organizational highlights, manual regeneration — v1.2
 
 ### Active
 
-## Current Milestone: v1.2 Intelligence
+## Current Milestone: v1.3 Analytics
 
-**Goal:** Surface knowledge base data and donation trends directly on the dashboard — AI-extracted KPIs, auto-generated summaries, and QB income visualizations.
+**Goal:** Surface all untapped data across a dashboard summary layer and a dedicated /analytics page — demographics, client activity, operational health, and donation trends.
 
 **Target features:**
-- KB-powered KPI cards — extract client/program stats and impact metrics from uploaded documents
-- AI summary panel — key organizational takeaways from KB docs, manually triggered regeneration
-- Donation performance charts — trend visualization from QB income accounts
+- Dashboard summary cards — active clients, session volume, intake trends
+- Analytics page with Demographics tab — gender, ethnicity, age group, referral source charts
+- Analytics page with Client Activity tab — session trends, goals progress, intake volume
+- Analytics page with Operations tab — expense categorization accuracy, staff activity feed + stats
+- Donation Performance Charts — QB income trends with admin account designation UI (deferred from v1.2)
 
-- [ ] KB-powered KPI cards displaying client stats and impact metrics from knowledge base documents
-- [ ] AI-generated summary panel with key takeaways from KB documents
-- [ ] Donation performance charts — trend visualization from QB income accounts
+- [ ] Dashboard summary KPI cards/sparklines for active clients, session volume, intake trends
+- [ ] /analytics page with Demographics tab (gender, ethnicity, age group, referral source visualizations)
+- [ ] /analytics page with Client Activity tab (session trends, goals in-progress vs completed, intake volume)
+- [ ] /analytics page with Operations tab (expense categorization accuracy, staff activity feed + per-user stats)
+- [ ] Donation Performance Charts — QB income trend chart with account breakdown and admin designation UI
 
 ### Out of Scope
 
@@ -67,7 +73,7 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ## Context
 
-Shipped v1.1 Polish milestone with 22,027 LOC TypeScript across 94 TS/TSX files. Starting v1.2 Intelligence — surfacing KB data and donation trends on dashboard.
+Shipped v1.2 Intelligence milestone (KB KPI extraction + AI summary panel). Starting v1.3 Analytics — surfacing program demographics, client sessions/goals, intake analytics, operational health, and deferred donation charts.
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API, Google Calendar API, OpenAI Assistants API.
 26 database tables, 100+ backend functions, 13 routes, 4 AI systems, 5 third-party integrations.
 
@@ -112,4 +118,4 @@ Known operational notes:
 | Inline ?? fallbacks for thresholds | alerts.ts uses `configRow?.field ?? default` instead of cross-file constant imports | ✓ Good — self-contained, avoids circular deps |
 
 ---
-*Last updated: 2026-02-28 after v1.2 milestone start*
+*Last updated: 2026-03-01 after v1.3 milestone start*
