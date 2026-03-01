@@ -179,7 +179,7 @@ Plans:
 | 16. Schema Foundation | 1/1 | Complete    | 2026-03-01 | - |
 | 17. Enrollment and Sessions Backend | 1/1 | Complete    | 2026-03-01 | - |
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
-| 19. Analytics Backend Rewrite | 1/1 | Complete   | 2026-03-01 | - |
+| 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | v2.0 | 0/TBD | Not started | - |
 | 21. Schema Cleanup | v2.0 | 0/TBD | Not started | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |
