@@ -22,10 +22,10 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 20 of 22 (Frontend and Sheets Removal — in progress)
-Plan: 1 of 2 in current phase (complete)
-Status: Phase 20 plan 01 complete — enrollment-based RBAC rewired in four client queries; client detail page shows Enrollments card with enrollment-aware intake gating; ready for plan 02
-Last activity: 2026-03-01 — 20-01 executed: listWithPrograms, getStats, getStatsByProgram, getByIdWithIntake rewritten; Enrollments card added to client detail page
+Phase: 20 of 22 (Frontend and Sheets Removal — complete)
+Plan: 2 of 2 in current phase (complete)
+Status: Phase 20 complete — enrollment-based RBAC rewritten (plan 01) and Sheets program sync removed from cron, actions, alerts, and admin UI (plan 02); human-verified
+Last activity: 2026-03-01 — 20-02 executed: syncProgramData deleted, triggerSync trimmed, Section E deleted from alerts, Google Sheets admin tab and GoogleSheetsConfig.tsx removed; Calendar independence confirmed
 
 Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
@@ -61,6 +61,10 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 20-01]: getStatsByProgram counts clients per enrollment type (client may appear in legal + coparent if enrolled in both); falls back to legacy programId for clients with no active enrollments
 - [Phase 20-01]: getByIdWithIntake returns enriched enrollments array (programName, programType) alongside legacy program field for backward compat — removed in Phase 21
 - [Phase 20-01]: Client detail intake form visibility gated by enrollment type (hasLegalEnrollment/hasCoparentEnrollment) not legacy program.type
+- [Phase 20-02]: Grant sync (syncGrantTracker) preserved; only program sync (syncProgramData) removed — grant tracker reads from separate spreadsheet
+- [Phase 20-02]: upsertProgramParticipant left in googleSheetsInternal.ts as dead code — Phase 21 handles cleanup
+- [Phase 20-02]: sheetsStalenessHours left in alertConfig schema — Phase 21 removes it; leaving prevents schema errors
+- [Phase 20-02]: Google Calendar confirmed independent — reads googleCalendarConfig table (not googleSheetsConfig); no regression
 
 ### Pending Todos
 
@@ -77,5 +81,5 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 20-01-PLAN.md — enrollment-based RBAC rewritten in 4 client queries, Enrollments card added to client detail page, intake gating fixed
+Stopped at: Completed 20-02-PLAN.md — Sheets program sync removed from cron, actions, alerts, and admin UI; grant sync and Calendar preserved; human-verified
 Resume file: None

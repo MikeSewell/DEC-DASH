@@ -38,12 +38,12 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFR-01**: Sheets program sync cron removed (grant sync preserved)
+- [x] **INFR-01**: Sheets program sync cron removed (grant sync preserved)
 - [ ] **INFR-02**: programDataCache table cleared and removed from schema
 - [ ] **INFR-03**: Legacy programId, enrollmentDate, status fields removed from clients schema
-- [ ] **INFR-04**: Google Sheets program config removed from admin UI
-- [ ] **INFR-05**: alerts.ts Sheets staleness check removed
-- [ ] **INFR-06**: Calendar auth verified working after Sheets config removal
+- [x] **INFR-04**: Google Sheets program config removed from admin UI
+- [x] **INFR-05**: alerts.ts Sheets staleness check removed
+- [x] **INFR-06**: Calendar auth verified working after Sheets config removal
 
 ### Export
 
@@ -102,12 +102,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANLY-01 | Phase 19 | Complete |
 | ANLY-02 | Phase 19 | Complete |
 | ANLY-03 | Phase 19 | Complete |
-| INFR-01 | Phase 20 | Pending |
+| INFR-01 | Phase 20 | Complete |
 | INFR-02 | Phase 21 | Pending |
 | INFR-03 | Phase 21 | Pending |
-| INFR-04 | Phase 20 | Pending |
-| INFR-05 | Phase 20 | Pending |
-| INFR-06 | Phase 20 | Pending |
+| INFR-04 | Phase 20 | Complete |
+| INFR-05 | Phase 20 | Complete |
+| INFR-06 | Phase 20 | Complete |
 | XPRT-01 | Phase 22 | Pending |
 | XPRT-02 | Phase 22 | Pending |
 | XPRT-03 | Phase 22 | Pending |
