@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 20 — Sheets Removal (v2.0 Data Foundation)
+**Current focus:** Phase 20 — Frontend and Sheets Removal (v2.0 Data Foundation)
 
 ## Current Position
 
-Phase: 19 of 22 (Analytics Backend Rewrite — complete)
-Plan: 1 of 1 in current phase (complete)
-Status: Phase 19 complete — analytics queries rewritten to use index scans, demographics decoupled from Sheets/programDataCache, Programs page redesigned with filter pills; ready for Phase 20
-Last activity: 2026-03-01 — 19-01 executed: 4 queries rewritten, DemographicsTab Sheets guard removed, human verification passed, Programs page redesigned
+Phase: 20 of 22 (Frontend and Sheets Removal — in progress)
+Plan: 1 of 2 in current phase (complete)
+Status: Phase 20 plan 01 complete — enrollment-based RBAC rewired in four client queries; client detail page shows Enrollments card with enrollment-aware intake gating; ready for plan 02
+Last activity: 2026-03-01 — 20-01 executed: listWithPrograms, getStats, getStatsByProgram, getByIdWithIntake rewritten; Enrollments card added to client detail page
 
 Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
@@ -57,6 +57,10 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 19-01]: Ethnicity normalization at query time via ETHNICITY_MAP (not at migration time) — preserves flexibility
 - [Phase 19-01]: programId filter added to getAllDemographics for All/Legal/CoParent drill-down
 - [Phase 19-01]: Analytics page renamed to Programs, Operations tab removed
+- [Phase 20-01]: Enrollment-based RBAC uses by_status index scan + Set intersection instead of clients.programId check — lawyer/psychologist see only clients with active enrollments in qualifying programs
+- [Phase 20-01]: getStatsByProgram counts clients per enrollment type (client may appear in legal + coparent if enrolled in both); falls back to legacy programId for clients with no active enrollments
+- [Phase 20-01]: getByIdWithIntake returns enriched enrollments array (programName, programType) alongside legacy program field for backward compat — removed in Phase 21
+- [Phase 20-01]: Client detail intake form visibility gated by enrollment type (hasLegalEnrollment/hasCoparentEnrollment) not legacy program.type
 
 ### Pending Todos
 
@@ -73,5 +77,5 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 19-01-PLAN.md — analytics queries rewritten, DemographicsTab decoupled from Sheets, Programs page redesigned, human verification passed
+Stopped at: Completed 20-01-PLAN.md — enrollment-based RBAC rewritten in 4 client queries, Enrollments card added to client detail page, intake gating fixed
 Resume file: None
