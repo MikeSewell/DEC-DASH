@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** DEC DASH 2.0 — v1.2 Intelligence Milestone
-**Domain:** Nonprofit Executive Dashboard — KB extraction, AI summary, donation/income charts
+**Project:** DEC DASH 2.0 — v2.0 Data Foundation
+**Domain:** Nonprofit case management — Client/Enrollment/Session data model refactor, Sheets removal, analytics rewrite, data migration, export
 **Researched:** 2026-03-01
 **Confidence:** HIGH
 
 ## Executive Summary
 
-DEC DASH 2.0 v1.2 is a targeted enhancement milestone adding three intelligence features to an already-working nonprofit dashboard: KB-powered KPI cards that extract real program metrics from uploaded documents, an AI summary panel grounded in knowledge base contents, and donation/income performance charts sourced from QuickBooks monthly P&L data. The existing stack (Next.js 15, Convex, OpenAI SDK v6, Chart.js) covers all three features with zero new npm packages. All implementation work is new Convex actions, new schema tables, and new/modified frontend components following patterns already established in the codebase.
+The v2.0 Data Foundation milestone is a structural refactor of an already-working executive dashboard for the Dads' Education Center nonprofit. The goal is to replace a fragile Google Sheets sync architecture with a Convex-native data model where the app is the authoritative source of client and program data. This is not a greenfield build — it is a carefully sequenced migration on a live, single-deployment system (`aware-finch-86`) where any schema push that breaks validation immediately affects the production environment.
 
-The recommended approach is strictly cache-then-query: external service calls (OpenAI, QuickBooks) happen only in Convex actions and store results into Convex tables; React components read exclusively from those tables via `useQuery`. KB extraction must use Chat Completions with `response_format: json_schema` — NOT the Assistants API file_search path, which is non-deterministic and does not support structured output formatting. The QB monthly income chart should use `summarize_column_by=Month` on the existing P&L endpoint — one API call for 12 months of data rather than 12 separate calls.
+The recommended approach is a strict eight-phase build order driven by Convex schema dependency constraints: the `enrollments` table must exist before any RBAC rewrites, migration scripts, analytics changes, or frontend updates can proceed. All fields added to existing tables must start as `v.optional` and only be tightened to required after a migration mutation backfills existing documents. The Sheets sync removal and the analytics rewrite are co-dependent and must ship in the same deployment — not sequentially. No new npm packages are needed; the entire milestone is achievable with the existing stack (`convex` 1.32.0, `xlsx` 0.18.5, `googleapis` 171.4.0, `dotenv` 17.3.1, `date-fns` 4.1.0).
 
-The dominant risks are hallucinated KPI values (OpenAI filling in required schema fields with fabricated numbers when documents don't contain the data), runaway OpenAI API costs (auto-triggering summary generation on dashboard load instead of manual-only), and silent data mismatch in QB income account parsing (QB nonprofit-mode uses different row label strings than the current parser expects). All three risks are avoidable with specific, well-understood mitigations identified in research. Build order matters: schema changes deploy first, KB backend before KB frontend, income trend backend is independent and can be built in parallel.
+The primary risks are: (1) Convex schema push failures due to existing documents not matching tightened field types, (2) RBAC breakage for lawyer/psychologist roles if `programId` is removed from `clients` before the enrollment-join filter is deployed, and (3) the Demographics analytics tab appearing broken if Sheets sync is removed before the replacement Convex-native query is verified. All three are preventable with the sequenced deployment approach documented in the architecture research. The dataset is small (200–500 clients), so in-memory aggregation in Convex queries is appropriate and no caching or pagination infrastructure is needed for this milestone.
 
 ---
 
@@ -19,83 +19,89 @@ The dominant risks are hallucinated KPI values (OpenAI filling in required schem
 
 ### Recommended Stack
 
-The v1.2 milestone adds no new npm packages. Everything builds on what already exists.
+No new packages are required for v2.0. The milestone is pure Convex schema, query, mutation, and migration script work using the already-installed stack. This is a significant finding — it means no dependency risk, no bundle size increase, and no new auth or integration concerns.
 
 **Core technologies:**
-- **openai ^6.22.0** — Chat Completions with `response_format: json_schema` for deterministic KPI extraction; Assistants API (existing `aiDirectorActions.ts` pattern) for the narrative AI summary only; already installed and in production use
-- **Convex ^1.32.0** — new `kbSummaryCache` table, new `kbInsights.ts` and `kbInsightsActions.ts` files, extended `quickbooksCache` with `income_trend` reportType; all patterns follow existing Convex module conventions
-- **chart.js ^4.5.1 + react-chartjs-2 ^5.3.1** — monthly income line chart in `DonationPerformance.tsx`; already registered and rendering in `ProfitLoss.tsx`; only the data source changes (from always-null `getDonations` to new `getIncomeTrend` query)
-- **date-fns ^4.1.0** — month label formatting for chart X-axis; already installed
+- `convex` 1.32.0 — all new backend work: `enrollments` table, modified `clients`/`sessions`, rewritten `analytics.getAllDemographics`, new `enrollments.ts` and `sessions.ts` files
+- `xlsx` 0.18.5 — already used by import scripts; covers Excel export via `json_to_sheet` + `writeFile` and migration script spreadsheet reading
+- `date-fns` 4.1.0 — date formatting for export labels and analytics queries
+- `dotenv` 17.3.1 — env loading for CLI migration scripts (`NEXT_PUBLIC_CONVEX_URL`)
+- Native `Blob` API — CSV export without any library (no `react-csv` or `papaparse` needed)
 
-**Critical version constraint:** The Assistants API runs (`openai.beta.threads.runs.createAndPoll`) do NOT support `response_format: json_schema` — that parameter is Chat Completions only. KB KPI extraction must use `chat.completions.create()` with a structured output schema, not the Assistants thread path.
+**What NOT to add:** `@convex-dev/migrations` (overkill at this scale — existing `internalMutation` + `npx convex run` pattern handles it), `react-csv` / `papaparse` (native Blob + xlsx cover all export cases), `@convex-dev/aggregate` (in-memory aggregation is sufficient at nonprofit scale), OAuth2 user-flow for Calendar (service account already works and is validated).
 
 See: `.planning/research/STACK.md`
 
 ### Expected Features
 
-**Must have — table stakes for v1.2:**
-- KB KPI cards extract real numbers from uploaded documents with source document attribution and extraction timestamp — not placeholders or hallucinated values
-- Graceful empty/not-configured states on all new sections following the existing `undefined`/`null`/`data` three-state pattern
-- Manual "Regenerate" button on AI summary panel — passive display without user-triggered refresh is insufficient for a point-in-time document snapshot
-- Donation/income chart reads actual QB income data — `DonationPerformance.tsx` already exists but the `getDonations` query always returns null (confirmed by codebase comment); must be wired to real monthly P&L data
-- Skeleton loading states matching existing `ChartSkeleton` / `StatCardSkeleton` components; no flash-of-wrong-state
+**Must have (table stakes — v2.0 launch):**
+- `enrollments` table schema — new Convex table linking clients to programs with status, dates, and notes; removes `programId` direct FK from `clients`
+- Gender field on `clients` — `gender: v.optional(v.string())` required for Demographics analytics to query Convex instead of Sheets (the field exists in `programDataCache` but not on `clients`)
+- Attendance status on sessions — `attendanceStatus: "attended" | "missed" | "excused" | "cancelled"` field; industry standard from Salesforce NPM and PlanStreet patterns
+- Data migration script — one-time CLI script creating `enrollments` records for all existing clients; deduplicates by `firstName+lastName`; dry-run mode required before writing
+- Unified client list — `listWithPrograms` query joins through `enrollments` instead of `clients.programId`; role-based filtering preserved via enrollment join
+- Analytics Demographics rewrite — `getAllDemographics` reads `clients` table directly; removes `programDataCache` and Sheets config dependency
+- Data export — admin-only CSV download of clients + enrollments + session counts; native Blob API implementation
+- Remove `programDataCache` / Sheets program sync — after migration validated: remove cron, deprecate table writes
 
-**Should have — differentiators that justify the milestone:**
-- KB extraction grounded strictly in documents — explicit "return null if not found" prompt constraint prevents hallucination; source document name displayed under each KPI card builds user trust
-- Multi-metric extraction in a single OpenAI call — batch extraction is cheaper and faster than one call per metric
-- Income breakdown by QB source category (grants vs. program fees vs. contributions) — more informative than a single total line
-- Rolling 6-12 month income trend via `summarize_column_by=Month` — reveals seasonal patterns and grant receipt timing
+**Should have (differentiators — v2.0 launch):**
+- Enrollment-level status and completion tracking — `status` on `enrollments` (not `clients`); enables "87% completion rate" metrics
+- Sessions linked to `enrollmentId` — optional FK on sessions; enables program-scoped session history
+- App becomes canonical source of truth — staff can trust what they see without "did Sheets sync yet?" confusion
+- `by_sessionDate` index on sessions — fixes known full-table scan in `getSessionVolume`/`getSessionTrends`
 
-**Defer to v1.x/v2+:**
-- Automated KB re-extraction on every document upload (cost and latency not warranted until usage patterns are clear)
-- KB summary history with compare-over-time capability
-- Multi-month income forecast / projection
-- Configurable KB extraction fields via admin UI (admin specifies which metrics to extract)
-- Scheduled weekly summary emails
+**Defer to v2.1 (post-validation):**
+- Enrollment-level session history UI — build after `enrollmentId` FK is stable with real data
+- Completion tracking dashboard widget — requires `completedAt` data from real usage
+- New vs. returning client KPI card — requires a full quarter of data in new model
+- Missed session alerts (3+ consecutive misses) — requires attendance status data from real usage
 
-**Anti-features to reject:**
-- Streaming KB summary generation — Convex actions do not support streaming to client; 5-30 second extraction time is acceptable with a loading spinner
-- Per-card AI narrative explanations — adds cost per card; AI Director chat already handles "explain this" queries
-- PayPal/GoFundMe API integration for donation data — out of scope per PROJECT.md; QB income accounts capture donation totals adequately
+**Anti-features (never build for this milestone):**
+- Real-time check-in kiosk / QR codes — out of scope; DEC cohort sizes make manual logging fast
+- Automatic silent deduplication of import data — dangerous for healthcare-adjacent data; require admin review
+- Multi-level program hierarchy (programs > cohorts > sessions) — overkill; Enrollment IS the cohort equivalent
+- Bulk session import from Excel — historical session data lacks the structure needed for the new model
 
 See: `.planning/research/FEATURES.md`
 
 ### Architecture Approach
 
-The milestone integrates two independent subsystems — KB Intelligence and Income Trend — into the existing dashboard section framework. Both follow the established cache-then-query pattern. KB intelligence uses two new Convex files (`kbInsightsActions.ts` for OpenAI calls, `kbInsights.ts` for table CRUD) and one new schema table (`kbSummaryCache`). Income trend adds a new `fetchIncomeTrend` internalAction to the existing `quickbooksActions.ts` and wires it into the 15-minute cron via `syncAllData`. The new `KBInsights` dashboard section registers via the existing `SECTION_COMPONENTS` map and `DEFAULT_DASHBOARD_SECTIONS` array — the reorderable section framework requires zero new infrastructure.
+The architecture follows the Salesforce Nonprofit Cloud PMM pattern (Programs > Enrollments > Sessions) adapted for Convex's schema constraints. The central insight is that client status (`active`, `completed`, `withdrawn`) must move from the `clients` table to the `enrollments` table — a client record is permanent identity, an enrollment is a program participation episode. This enables multi-program enrollment and correct active-client counting without ambiguity.
 
 **Major components:**
-1. `convex/kbInsightsActions.ts` ("use node") — Chat Completions for structured KPI extraction; Assistants API for narrative summary; reads `assistantId`/`vectorStoreId` from existing `aiDirectorConfig` (no new AI config needed)
-2. `convex/kbInsights.ts` — queries and mutations for `kbSummaryCache` table using `cacheType: "summary" | "kpis"` discriminator; singleton upsert via delete-then-insert pattern matching existing `aiDirectorConfig`/`alertConfig` singletons
-3. `convex/quickbooksActions.ts` (extended) — adds `fetchIncomeTrend` internalAction using `summarize_column_by=Month`; wired into existing `syncAllData` so it runs on every 15-minute QB cron automatically
-4. `src/components/dashboard/KBInsights.tsx` — new dashboard section: AI summary bullets + KB KPI stat cards + Regenerate button; uses `status` field ("idle" | "generating" | "ready" | "failed") to prevent duplicate generation triggers and show stale data during regeneration
-5. `src/hooks/useKnowledgeBase.ts` — `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` following existing hook file patterns
-6. `src/components/dashboard/DonationPerformance.tsx` (modified) — replace `useDonations()` call with `useIncomeTrend()`; update chart title copy; all rendering logic unchanged
 
-**Build order (strict dependencies):**
-1. Schema: add `kbSummaryCache` table to `convex/schema.ts` → deploy with `npx convex dev --once`
-2. KB backend: `kbInsights.ts` + `kbInsightsActions.ts` (depends on step 1)
-3. Income trend backend: `quickbooks.ts` + `quickbooksActions.ts` extensions (independent of steps 1-2, can be parallel)
-4. Frontend hooks: `useKnowledgeBase.ts` + add `useIncomeTrend()` to `useQuickBooks.ts` (depends on steps 2-3)
-5. `KBInsights.tsx` component (depends on step 4)
-6. `DonationPerformance.tsx` update (depends on step 4, independent of step 5)
-7. Dashboard registration: `constants.ts`, `types/index.ts`, `dashboard/page.tsx` (depends on steps 5-6)
+1. `enrollments` table (NEW) — `clientId`, `programId`, `status`, `enrollmentDate`, `exitDate`, `completionStatus`, `notes`, `createdAt`, `createdBy`; indexes: `by_clientId`, `by_programId`, `by_status`
+2. `clients` table (MODIFIED) — drop `programId`, `enrollmentDate`, `status`; add `gender`, `referralSource`, `dateOfBirth`, `phone`, `email`; add `by_lastName` index
+3. `sessions` table (MODIFIED) — add `enrollmentId` (optional FK), `attendanceStatus`; add `by_sessionDate`, `by_enrollmentId`, `by_programId` indexes
+4. `enrollments.ts` (NEW FILE) — CRUD with `requireRole` + audit log; `importBatch` internal mutation for migration
+5. `sessions.ts` (NEW FILE) — formalized session CRUD with `attendanceStatus`
+6. `analytics.ts` (MODIFIED) — `getAllDemographics` reads `clients` directly; `getActiveClientCount` reads enrollments by `by_status` index
+7. `googleSheetsActions.ts` / `googleSheetsSync.ts` / `googleSheetsInternal.ts` (MODIFIED) — remove `syncProgramData`, `upsertProgramParticipant`; keep grant sync only
+8. `scripts/migrateV2.ts` (NEW) — CLI migration: backfill enrollments from `clients.programId`; patch demographics from intake forms; batch 50 per call
+9. `scripts/importFromSpreadsheet.ts` (NEW) — import cleaned spreadsheet into new model; idempotent by name match
+
+**Key patterns:**
+- Enrollment-centric status: active client count queries `enrollments` filtered by `by_status` index, collects distinct `clientId` values
+- Demographics on client record: demographic fields describe the person, not the program episode; query `clients` directly
+- Role-based filtering via enrollments: join `clients > enrollments > programs` for lawyer/psychologist RBAC
+- Batched CLI migration: `ConvexHttpClient` + 50-record batches via separate mutation calls (avoids Convex write-per-transaction limit)
+- Google auth already unified: Calendar and Sheets both read `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY` from env vars; no new infrastructure needed
 
 See: `.planning/research/ARCHITECTURE.md`
 
 ### Critical Pitfalls
 
-1. **OpenAI hallucination on required schema fields** — When extraction schema fields are marked required, the model invents plausible values rather than returning null when source documents don't contain that data. Prevention: make all KPI schema fields optional/nullable; include explicit prompt instruction "return null for any metric not explicitly stated in the documents"; post-validate extracted values against plausible ranges; show source document name under each KPI card for auditability.
+1. **Convex schema push fails on existing data** — Never make a field required in the same deploy that introduces it. Always add as `v.optional`, run migration mutation to backfill, then tighten to required in a second deploy. This applies to every new field on `clients` and `sessions`.
 
-2. **Using Assistants API file_search for structured extraction** — `file_search` threads return non-deterministic conversational text; `response_format: json_schema` is not supported in Assistants API runs. Prevention: use `chat.completions.create()` with `response_format: { type: "json_schema" }` for KPI extraction; reserve the Assistants API exclusively for the narrative summary feature where conversational output is appropriate.
+2. **RBAC breaks when `programId` removed from `clients`** — Lawyers and psychologists see all clients if the enrollment-join filter is not deployed before `programId` is removed. Keep `programId` as `v.optional` during the entire transition. Only remove after every role-filtered query is rewritten to join through `enrollments`.
 
-3. **AI summary cost runaway from auto-triggering** — Each generation call can consume 50,000–100,000 input tokens ($0.50–$1.00/call at gpt-4o rates) if triggered on dashboard load or via a fixed-interval cron. Prevention: manual-only "Regenerate" button gated behind `requireRole(["admin", "manager"])`; store result in `kbSummaryCache` with `status` field; disable button during generation to prevent duplicate requests.
+3. **Demographics tab shows empty state after Sheets removal** — `getAllDemographics` currently reads `programDataCache`; `DemographicsTab.tsx` has a `useSheetsConfig()` gate. Sheets removal and the analytics rewrite must ship in the same deployment — never sequentially. Verify `total > 0` from the new query before cutting over.
 
-4. **QB income account names are org-specific and unfilterable by type** — There is no "donations" QB account type; account names like "Individual Contributions," "Unrestricted Gifts," or "Donor Revenue" vary entirely by how DEC's bookkeeper configured their chart of accounts. The existing `revenueByCategory` map already contains the right data but requires knowing which key names represent donation income. Prevention: surface all `revenueByCategory` account names in the admin panel; let admin designate which accounts represent donation/income categories; store designation in `appSettings`.
+4. **Sheets cron/table removal order matters** — Must follow the 8-step ordered sequence: remove cron, update `alerts.ts` to remove Sheets staleness check, clear `programDataCache` documents, clear `googleSheetsConfig` documents, remove table definitions from schema, remove backend files, remove frontend references. Skipping steps causes blocked schema pushes or runtime errors.
 
-5. **QB nonprofit-mode changes P&L row group labels silently** — DEC's QB may use nonprofit accounting mode where "Income" rows are labeled "Revenue" or "Support & Revenue," causing the existing parser (which matches on `"income"`) to return `$0` with no error. Prevention: log one real QB P&L JSON response from DEC's environment before writing the monthly income parser; broaden label matching to include "revenue" and "support" variants.
+5. **Duplicate clients from migration script** — The spreadsheet likely contains clients already in Convex from earlier imports. Always build and run dry-run mode first that reports `{ wouldCreate, wouldUpdate, wouldSkip }` without writing. Normalize name keys (`toLowerCase().trim()`) for dedup matching. Verify final client count matches expectations before deleting `programDataCache`.
 
-6. **KB extraction results go stale when documents are added or deleted** — The `kbSummaryCache` table has no relationship to `knowledgeBase` table mutations. Prevention: store `kbSnapshotIds` (list of `knowledgeBase._id` values at extraction time) alongside results; compare against current KB in the display query; show "Data may be outdated — regenerate?" badge when the sets differ. Manual regeneration plus a staleness indicator keeps it simple and auditable.
+6. **Sessions full-table scan gets worse after migration data import** — `getSessionVolume` and `getSessionTrends` have no `by_sessionDate` index. Add it in the Phase 1 schema deploy before historical data is imported. Do not defer this — adding it after performance degrades is harder to verify.
 
 See: `.planning/research/PITFALLS.md`
 
@@ -103,65 +109,85 @@ See: `.planning/research/PITFALLS.md`
 
 ## Implications for Roadmap
 
-Based on combined research, suggested three-phase structure for v1.2:
+Based on Convex schema constraints and the dependency chain identified in research, the build order is non-negotiable. The roadmap must follow schema > backend > migration > analytics > frontend > cleanup > export sequencing.
 
-### Phase 1: KB KPI Extraction Backend + Cards
+### Phase 1: Schema Foundation
 
-**Rationale:** KB features share infrastructure — the `kbSummaryCache` schema, `kbInsightsActions.ts`, `kbInsights.ts`. Building backend and schema first unblocks both KB KPI cards and the AI summary panel. This phase also requires locking in the hardest design decision (Chat Completions vs. Assistants API for extraction) before any UI is built, preventing a costly implementation reversal.
+**Rationale:** Everything else depends on the `enrollments` table existing in Convex. This is the critical path blocker. Non-breaking additive change — existing code continues working after deploy.
+**Delivers:** `enrollments` table deployed; new optional fields on `clients` (`gender`, `referralSource`, `dateOfBirth`, `phone`, `email`); new fields on `sessions` (`enrollmentId`, `attendanceStatus`); new indexes (`by_sessionDate`, `by_enrollmentId`, `by_programId`, `by_status`, `by_lastName`).
+**Addresses:** Enrollment multi-program schema, session attendance status, sessions full-table scan fix.
+**Avoids:** Schema push failures (all new fields are `v.optional`); RBAC breakage (existing `programId` fields remain during transition).
+**Research flag:** Standard Convex additive schema pattern — well documented; no additional research needed.
 
-**Delivers:** `kbSummaryCache` schema deployed; `extractKBKPIs` Chat Completions action working; `KBInsights.tsx` dashboard section visible with real stat cards; source document name + extraction timestamp shown under each KPI value; staleness badge when KB documents have changed since last extraction.
+### Phase 2: Enrollment and Sessions Backend
 
-**Features addressed (from FEATURES.md):** KB KPI extraction (P1), KB stat card frontend (P1), staleness detection, source provenance display.
+**Rationale:** Before any migration can run, `enrollments.importBatch` must exist. Before any frontend work, the enrollment CRUD queries must be available. Sessions backend formalization can run in parallel.
+**Delivers:** `enrollments.ts` with `list`, `create`, `update`, `remove`, `listByClient`, `importBatch` (internal mutation). `sessions.ts` with formalized CRUD + `attendanceStatus`. Both use `requireRole` + audit log pattern.
+**Addresses:** Enrollment CRUD, attendance status tracking, session-enrollment link.
+**Avoids:** Migration script calling mutations that do not exist yet.
+**Research flag:** Standard patterns matching existing `clients.ts` and `grants.ts`; no additional research needed.
 
-**Pitfalls to avoid:** Hallucination on required fields (nullable schema + explicit null-return prompt instruction), Assistants API misuse for extraction (Chat Completions only), PII exposure (filter KB to aggregate reports, not individual intake forms), missing `DashboardSectionId` type update (add to union before first render).
+### Phase 3: Data Migration
 
-**Research flag:** Standard patterns — follows existing Convex action + cache pattern with code examples available directly in research files. No additional research-phase needed.
+**Rationale:** Migration must run after schema and enrollment backend exist. Creates the enrollment records that analytics and the unified client list depend on. Must run before Sheets sync is removed.
+**Delivers:** `scripts/migrateV2.ts` — dry-run mode then execute: backfill `enrollments` from `clients.programId`; patch `gender`, `referralSource` from intake forms. Optional: `scripts/importFromSpreadsheet.ts` for cleaned spreadsheet import. All clients have enrollment records after this phase.
+**Addresses:** Historical data preservation, deduplication-safe migration, demographic data gap (gender field).
+**Avoids:** Duplicate clients (dry-run required first); data corruption (idempotent batch script); skipping validation.
+**Research flag:** Needs careful implementation attention — dry-run validation output must be reviewed before write execution. Inspect the actual spreadsheet before writing the import script to verify column names and data quality.
 
----
+### Phase 4: Analytics Backend Rewrite
 
-### Phase 2: AI Summary Panel
+**Rationale:** Must happen before Sheets sync is removed. The new queries must be deployed and verified to return correct data before cutting over. Co-dependent with Phase 5 (must ship together).
+**Delivers:** Rewritten `analytics.getAllDemographics` reading `clients` table directly; `getActiveClientCount` via `enrollments.by_status`; `getSessionTrends`/`getSessionVolume` using `by_sessionDate` index range query.
+**Addresses:** Demographics-from-Convex, performance-fixed session analytics.
+**Avoids:** Empty Demographics tab during Sheets removal; full-table scan performance trap.
+**Research flag:** Standard Convex query patterns; no additional research needed.
 
-**Rationale:** Shares the `kbSummaryCache` table and `aiDirectorConfig` credentials established in Phase 1. The Assistants API thread pattern (already working in `aiDirectorActions.ts`) is the correct choice here — the summary is a narrative, not structured extraction. The key design challenge is the generation state model (`status` field, duplicate-trigger prevention) which builds directly on Phase 1 infrastructure.
+### Phase 5: Frontend and Sheets Removal (co-deployed with Phase 4)
 
-**Delivers:** Dashboard panel showing 3-5 bullet highlights from KB documents; manual Regenerate button with disabled state during generation; "Generated X ago" timestamp; stale cached summary shown during regeneration (not a blank screen); role-gated action preventing runaway cost.
+**Rationale:** Sheets removal and analytics frontend update must ship together. Also covers RBAC rewrite in the client list, which must be verified before `programId` is removed. This is the most coordinated phase.
+**Delivers:** `clients.listWithPrograms` role filter via enrollments; `/clients` page unified list (no program-tab split by role); `DemographicsTab.tsx` with `useSheetsConfig()` guard removed; `syncProgramData` removed from Sheets actions; program Sheets config removed from admin UI; Sheets cron narrowed to grant sync only.
+**Addresses:** Unified client list, role-based filtering correctness, Sheets dependency removal.
+**Avoids:** RBAC breakage (deploy enrollment-join filter before removing `programId`); Demographics empty state (analytics rewrite already deployed from Phase 4); `alerts.ts` runtime errors (remove Sheets staleness check in this phase per the 8-step sequence).
+**Research flag:** RBAC verification required after deploy — log in as `lawyer` and `psychologist` roles and confirm filtered results before marking complete.
 
-**Features addressed (from FEATURES.md):** AI summary panel with regenerate (P1).
+### Phase 6: Schema Cleanup
 
-**Pitfalls to avoid:** Cost runaway (manual trigger only, role-gated action), race condition from multiple rapid clicks (`status: "generating"` guard before triggering action), layout congestion from additional dashboard section (verify default section ordering, verify hideable).
+**Rationale:** Can only happen after Phase 5 is confirmed working and `programDataCache` documents are cleared. Removes all legacy fields and deprecated tables.
+**Delivers:** `programId`, `enrollmentDate`, `status` removed from `clients` schema definition; `programDataCache` table removed from schema; `googleSheetsConfig` documents cleared and table removed; `upsertProgramParticipant` removed from `googleSheetsInternal.ts`.
+**Addresses:** Technical debt cleanup, schema accuracy.
+**Avoids:** Schema push failure (all documents in removed tables are cleared before table definition is removed).
+**Research flag:** No research needed; follow the documented 8-step removal sequence from PITFALLS.md precisely.
 
-**Research flag:** Standard patterns — Assistants API thread + action-on-demand + Convex reactive query is the exact pattern used by `aiDirectorActions.ts` today. No additional research-phase needed.
+### Phase 7: Data Export
 
----
-
-### Phase 3: Donation/Income Performance Charts
-
-**Rationale:** Fully independent of Phases 1-2 — no shared code, different Convex files, different QB data path. Can be built in parallel with Phase 1 or sequentially after Phase 2. Highest backend complexity of the three features due to QB API monthly column parsing, but the `DonationPerformance.tsx` frontend change is minimal (data source swap + label copy update only).
-
-**Delivers:** `DonationPerformance.tsx` shows real QB monthly income data instead of always-null empty state; line chart with 12-month trend via `summarize_column_by=Month` single API call; income breakdown by QB account category when admin has designated accounts in `appSettings`.
-
-**Features addressed (from FEATURES.md):** Donation chart from QB income data (P1), rolling 12-month income trend (P2), income breakdown by source (P2).
-
-**Pitfalls to avoid:** QB account name fragility (build admin account designation before the chart, not after), QB nonprofit-mode label mismatch (log real QB P&L response first — 10 minutes of validation that eliminates the highest-risk parsing failure), monthly fetch strategy (`summarize_column_by=Month` not 12 separate calls), empty state when no accounts have been designated (show "Configure donation accounts in Admin" with link, not a broken chart).
-
-**Research flag:** Moderate uncertainty on QB monthly P&L JSON shape (confirmed via community sources, not official Intuit docs). Recommended validation: before writing the monthly income parser, trigger a real QB P&L API call in DEC's environment and inspect the raw JSON column structure. This is a 10-minute validation step, not a full research phase.
-
----
+**Rationale:** Deliberately last — export produces more useful output (includes enrollment data) after the data model is fully migrated and stable. Can be built earlier if needed but is lower risk at the end.
+**Delivers:** `clients.exportAll` query (clients + enrollments + session counts, admin-only); `src/lib/exportUtils.ts` with `downloadCsv` and `downloadXlsx` utilities; export button in admin console.
+**Addresses:** Admin data export, backup/audit compliance, grant reporting support.
+**Avoids:** JSON-only export (CSV with human-readable headers required for nonprofit admin use).
+**Research flag:** Standard implementation — native Blob API and `xlsx` 0.18.5 `json_to_sheet` + `writeFile`; no additional research needed.
 
 ### Phase Ordering Rationale
 
-- Phases 1 and 2 share the same Convex table (`kbSummaryCache`) and action file (`kbInsightsActions.ts`) — build sequentially to avoid write conflicts.
-- Phase 3 (QB income) touches entirely different files (`quickbooks.ts`, `quickbooksActions.ts`, `DonationPerformance.tsx`) — it can run in parallel with Phase 1 if two developers are available, or be built sequentially after Phase 2 with no dependency penalty.
-- Schema deployment must precede any KB backend work — Convex rejects queries against tables that don't exist in the deployed schema.
-- Dashboard registration (constants, types, page.tsx) is always the final step — it depends on component files existing and the schema being deployed.
+- Schema must deploy before any code touches new fields — Convex validates every push against production data
+- Enrollment backend must exist before migration scripts run — `importBatch` internal mutation is the target
+- Migration must complete before Sheets sync is removed — enrollment records are the replacement for `programDataCache`
+- Analytics rewrite must deploy and be verified before Sheets sync is removed — they are co-dependent, not sequential
+- Schema cleanup (table/field removal) must come after documents are cleared — Convex blocks schema pushes with orphaned data
+- Export is independent and comes last because it produces richer output with the complete new data model
 
 ### Research Flags
 
-**Phases needing targeted validation during execution:**
-- **Phase 3:** Capture and inspect a real DEC QB P&L JSON response (with `summarize_column_by=Month`) before writing the monthly income parser. The column-to-month mapping structure is confirmed to exist from community sources but not verified against DEC's specific QB configuration. This validation prevents the highest-confidence parse-failure pitfall.
+Phases needing careful implementation attention (not external research, but execution complexity):
+- **Phase 3 (Data Migration):** Dry-run output must be reviewed before write execution. Inspect the actual cleaned spreadsheet before writing the import script. The deduplication and name-normalization logic are the highest-risk implementation details.
+- **Phase 5 (Frontend + Sheets Removal):** Most coordinated phase — RBAC verification for restricted roles required before shipping; follow the 8-step Sheets removal sequence precisely.
 
-**Phases with well-documented standard patterns (no additional research needed):**
-- **Phase 1:** Convex action + cache + Chat Completions `json_schema` — all established with working code examples in STACK.md and ARCHITECTURE.md research files.
-- **Phase 2:** Assistants API thread + action-on-demand + Convex reactive query — the exact pattern `aiDirectorActions.ts` uses in production today.
+Phases with standard patterns (straightforward execution):
+- **Phase 1 (Schema):** Well-documented Convex additive schema pattern; all fields `v.optional`.
+- **Phase 2 (Backend):** Matches existing `clients.ts` and `grants.ts` CRUD patterns exactly.
+- **Phase 4 (Analytics):** Direct table reads replacing `programDataCache` reads; same query structure.
+- **Phase 6 (Schema Cleanup):** Documented removal sequence; no implementation complexity.
+- **Phase 7 (Export):** Client-side Blob + xlsx; simple utility functions.
 
 ---
 
@@ -169,38 +195,44 @@ Based on combined research, suggested three-phase structure for v1.2:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Zero new packages; all patterns verified via direct codebase inspection. OpenAI file download restriction confirmed by multiple independent community sources. QB `summarize_column_by=Month` confirmed via developer community (not official Intuit docs — exact JSON column shape is MEDIUM confidence). |
-| Features | HIGH | P1 features derive directly from documented codebase gaps (`getDonations` always null per source comment, no KB extraction mechanism exists today). P2 features are well-understood extensions of the same infrastructure. |
-| Architecture | HIGH | Based on direct inspection of all relevant Convex files, component files, hooks, and the dashboard section registration pattern. Build order is dependency-derived, not speculative. |
-| Pitfalls | HIGH | Hallucination on required schema fields is verified OpenAI model behavior. Assistants API structured output limitation is confirmed via official docs. QB label mismatch is verified via codebase comment and QB nonprofit-mode documentation. Cost runaway math ($0.50–$1.00/call) is calculated from current gpt-4o pricing. |
+| Stack | HIGH | All technologies are already installed and in production use. No version research needed. The "zero new packages" finding is verified against package.json and confirmed against each feature's implementation approach. |
+| Features | HIGH | Existing codebase inspected directly. Industry patterns (Salesforce NPM, PlanStreet) cross-validate the feature set and attendance status enum values. Migration strategy specifics are MEDIUM — depends on actual spreadsheet data quality not yet inspected. |
+| Architecture | HIGH | All findings based on direct code inspection of every relevant file in the codebase. No external API uncertainty. Schema design is validated against Convex documentation. The 8-step Sheets removal sequence is specific to this codebase's `alerts.ts` dependency chain. |
+| Pitfalls | HIGH | v2.0 pitfalls verified against official Convex migration docs, stack.convex.dev blog posts, and direct codebase inspection. The RBAC breakage and schema validation failure patterns are confirmed Convex behaviors, not speculative risks. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **QB monthly P&L JSON shape:** The `summarize_column_by=Month` parameter is confirmed to exist, but the exact column-to-row ColData index mapping is from community sources, not official Intuit docs. Validate with one real API call before writing the parser. Fallback if shape differs: 12 separate monthly P&L calls (slower but guaranteed to work with existing single-period fetch logic).
+- **Spreadsheet data quality is unknown:** The "cleaned master spreadsheet" referenced in milestone requirements has not been inspected. The migration script's deduplication logic will work correctly only if the spreadsheet uses consistent name formatting. Inspect the spreadsheet before writing the import script — determine: how many rows, what columns exist, whether names match existing Convex client names exactly.
 
-- **DEC's QB income account names:** Research cannot determine how DEC's bookkeeper named their income accounts. The admin account-designation UI (stored in `appSettings`) is the designed mitigation, but it adds a one-time setup step before the donation chart shows real data. Factor this into rollout communication with the Executive Director.
+- **`programOutcome` field has no equivalent in the new model:** `programDataCache` has a `programOutcome` field. The architecture research recommends using `enrollments.completionStatus` as a string field. This needs a design decision before Phase 1 schema deploy: does `programOutcome` map to `enrollments.completionStatus`, or is it dropped for v2.0?
 
-- **KB document content format:** Research assumes KB documents are PDF/text aggregate program reports. If any documents are image-only PDFs or non-OCR spreadsheets, Chat Completions extraction will return null for all metrics (not an error). No code mitigation needed now — document this as a known limitation if extraction returns consistently empty for specific files.
+- **"Unified Google OAuth" scope is narrower than it sounds:** The feature is actually "remove Sheets program sync config" — not new auth infrastructure. The Calendar service account is already unified with Sheets at the env var level. Confirm this interpretation before Phase 5 to avoid over-engineering.
+
+- **`importLegalBatch` and `importCoparentBatch` remain public mutations:** These unauthenticated batch insert mutations should be converted to `internalMutation` after migration is complete. This is a security cleanup item that belongs in Phase 3 or Phase 6 rather than being forgotten.
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Direct codebase inspection: `convex/aiDirectorActions.ts`, `convex/quickbooks.ts`, `convex/quickbooksActions.ts`, `convex/schema.ts`, `convex/kbInsights.ts` (planned), `src/components/dashboard/DonationPerformance.tsx`, `src/app/(dashboard)/dashboard/page.tsx`, `src/hooks/useQuickBooks.ts`, `convex/crons.ts` — all patterns verified directly against working production code
-- OpenAI file download restriction — https://community.openai.com/t/not-allowed-to-download-files-of-purpose-assistants/528220 (multiple independent community reports)
-- OpenAI Structured Outputs guide — https://platform.openai.com/docs/guides/structured-outputs
-- react-chartjs-2 v5.3.1 docs — https://react-chartjs-2.js.org/
+- Direct codebase inspection — `convex/schema.ts`, `convex/clients.ts`, `convex/sessions.ts`, `convex/analytics.ts`, `convex/googleSheetsActions.ts`, `convex/googleCalendarActions.ts`, `convex/alerts.ts`, `convex/crons.ts`, `scripts/importCoparent.ts`, `src/components/analytics/DemographicsTab.tsx`, `src/app/(dashboard)/clients/page.tsx`
+- Convex index documentation — https://docs.convex.dev/database/reading-data/indexes/
+- Convex schema documentation — https://docs.convex.dev/database/schemas
+- Convex migration patterns — https://stack.convex.dev/intro-to-migrations, https://stack.convex.dev/migrating-data-with-mutations, https://stack.convex.dev/lightweight-zero-downtime-migrations
+- SheetJS XLSX write documentation — https://docs.sheetjs.com/docs/solutions/output/
+- Google OAuth service account documentation — https://developers.google.com/identity/protocols/oauth2/service-account
 
 ### Secondary (MEDIUM confidence)
-- QB `ProfitAndLoss` API `summarize_column_by=Month` parameter — multiple QB developer community sources confirm the parameter exists and returns monthly columns; exact JSON column structure unverified against DEC's QB
-- QB nonprofit-mode label changes — QB Online Help + developer community; codebase `parsePnlTotals` function confirms reliance on "income" string matching which would silently fail in nonprofit mode
-- OpenAI hallucination on required schema fields — OpenAI documented model behavior for Structured Outputs strict mode
+- Salesforce Nonprofit Cloud Program Management data model — https://developer.salesforce.com/docs/atlas.en-us.nonprofit_cloud.meta/nonprofit_cloud/npc_dm_overview.htm — Programs/Enrollments/Sessions pattern
+- PlanStreet human services attendance tracking — https://www.planstreet.com/attendance-tracking-human-services-guide — attendance status options (attended/missed/excused/cancelled)
+- Nonprofit data migration best practices — CaseWorthy, NeonOne — deduplication strategy and validation report pattern
+- Nonprofit impact metrics — funder-standard metrics: new vs. returning, retention/dropout, completion rate
 
-### Tertiary (LOW confidence — validate during execution)
-- Exact JSON column structure of QB monthly P&L response (ColData index-to-month mapping) — developer community discussions; validate with real DEC QB API call before writing the monthly income parser
+### Tertiary (LOW confidence — validate during implementation)
+- Spreadsheet data quality: unknown until actual spreadsheet is inspected before Phase 3
+- Historical session count in `legalIntakeForms.numberOfVisits` and `coparentIntakeForms.sessionsCompleted`: assumed usable for migration notes, not for creating actual session records
 
 ---
 *Research completed: 2026-03-01*

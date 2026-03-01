@@ -1,31 +1,27 @@
 # Feature Research
 
-**Domain:** Nonprofit Executive Dashboard — v1.2 Intelligence Milestone
+**Domain:** Nonprofit Case Management — Client-Enrollment-Session Data Model, Session Tracking, Unified Client List, Data Migration, Data Export, Analytics Rewrite
 **Researched:** 2026-03-01
-**Confidence:** HIGH (existing codebase patterns), MEDIUM (KB extraction behavior)
+**Confidence:** HIGH (existing codebase), HIGH (nonprofit case management patterns from industry leaders), MEDIUM (migration strategy specifics)
 
 ---
 
 ## Context: What This Milestone Is
 
-v1.2 Intelligence adds three new dashboard capabilities to an already-working app:
-
-1. **KB-powered KPI cards** — extract client/program stats and impact metrics from uploaded documents in the OpenAI vector store
-2. **AI summary panel** — organizational highlights auto-generated from KB documents, manually re-triggerable
-3. **Donation performance charts** — income trend visualization from QB revenue data
+v2.0 Data Foundation refactors the data model and removes the Google Sheets dependency, making the app the authoritative source for client and program data. It is not building new user-visible features from scratch — it is replacing a fragile sync-based architecture with a direct Convex-native one, and extending an existing data model to support multi-program enrollment and individual session records.
 
 **What already exists that this builds on:**
 
-| Existing Infrastructure | Relevance to v1.2 |
+| Existing Infrastructure | Relevance to v2.0 |
 |-------------------------|-------------------|
-| OpenAI Assistants API (aiDirectorActions.ts) | KB extraction reuses the same vector store + file_search pattern |
-| Vector store + knowledgeBase table | Files already live in OpenAI vector store — can be queried |
-| `quickbooks.getProfitAndLoss` → `revenueByCategory` | Income by category already parsed in getProfitAndLoss; fetchProfitAndLoss action already handles multi-period data |
-| `DonationPerformance.tsx` component (exists but always null) | Shell chart component + getDonations query exist; getDonations returns null (no PayPal) |
-| `quickbooks.getTrends` (current vs. prior year) | Single month comparison exists; multi-month trend requires new QB fetch action |
-| Dashboard section system (DashboardSection + SECTION_COMPONENTS map) | New sections slot into existing reorderable framework |
-| `appSettings` key-value table | KB summary cache can be stored here or in a dedicated table |
-| Three-state loading pattern (undefined/null/data) | All new components must follow: undefined=loading, null=unconfigured, data=ready |
+| `clients` table with `programId` (single FK) | Being replaced by `enrollments` join table for many-to-many |
+| `sessions` table (clientId, programId, sessionDate, notes) | Extending with `enrollmentId`, attendance status, structured data |
+| `programs` table (name, type, isActive) | Stays — enrollment links clients to programs |
+| `legalIntakeForms` + `coparentIntakeForms` | Stays — linked to clients via `clientId` |
+| `programDataCache` table (from Sheets sync) | Being deprecated — replaced by direct Convex queries |
+| `analytics.ts` getAllDemographics (queries programDataCache) | Being rewritten to query clients/enrollments directly |
+| `/clients` page with role-based filtering | Being updated to show unified list across all programs |
+| Import scripts: `importLegalBatch`, `importCoparentBatch` | Pattern for new migration script |
 
 ---
 
@@ -33,103 +29,131 @@ v1.2 Intelligence adds three new dashboard capabilities to an already-working ap
 
 ### Table Stakes (Users Expect These)
 
-Features the Executive Director assumes exist once the milestone is announced. Missing = milestone feels incomplete.
+Features the Executive Director and staff assume exist once the milestone is delivered. Missing these makes the milestone feel incomplete or broken.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **KB KPI cards actually extract real numbers** | If KB contains "150 clients served" in a report, users expect the card to show 150, not a placeholder | HIGH | OpenAI file_search returns text passages; number extraction requires a targeted prompt + parse pass. The AI can hallucinate numbers — needs explicit grounding instructions |
-| **Graceful empty/not-configured states** | All existing dashboard sections handle null/undefined with helpful messages + admin link. KB cards must do the same when no files are uploaded | LOW | Follow existing ExecutiveSnapshot null pattern exactly. `knowledgeBase.listFiles` returns [] when empty, not null |
-| **"Last extracted" timestamp on KB cards** | Every other dashboard section shows "Updated X ago". KB cards without a freshness indicator feel stale or unreliable | LOW | Store `extractedAt` timestamp alongside the extracted values in Convex |
-| **Manual re-trigger for KB summary** | AI summaries go stale as new documents are uploaded. User needs a "Regenerate" button — passive auto-generation alone is insufficient | MEDIUM | Button → Convex action → OpenAI call → save result. Loading state during generation is required |
-| **Donation chart uses actual QB income data** | `DonationPerformance.tsx` already exists but always shows null. Users who see it expect it to show something from QB | MEDIUM | QB P&L `revenueByCategory` has income line items (grants, donations, program fees). Income trend over multiple months requires fetching prior months' P&L from QB API |
-| **Skeleton loading states** | All other sections use `ChartSkeleton` / `StatCardSkeleton`. New sections without loading skeletons flash incorrectly | LOW | Reuse existing skeleton components from `src/components/dashboard/skeletons/` |
+| **Client can be enrolled in multiple programs simultaneously** | A co-parent client may also be in the fatherhood program. Single `programId` on clients table makes this impossible — the new `enrollments` table is the fix | HIGH | Schema change: remove `programId` from `clients`, add `enrollments` table with `clientId` + `programId` + enrollment-level fields. All existing queries touching `programId` on clients need updating |
+| **Session record has an attendance status** | Staff need to mark sessions as attended, missed, excused, or cancelled — not just log that a session happened. Without status, you cannot compute retention or completion rates | MEDIUM | Add `attendanceStatus` field to `sessions` table: `"attended" \| "missed" \| "excused" \| "cancelled"`. Default `"attended"` for backward compatibility with existing session records |
+| **Unified client list without program-type split** | The current `/clients` page requires selecting a program type tab — lawyers see legal, psychologists see co-parent, admins see both but in split tabs. Admin/manager should see all clients in one sortable list | MEDIUM | New `listAll` query that joins enrollments to resolve program names, collapses multi-enrollment clients to one row, preserves role-based visibility filtering |
+| **New vs. returning client distinction** | Funders and grant reports require "unduplicated client count" — people who received service for the first time this period vs. those returning. Without an `enrollments.startDate`, this cannot be computed accurately | MEDIUM | Track `firstEnrolledAt` on the `clients` record (set once, never updated) plus `startDate` on each `enrollments` record. New = enrolled for first time in reporting period. Returning = `firstEnrolledAt` predates the period |
+| **Historical data preserved after migration** | Existing clients, intake forms, sessions, and goals must not be lost during the schema refactor. Staff have months of records in the current model | HIGH | Migration must: (1) create an `enrollments` record for every existing `clients.programId`, (2) preserve `clients.enrollmentDate` as `enrollments.startDate`, (3) leave all linked sessions and intake forms intact |
+| **Analytics Demographics tab reads from Convex (not Sheets)** | After removing `programDataCache`, the Demographics tab currently queries `programDataCache` via `getAllDemographics`. With Sheets sync removed, this query returns empty. Demographics must be rewritten to query `clients` directly | HIGH | Replace `getAllDemographics` in `analytics.ts` with a query that aggregates `clients` table fields (ethnicity, ageGroup, zipCode) plus `enrollments` for status/referralSource. Gender field needs to be added to `clients` table |
+| **Session count visible on client record** | Staff expect to see "Total sessions: 12" on a client detail view without manually counting. This was tracked in `programDataCache.sessionCount` (from Sheets). Must now be computed from the `sessions` table | LOW | Computed in `getByIdWithIntake` query: count sessions by clientId (or by enrollmentId post-refactor). No schema change needed — it's a join count |
+| **Data export produces a usable file** | Admins must be able to export client/session data to CSV for backup, grant reporting, and board presentation. Without export, the "app as source of truth" transition is blocked — there is no safety net | MEDIUM | Convex action exports clients + enrollments + session counts as JSON, frontend converts to CSV download via `Blob` + `URL.createObjectURL`. No server-side file generation needed |
 
-### Differentiators (Competitive Advantage)
+### Differentiators (What Makes This Milestone Meaningful)
 
-Features that justify the milestone's existence beyond "we added more stuff."
+Features that justify the architectural investment and provide lasting value beyond "we moved data around."
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **KB-grounded KPI extraction (not hallucinated)** | Generic dashboards show financial KPIs only. KB-powered cards surface program-level impact — "families served this quarter," "court dates resolved" — data that only lives in uploaded reports, not QB | HIGH | Key design: prompt must instruct GPT to return "NOT_FOUND" when a metric is absent, not invent a number. Store raw extracted text alongside the parsed value for auditability |
-| **Multi-metric extraction in single pass** | Extract active clients, total sessions, key outcomes, demographic highlights all in one OpenAI call — not 5 separate calls | MEDIUM | Structured JSON response format (function calling or response_format) ensures parseable output. Batch extraction is cheaper and faster than sequential |
-| **AI summary grounded in KB, not hallucination** | "AI summary" is only valuable if it synthesizes actual uploaded documents. The summary panel should cite document names, not fabricate narrative | HIGH | Pass document titles as context in the prompt. Instruct: "only summarize what documents explicitly state." Response should be 3-5 bullet highlights, not a paragraph |
-| **Income breakdown by source, not just total** | Most QB dashboards show total revenue. QB `revenueByCategory` already has grant income vs. program fees vs. individual donations separated — showing this breakdown is a differentiator | MEDIUM | Reuse the `revenueByCategory` data already parsed in `getProfitAndLoss`. Stack or grouped bar chart by income category over time is more informative than a single line |
-| **Donor/income trend over rolling 6 months** | Single-month YoY comparison exists in KPI cards. A 6-month rolling chart reveals seasonal patterns and grant receipt timing | HIGH | Requires fetching 5 additional prior-month P&L reports from QB API. New action: `fetchMonthlyIncomeTrend`. Adds QB API calls but provides context no single-month view can |
+| **Enrollment-level status and completion tracking** | An enrollment can be active, completed, or withdrawn independently of whether the client is still in other programs. Completion rate becomes a meaningful metric: "87% of legal program enrollees completed the program" | MEDIUM | Add `status` and `completedAt` to `enrollments` table. Status: `"active" \| "completed" \| "withdrawn"`. `completedAt` timestamp enables time-to-completion analytics |
+| **Session notes indexed by enrollment** | Sessions linked to `enrollmentId` (not just `clientId`) let staff see session history scoped to a specific program participation — "how many sessions did this client attend in the co-parent program?" — vs. all sessions across all programs | MEDIUM | Add `enrollmentId` (optional FK) to `sessions` table. Existing sessions without an enrollment stay valid — migrate using the client's `programId` to resolve the enrollment ID |
+| **Referral source on enrollment (not just client)** | A client may be referred differently for each program enrollment. "Referred by court order" for legal, "self-referral" for co-parent. Storing referral source per enrollment is more accurate than per client | LOW | Add `referralSource` field to `enrollments` table. Keep `referralSource` on intake forms too — they are program-specific by nature |
+| **App becomes the canonical source of truth** | When the app owns its data (not a Sheets sync), staff can trust what they see. No more "did Sheets sync yet?" confusion. Data edits in the app are immediately reflected everywhere. Analytics are real-time | HIGH | Achieved by the combination of: (1) deprecating `programDataCache`, (2) rewriting analytics queries to use Convex tables directly, (3) removing the Sheets sync cron for program data |
+| **Demographics rewritten with correct gender field** | Current `programDataCache` had a `gender` field from the old spreadsheet. The `clients` table does not have a gender field. This migration adds `gender` to `clients` and surfaces it in Demographics analytics for the first time with validated app-native data | LOW | Add `gender: v.optional(v.string())` to `clients` schema. Populate during migration from the spreadsheet import. Analytics tab then shows gender distribution from real client records |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| **Auto-regenerate KB summary on every document upload** | "Keep it always fresh" | OpenAI API call on every upload adds latency to the upload flow, increases costs, and may run on partial document sets during multi-file upload sessions | Manual "Regenerate" button triggered by the user when they're done uploading. Store `extractedAt` so staleness is visible |
-| **Real-time KB extraction (streaming)** | Streaming looks responsive | Convex actions don't support streaming responses to the client. The existing `sendMessage` in aiDirectorActions.ts runs to completion and stores the result. Streaming would require a different architecture (SSE, WebSockets) that doesn't fit the current Convex pattern | Show loading spinner during extraction (same as AI Director chat's loading state). Typical extraction takes 3-8 seconds — acceptable without streaming |
-| **PayPal/GoFundMe donation platform integration for donation chart** | "Real donation data" | Explicitly out of scope per PROJECT.md. QB already receives donation income via journal entries. The donation chart should read QB income categories, not external platforms | Parse QB `revenueByCategory` for income lines matching "donation" or "contribution." If QB has no such categories, show a "no income data matching donations" message |
-| **LLM-generated narrative for every KPI card** | "Explain this number" | Adds an AI call per card, dramatically increases cost and latency. The existing AI Director chat already supports "explain this" queries | Show the raw extracted value and its source document name. Let the user ask AI Director for narrative context |
-| **Scheduled weekly summary emails** | "Automate reporting" | Requires email infrastructure, scheduling complexity, and content review workflow. Newsletter system already handles email. Kareem opens the dashboard daily | Dashboard summary panel with timestamp covers this. Email digest is v2+ |
-| **KB extraction from QB data (not documents)** | "Analyze financials too" | QB financial analysis is already covered by AI Insights tab in expenses section. Mixing KB document extraction with QB data in the same panel creates confused data provenance | Keep KB extraction strictly for uploaded documents. QB financial analysis stays in the Expenses → AI Insights tab |
+| **Real-time session attendance with check-in kiosk / QR codes** | "Staff shouldn't have to log sessions manually" | Way out of scope — requires hardware, a separate check-in UI, and real-time presence detection. DEC has small cohort sizes (10-30 per session) where manual logging takes seconds | Keep session logging as a simple form with date, status, and notes. The bottleneck is not logging speed — it's staff adoption |
+| **Automatic deduplication of imported clients against existing records** | "The migration spreadsheet might have clients already in the system" | Fuzzy name matching has high false-positive risk — "John Smith" matching a different "John Smith" would corrupt data. Silent deduplication is dangerous for healthcare-adjacent data | Export a deduplication report at migration time (new name vs. existing name, side by side) and require admin review before committing. Explicit human decision per conflict |
+| **Soft-delete / archive for clients** | "We don't want to truly delete anyone" | Adds a `deletedAt` field to every query (filter deleted), complicates the unified list, and creates confusion when "active client count" includes or excludes archived records. DEC's volume is small enough that actual deletion is fine | Use `status: "withdrawn"` already in the schema. "Withdrawn" clients are still in the system, not deleted. Status filter on the unified list handles visibility |
+| **Full audit trail for session edits** | "We need to know who changed a session" | Session edit auditing is valuable but the `auditLogs` table already logs `create_session`. Full field-level diffs require significant schema work and storage | Log `create_session` and `update_session` to auditLogs with a details string (existing pattern). Field-level diff is a v3 compliance feature if it becomes necessary |
+| **Multi-level program hierarchy (programs → cohorts → sessions)** | Salesforce NPSP has program cohorts between programs and sessions | Overkill for DEC. They run 2-3 program types with small cohort sizes. Adding a cohort concept means 3 levels of navigation for staff. The Client → Enrollment → Session model is sufficient | Enrollment IS the cohort equivalent — it links a specific client to a specific program participation period. Use `notes` on enrollment for cohort identifiers if needed |
+| **Email notifications when session attendance is logged** | "Staff should be notified when a client misses" | Adds Constant Contact or SendGrid integration complexity. DEC doesn't currently use the app for operational communication — the Executive Director monitors dashboards, not notification streams | Show "missed sessions" count in the unified client list as a visual indicator. Alert the director via the existing alerts panel if a client misses 3+ consecutive sessions (v2.1 enhancement) |
+| **Bulk session import from Excel** | "We have historical session logs in a spreadsheet" | Historical session data is likely inconsistent, incomplete, or lacks the structure (enrollmentId, status) needed for the new model. Importing garbage data defeats the purpose of the migration | The migration script imports client records and enrollment records from the cleaned spreadsheet. Historical session counts can be approximated from `numberOfVisits` in legalIntakeForms and `sessionsCompleted` in coparentIntakeForms, stored as a legacy note |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[KB-Powered KPI Cards]
-    └──requires──> [knowledgeBase table with uploaded files] (already exists)
-    └──requires──> [OpenAI vector store ID in aiDirectorConfig] (already exists)
-    └──requires──> [new Convex action: extractKbMetrics] (new)
-    └──requires──> [new Convex table or appSettings keys for cached extracted values] (new)
-    └──renders via──> [new dashboard section: KbInsights or similar] (new)
-    └──independent of──> [QB connection]
+[Enrollments Table]
+    └──required by──> [Multi-Program Enrollment]
+    └──required by──> [Enrollment-Level Status/Completion]
+    └──required by──> [Session → EnrollmentId Link]
+    └──required by──> [New vs. Returning Client Metric]
+    └──required by──> [Unified Client List (cross-program view)]
+    └──required by──> [Analytics Rewrite (demographics + activity)]
+    └──blocks if missing──> [Data Migration Script]
 
-[AI Summary Panel]
-    └──requires──> [knowledgeBase table with files] (already exists)
-    └──requires──> [OpenAI vector store] (already exists)
-    └──shares action infrastructure with──> [KB-Powered KPI Cards] (can be same action, different prompt)
-    └──requires──> [stored summary text in Convex] (new field or appSettings key)
-    └──requires──> [manual regenerate trigger UI] (new)
-    └──independent of──> [QB connection]
+[Gender Field on Clients]
+    └──required by──> [Demographics Tab (gender distribution chart)]
+    └──populated by──> [Data Migration Script]
 
-[Donation Performance Charts]
-    └──requires──> [QB connected] (already gated, follows existing pattern)
-    └──requires──> [QB income data: revenueByCategory from getProfitAndLoss] (already exists for current month)
-    └──requires──> [multi-month income trend: new fetchMonthlyIncomeTrend action] (new — biggest new backend work)
-    └──requires──> [new quickbooksCache reportType: "income_trend"] (new cache entry)
-    └──renders in──> [existing DonationPerformance.tsx component] (extend, don't replace)
-    └──independent of──> [KB features]
+[Attendance Status on Sessions]
+    └──enables──> [Completion Rate / Retention Metrics]
+    └──independent of──> [Enrollments Table] (can be added separately)
 
-[KB KPI Cards] ──independent of──> [Donation Charts]
-[AI Summary Panel] ──shares infra with──> [KB KPI Cards]
+[Data Migration Script]
+    └──requires──> [Enrollments Table] (to create enrollment records for existing clients)
+    └──requires──> [Gender Field on Clients] (to populate from spreadsheet)
+    └──runs after──> [Schema deployed to Convex]
+    └──blocks──> [Remove programDataCache dependency]
+    └──blocks──> [Analytics Rewrite] (rewrite queries before removing old data)
+
+[Analytics Rewrite (Demographics)]
+    └──requires──> [Clients table has gender, ethnicity, ageGroup, zipCode]
+    └──requires──> [Enrollments table has referralSource, status]
+    └──replaces──> [programDataCache.getAllDemographics]
+    └──safe to remove after──> [Data Migration complete + validated]
+
+[Data Export]
+    └──requires──> [Enrollments table] (to export meaningful program participation data)
+    └──independent of──> [Migration] (can be built before or after)
+    └──depends on──> [Admin role] (export is admin-only)
+
+[Remove programDataCache / Sheets Sync]
+    └──requires──> [Analytics Rewrite complete] (nothing should query programDataCache)
+    └──requires──> [Data Migration complete] (all data now in Convex natively)
+    └──affects──> [Sheets cron] (remove or repurpose)
+    └──affects──> [googleSheetsConfig] (may remain for Calendar-related Google auth unification)
+
+[Unified Google OAuth]
+    └──independent of──> [Enrollments / Session model]
+    └──requires──> [Remove Sheets sync for program data] (simplifies what Sheets connection is used for)
 ```
 
 ### Dependency Notes
 
-- **KB KPI Cards and AI Summary share the same infrastructure:** Both call OpenAI with the vector store, both cache results in Convex. Build one Convex action that handles both extraction types (metrics + summary) to avoid two separate OpenAI round-trips.
-- **Donation chart is fully independent of KB:** QB connection is the only dependency. Can be built or shipped separately.
-- **Multi-month income trend is the hardest new backend piece:** The existing `fetchPriorYearPnl` action fetches a single prior month. Fetching 5 prior months for a rolling 6-month view means 5 additional QB API calls. This should be a single new action that loops, not 5 separate actions. Cache as a single `income_trend` entry (JSON array of month objects).
-- **No new auth or integrations required:** Everything reuses existing OpenAI API key and QB OAuth tokens.
+- **Enrollments table is the critical path blocker.** Every other new feature either requires it or is much simpler once it exists. Schema deployment to Convex must happen before any frontend or migration work can proceed.
+- **Data migration must run after schema is deployed, before the Sheets sync is removed.** The migration script creates enrollment records for every existing client. Only after validating migration results is it safe to remove the `programDataCache` dependency.
+- **Analytics rewrite is a dependency on removing Sheets sync, not the reverse.** Rewrite `getAllDemographics` to use `clients` table, then remove `programDataCache` queries, then deprecate the Sheets cron for program data. Doing it out of order breaks the Demographics tab.
+- **Attendance status on sessions is independent.** It adds a field to the existing sessions schema and doesn't depend on the enrollments table. It can be built in parallel with the enrollment refactor.
+- **Data export is independent.** It can be built against either the old or new schema. Building against the new schema produces more useful output (includes enrollment data). Priority: build after enrollments table exists.
 
 ---
 
 ## MVP Definition
 
-This is a targeted milestone on a working app. MVP means "what makes v1.2 shippable."
+This is a structural milestone on a working app. MVP means "what makes v2.0 shippable without breaking existing functionality."
 
-### Launch With (v1.2)
+### Launch With (v2.0)
 
-- [ ] **KB KPI extraction** — Convex action queries vector store for 3-5 configurable impact metrics (active clients, sessions, key outcomes). Results cached in Convex with timestamp. New dashboard section renders them as stat cards.
-- [ ] **AI summary panel** — Same action (or companion action) generates 3-5 bullet highlights from KB documents. Cached, with manual Regenerate button. Empty state when no KB files exist.
-- [ ] **Donation/income chart** — Replace the always-null `getDonations` path with real QB income data. Read from existing `revenueByCategory` for current-month breakdown. Add rolling 6-month income trend via new action + cache.
+- [ ] **Enrollments table schema** — New Convex table `enrollments` with `clientId`, `programId`, `startDate`, `status`, `completedAt`, `referralSource`, `notes`. Remove `programId` direct FK from `clients`.
+- [ ] **Gender field added to clients** — `gender: v.optional(v.string())` to enable Demographics analytics to query Convex instead of Sheets.
+- [ ] **Attendance status on sessions** — `attendanceStatus` field with `"attended" | "missed" | "excused" | "cancelled"` enum. Defaults to `"attended"`.
+- [ ] **Data migration script** — One-time script that creates an `enrollments` record for every existing client with a `programId`. Preserves existing `enrollmentDate` as `startDate`. Does NOT touch sessions, intake forms, or goals.
+- [ ] **Unified client list** — `listWithPrograms` query updated to join through `enrollments` instead of `clients.programId`. Frontend `/clients` page shows all clients in one list with program names from their enrollments. Role-based filtering preserved.
+- [ ] **Analytics Demographics rewrite** — `getAllDemographics` in `analytics.ts` queries `clients` table directly (not `programDataCache`). Aggregates gender, ethnicity, ageGroup, zipCode, and enrollment status/referralSource.
+- [ ] **Data export** — Admin-only action that returns all clients + enrollments + session counts as JSON. Frontend converts to CSV download. Includes: name, programs, enrollment dates, session count, status, demographics fields.
+- [ ] **Remove programDataCache sync** — After migration validated: remove the Sheets cron for program data, deprecate `programDataCache` table queries. Leave table in schema (Convex doesn't delete tables automatically) but stop writing to it.
 
-### Add After Validation (v1.x)
+### Defer to v2.1 (Post-Validation)
 
-- [ ] **Configurable KB extraction fields** — Admin UI to specify which metrics to extract (instead of hardcoded). Trigger: Kareem wants metrics beyond the initial 3-5.
-- [ ] **KB summary history** — Store last N summaries with timestamps so Kareem can compare. Trigger: "Can you show me last week's summary?"
-- [ ] **Income breakdown by category as stacked chart** — Show grant income vs. program fees vs. contributions separately over time. Trigger: QB income data proves rich enough to warrant breakdown.
+- [ ] **Enrollment-level session history UI** — Show sessions scoped by enrollment on client detail page. Build after `enrollmentId` FK on sessions is stable.
+- [ ] **Completion tracking dashboard widget** — "X of Y clients completed the program this quarter." Requires `completedAt` data from real usage.
+- [ ] **New vs. returning client KPI card** — Requires a full quarter of data in the new model to be statistically meaningful. Build once data is confirmed clean.
+- [ ] **Missed session alerts** — Notify admin if client misses 3+ consecutive sessions. Requires attendance status data from real usage.
 
-### Future Consideration (v2+)
+### Future Consideration (v3+)
 
-- [ ] **Automated KB re-extraction on document upload** — Adds API cost but removes manual friction. Defer until usage patterns are clear.
-- [ ] **KB extraction confidence scores** — Show "extracted from: [document name]" per metric. Needs citation parsing from OpenAI response.
-- [ ] **Multi-month income forecast** — Project next 3 months based on historical pattern. Requires more months of data than DEC currently has in QB.
+- [ ] **Program outcome scoring** — Structured outcomes per enrollment (goal achieved, partial, not achieved) with analytics. Requires significant intake workflow changes.
+- [ ] **Cohort-level analytics** — Compare program effectiveness across intake cohorts. Requires 6+ months of enrollment data.
+- [ ] **HIPAA-compliant encrypted export** — Password-protected ZIP with encrypted CSVs. Only relevant if client PII sensitivity escalates.
 
 ---
 
@@ -137,63 +161,100 @@ This is a targeted milestone on a working app. MVP means "what makes v1.2 shippa
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| KB KPI extraction (backend action + cache) | HIGH | MEDIUM (new Convex action, OpenAI call, storage schema) | P1 |
-| KB stat cards (frontend component) | HIGH | LOW (follows existing StatCard pattern exactly) | P1 |
-| AI summary panel with regenerate | HIGH | MEDIUM (companion to KB extraction, needs UI for regenerate + loading state) | P1 |
-| Donation chart from QB income data (current month) | HIGH | LOW (revenueByCategory already parsed, just wire into DonationPerformance.tsx) | P1 |
-| Rolling 6-month income trend (new QB action + cache) | MEDIUM | HIGH (5 additional QB API calls, new cache structure, date math) | P2 |
-| Income breakdown by source (stacked chart) | MEDIUM | MEDIUM (data exists, charting library supports it) | P2 |
-| Configurable KB extraction fields (admin UI) | LOW | HIGH | P3 |
+| Enrollments table schema + Convex deployment | HIGH | MEDIUM (schema change, all existing queries need review) | P1 |
+| Data migration script (existing clients → enrollments) | HIGH | MEDIUM (one-time, destructive if wrong — needs validation) | P1 |
+| Analytics Demographics rewrite (Convex-native) | HIGH | MEDIUM (replace Sheets-sourced aggregation with client table queries) | P1 |
+| Remove programDataCache / Sheets cron for program data | HIGH | LOW (delete cron + queries — but must come after above) | P1 |
+| Unified client list (multi-enrollment aware) | HIGH | MEDIUM (query rewrite + frontend update) | P1 |
+| Attendance status on sessions | HIGH | LOW (add field, update create mutation) | P1 |
+| Gender field on clients | MEDIUM | LOW (add optional field to schema + migration) | P1 |
+| Data export (CSV download) | HIGH | LOW (frontend-only CSV generation from existing queries) | P1 |
+| Enrollment-level session FK (enrollmentId on sessions) | MEDIUM | LOW (optional FK, backward compatible) | P2 |
+| Session count on client detail view | MEDIUM | LOW (computed join, no schema change) | P2 |
+| Unified Google OAuth (Calendar + Sheets single token) | MEDIUM | HIGH (auth flow redesign) | P2 |
+| New vs. returning client metric in analytics | MEDIUM | MEDIUM (requires firstEnrolledAt or createdAt comparison) | P2 |
+| Completion rate dashboard widget | LOW | MEDIUM (requires meaningful completedAt data) | P3 |
 
 **Priority key:**
-- P1: Must ship for v1.2 milestone
-- P2: Ship if P1 lands cleanly and time permits
+- P1: Must ship for v2.0 milestone
+- P2: Should have; schedule in later phases of the same milestone
 - P3: Future milestone
 
 ---
 
 ## Implementation Behavior Notes by Feature
 
-### KB Metric Extraction — Expected Behavior
+### Session Attendance Status — Expected Behavior
 
-The standard pattern for RAG-based metric extraction from organizational documents:
+Industry standard from Salesforce Nonprofit Cloud PMM and PlanStreet (human services):
 
-1. **Prompt structure matters:** The extraction prompt must be specific. "What is the current number of active clients?" outperforms "summarize client data." Specificity reduces hallucination.
-2. **JSON response format:** Use `response_format: { type: "json_object" }` or OpenAI function calling to get structured output. Free-text responses require regex parsing which is brittle.
-3. **NOT_FOUND sentinel:** Instruct the model to return `"value": null, "source": null` when a metric is not found in the documents. Never return a fabricated number. The prompt: "If you cannot find this metric explicitly stated in the documents, return null — do not estimate."
-4. **Source attribution:** Request the document name or passage as part of the response. This allows showing "from: Q4 Program Report.pdf" under the stat card, which builds trust.
-5. **Staleness model:** KB extraction should be explicitly user-triggered (Regenerate button) plus auto-triggered when new files are added to the KB (optional v1.x). Do not run on every dashboard load — that would cost $0.01-0.10 per page view.
-6. **Storage:** Cache extracted values in a new Convex table `kbInsightsCache` with fields: `{ metricKey, value, sourceDocument, extractedAt }` or simpler as `appSettings` keys like `kb_metric_active_clients`. The appSettings approach is lower friction since the table already exists.
+- **Default statuses needed:** `attended`, `missed`, `excused`, `cancelled`
+- `attended` = client was present; default for all new sessions
+- `missed` = client did not show, no advance notice
+- `excused` = client notified in advance, absence accepted
+- `cancelled` = session itself was cancelled by staff (not client no-show)
+- **Reporting implication:** Completion rate = sessions `attended` / sessions (all statuses except `cancelled`). Do not penalize clients for staff-cancelled sessions.
+- **Existing records:** All sessions created before this migration have no `attendanceStatus`. Treat these as `"attended"` implicitly (they were logged as events that occurred). Do NOT backfill to avoid data quality issues.
 
-### AI Summary Panel — Expected Behavior
+### New vs. Returning Client — Expected Behavior
 
-1. **Summary scope:** Should synthesize across ALL KB documents, not just the most recent one. Vector store file_search handles this.
-2. **Output format:** 3-5 bullet points, each 1-2 sentences. Not a paragraph — bullets are scannable for a busy Executive Director.
-3. **Tone:** Factual, not promotional. "Q3 report shows 87 families served" not "DEC is making great strides."
-4. **Prompt constraint:** "Summarize only what is explicitly stated in the uploaded documents. Do not add interpretation or context not present in the source material."
-5. **Regenerate UX:** Button shows spinner during generation (typically 5-15 seconds for file_search + response). Button is disabled during generation to prevent double-submission. Same pattern as AI Director's send button.
-6. **Timestamp:** "Generated [X ago] — Regenerate" provides the right mental model. Kareem knows the summary reflects KB contents as of the last regeneration.
+Nonprofit funders use "unduplicated participant count" as a standard grant metric:
 
-### Donation/Income Chart — Expected Behavior
+- **New client:** `clients.createdAt` (or `firstEnrolledAt`) falls within the reporting period (e.g., this fiscal year)
+- **Returning client:** Client's `firstEnrolledAt` predates the reporting period, but has at least one active enrollment during it
+- **Implementation:** The simplest approach is `clients.createdAt` as `firstEnrolledAt`. When a client is first created (during migration or staff entry), `createdAt` serves as first-seen date. For historical data, migration date becomes their `createdAt`. This is acceptable — the organization did not have accurate creation dates in the spreadsheet anyway.
+- **Analytics query:** Count clients where `createdAt >= periodStart` (new) vs. clients where `createdAt < periodStart AND has enrollment in period` (returning)
 
-The existing `DonationPerformance.tsx` component was built for a PayPal integration that never happened. QB is the right data source, but the data model differs from the original `DonationsData` interface:
+### Data Migration Strategy — Expected Behavior
 
-1. **Current-month approach (P1):** `getProfitAndLoss` already returns `revenueByCategory` — a Record<string, number> of income line items. Wire this directly into the chart as a pie/bar breakdown. The `DonationPerformance` component can be refactored to consume `getProfitAndLoss` instead of `getDonations`.
-2. **6-month rolling approach (P2):** Requires a new QB action `fetchMonthlyIncomeTrend` that loops over 6 months and fetches a P&L for each. Cache as `income_trend` reportType with data: `[{ month: "2025-09", income: 45000, byCategory: {...} }, ...]`.
-3. **Chart type recommendation:** Line chart (existing in DonationPerformance.tsx) for total income trend. Stacked bar chart for income-by-category breakdown. Both can live in the same component — show whichever data is available.
-4. **Label mapping:** QB account names like "Government Grants Income" or "Program Service Revenue" are not user-friendly. A mapping layer (constants object or admin-configurable) should translate QB category names to display labels. Example: `{ "Government Grants Income": "Grants", "Individual Contributions": "Donations" }`.
-5. **Empty state:** If QB is connected but has no income categories in the P&L (new org, no transactions yet), show "No income recorded in QuickBooks for this period" rather than a broken chart.
+Based on nonprofit data migration best practices (CaseWorthy, NeonOne, DataLadder):
+
+1. **Deduplication approach:** Use firstName + lastName as the match key (same as existing `importLegalBatch` pattern). Flag conflicts for manual admin review — never silently merge.
+2. **Migration is append-only:** Create `enrollments` records for existing clients. Do not delete, modify, or move any existing client records, intake forms, sessions, or goals.
+3. **Validation report:** After running, output counts: clients processed, enrollment records created, clients skipped (no programId), conflicts flagged. Admin reviews before confirming.
+4. **Rollback strategy:** Since migration only inserts enrollment records (no deletes), rolling back means deleting all enrollment records created by the migration run. Simple and safe.
+5. **Test first:** Run migration against a small batch (10 records) and inspect results before full run. Pattern established by existing CLI scripts.
+6. **Historical session count:** `legalIntakeForms.numberOfVisits` and `coparentIntakeForms.sessionsCompleted` contain historical session counts as strings. Do NOT import these as session records — they lack dates, types, and staff context. Store them as a `migrationNote` on the enrollment record for reference.
+
+### Data Export — Expected Behavior
+
+Standard for nonprofit backup/audit compliance:
+
+- **Format:** CSV, not JSON or Excel. CSV opens in any tool without software dependencies. Two files: `clients.csv` and `sessions.csv` (or a single wide-format file).
+- **Client export fields:** firstName, lastName, programs (pipe-delimited if multiple), enrollmentDate, status, gender, ethnicity, ageGroup, zipCode, sessionCount, createdAt
+- **Session export fields:** clientName, programName, sessionDate, attendanceStatus, sessionType, notes, createdAt
+- **Access:** Admin-only. The export button lives in the Admin console (existing 9-tab system, add under a new tab or existing Data section).
+- **Implementation:** Convex action that returns JSON → frontend converts to CSV string → `Blob` + `URL.createObjectURL` → `<a download>` click. No server-side file generation. No storage needed — generated on demand.
+- **No PII encryption required:** DEC is a social services nonprofit, not HIPAA-covered entity. Basic access control (admin role) is sufficient. If HIPAA coverage is needed in future, that is a v3 feature.
+- **Size concern:** At current scale (~200-500 clients), CSV generation takes <1 second in-browser. Convex query payload is well under limits.
+
+### Analytics Rewrite — Expected Behavior
+
+The Demographics tab currently calls `getAllDemographics` which queries `programDataCache`. Post-migration, that table is deprecated. The rewrite:
+
+1. **Gender distribution:** Query `clients.gender` (new field). Group and count.
+2. **Ethnicity distribution:** Query `clients.ethnicity` (existing field). Group and count.
+3. **Age distribution:** Query `clients.ageGroup` (existing field). Group and count.
+4. **Referral source:** Query `enrollments.referralSource` (new field on enrollment) OR `legalIntakeForms.referralSource` + `coparentIntakeForms.referralSource`. The enrollment approach is cleaner for the new model.
+5. **Outcome distribution:** Query `enrollments.status` (active / completed / withdrawn). This replaces the ambiguous `programOutcome` from the old spreadsheet.
+6. **Zip code distribution:** Query `clients.zipCode` (existing field). Group and count.
+7. **Totals:** Total clients from `clients` table. Active = clients with at least one `enrollment.status = "active"`. Completed = clients with at least one `enrollment.status = "completed"`.
+
+The Client Activity tab (`getSessionTrends`, `getGoalStats`, `getIntakeVolume`) already queries Convex directly and requires no changes for the v2.0 milestone.
 
 ---
 
 ## Sources
 
-- Existing codebase analysis: `convex/aiDirectorActions.ts`, `convex/quickbooks.ts`, `src/components/dashboard/DonationPerformance.tsx`, `src/components/dashboard/ExecutiveSnapshot.tsx` — HIGH confidence (direct code inspection)
-- OpenAI Assistants API file_search behavior: HIGH confidence (established in v1.0 via `aiDirectorActions.ts` implementation which uses the same pattern)
-- QB P&L income parsing: HIGH confidence (`parsePnlTotals` and `extractCategories` in `quickbooks.ts` already handle income row extraction correctly — `revenueByCategory` is populated)
-- Dashboard section framework: HIGH confidence (existing `SECTION_COMPONENTS` map and `DashboardSection` wrapper show the integration pattern clearly)
+- Existing codebase analysis: `convex/schema.ts`, `convex/clients.ts`, `convex/sessions.ts`, `convex/analytics.ts`, `convex/programs.ts` — HIGH confidence (direct code inspection)
+- Salesforce Nonprofit Cloud Program Management data model (Programs → Enrollments → Sessions pattern): [Nonprofit Cloud Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.nonprofit_cloud.meta/nonprofit_cloud/npc_pm_data_model.htm) — MEDIUM confidence (Salesforce patterns are industry standard but their object model is more complex than DEC needs)
+- PlanStreet human services attendance tracking: [Attendance Tracking for Human Services](https://www.planstreet.com/attendance-tracking-human-services-guide) — MEDIUM confidence (attendance status options validated: attended, missed, excused, cancelled are industry standard)
+- Salesforce Nonprofit attendance status fields: [Trailhead - Manage Schedule Participants and Attendance](https://trailhead.salesforce.com/content/learn/modules/attendance-and-benefit-tracking-in-nonprofit-cloud-for-programs/manage-schedule-participants-and-attendance) — MEDIUM confidence (Present/Excused Absence/Unexcused Absence confirmed; mapped to DEC's attended/excused/missed)
+- Nonprofit data migration best practices: [CaseWorthy — Data Migration Plan](https://caseworthy.com/articles/how-to-create-a-data-migration-plan-for-nonprofits/), [NeonOne — Donor Data Migration](https://neonone.com/resources/blog/donor-data-migration/) — MEDIUM confidence (deduplication strategy and validation report pattern validated across sources)
+- Nonprofit impact metrics: [10 Metrics to Track Nonprofit Program Impact](https://blog.helpyousponsor.com/metrics-track-nonprofit-program-impact/) — MEDIUM confidence (new vs. returning, retention/dropout rate, completion rate confirmed as standard funder metrics)
+- Data deduplication for imports: [DataLadder deduplication guide](https://dataladder.com/the-duplicate-data-dread-a-guide-to-data-deduplication/) — MEDIUM confidence (name+email composite key for dedup validated; DEC uses name-only which is acceptable at small scale)
 
 ---
 
-*Feature research for: DEC DASH 2.0 — v1.2 Intelligence Milestone*
+*Feature research for: DEC DASH 2.0 — v2.0 Data Foundation Milestone*
 *Researched: 2026-03-01*

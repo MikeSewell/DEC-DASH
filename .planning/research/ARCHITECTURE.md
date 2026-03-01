@@ -1,44 +1,61 @@
 # Architecture Research
 
-**Domain:** KB Intelligence + Donation Charts integration into existing nonprofit dashboard
+**Domain:** Nonprofit CRM — Client/Enrollment/Session data model refactor with Google OAuth unification and analytics rewrite
 **Researched:** 2026-03-01
-**Confidence:** HIGH — based on direct codebase inspection of all relevant files
+**Confidence:** HIGH (based on direct codebase inspection of all relevant files; no external library uncertainty)
 
 ---
 
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FRONTEND (Next.js 15 App Router)                │
-├─────────────────────────────────────────────────────────────────────────┤
-│  dashboard/page.tsx                                                      │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────────────────┐ │
-│  │ ExecutiveSnapshot│  │ DonationPerform. │  │  KBInsights (NEW)      │ │
-│  │ useAccounts()    │  │  useDonations()  │  │  useKBSummary() (NEW)  │ │
-│  │ useProfitAndLoss │  │  [currently null]│  │  useKBKPIs() (NEW)     │ │
-│  └──────────────────┘  └──────────────────┘  └────────────────────────┘ │
-│                                                                          │
-│  hooks/useQuickBooks.ts        hooks/useKnowledgeBase.ts (NEW)          │
-├─────────────────────────────────────────────────────────────────────────┤
-│                         CONVEX BACKEND                                   │
-├──────────────────────────┬──────────────────────┬───────────────────────┤
-│  QUERIES (quickbooks.ts) │  ACTIONS (node)       │  QUERIES              │
-│  getProfitAndLoss        │  fetchIncomeTrend(NEW)│  (kbInsights.ts, NEW) │
-│  getTrends               │  generateKBSummary    │  getKBSummary         │
-│  getDonations [null now] │   (NEW)               │  getKBKPIs            │
-│  getIncomeTrend (NEW)    │  extractKBKPIs (NEW)  │                       │
-├──────────────────────────┴──────────────────────┴───────────────────────┤
-│                         DATA LAYER (Convex Tables)                       │
-│  quickbooksCache (add reportType: "income_trend")                        │
-│  kbSummaryCache (NEW table)                                              │
-│  aiDirectorConfig (assistantId + vectorStoreId — reuse existing)         │
-│  knowledgeBase (openaiFileId — reuse existing)                           │
-├─────────────────────────────────────────────────────────────────────────┤
-│                         EXTERNAL SERVICES                                │
-│  QuickBooks API               OpenAI Assistants API / file_search        │
-│  (P&L with summarize_by=Month) (vector store: "DEC Knowledge Base")      │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                  Frontend (Next.js 15 App Router)                    │
+├──────────────────┬──────────────────┬───────────────────────────────┤
+│  /clients page   │  /analytics page │  Dashboard KPI cards          │
+│  (unified list,  │  DemographicsTab │  (active clients, sessions,   │
+│  all programs,   │  ClientActivityTab│  intake trend)               │
+│  no role-tab     │  OperationsTab   │                               │
+│  split in UI)    │                  │                               │
+└────────┬─────────┴────────┬─────────┴──────────────┬───────────────┘
+         │                  │                          │
+         │ useQuery          │ useQuery                │ useQuery
+         ▼                  ▼                          ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Convex Backend                                │
+├──────────────────┬──────────────────┬───────────────────────────────┤
+│  clients.ts      │  enrollments.ts  │  analytics.ts                 │
+│  (MODIFIED:      │  (NEW: clientId  │  (MODIFIED: getAllDemographics │
+│  remove programId│  + programId +   │   reads clients table;        │
+│  filter; role    │  status + dates) │   getActiveClientCount reads  │
+│  filter via      │                  │   enrollments; getSessionTrends│
+│  enrollments)    │                  │   uses by_sessionDate index)  │
+├──────────────────┼──────────────────┼───────────────────────────────┤
+│  sessions.ts     │  programs.ts     │  googleSheetsSync.ts          │
+│  (MODIFIED:      │  (unchanged)     │  (MODIFIED: remove program    │
+│  add enrollmentId│                  │   sync; keep grant sync only) │
+│  + by_sessionDate│                  │                               │
+│  index)          │                  │                               │
+└──────────────────┴──────────────────┴───────────────────────────────┘
+         │                  │                          │
+         ▼                  ▼                          ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Convex Schema Tables                             │
+├──────────────────────────────────────────────────────────────────────┤
+│  clients         │  enrollments (NEW)│  sessions (MODIFIED)         │
+│  (MODIFIED:      │  clientId         │  enrollmentId added (opt)    │
+│  drop programId  │  programId        │  attendanceStatus added      │
+│  enrollmentDate  │  status           │  by_sessionDate index added  │
+│  status;         │  enrollmentDate   │  by_enrollmentId index added │
+│  add gender,     │  exitDate         │  by_programId index added    │
+│  referralSource, │  completionStatus │                              │
+│  dateOfBirth,    │  notes            │                              │
+│  phone, email)   │  createdAt        │                              │
+├──────────────────┴───────────────────┴──────────────────────────────┤
+│  programDataCache — REMOVED after migration and analytics rewrite    │
+│  googleSheetsConfig — KEPT for grantsCache; program_* purpose       │
+│    records removed but table stays (grant Sheets still configured)  │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -47,509 +64,509 @@
 
 | Component | Responsibility | Status |
 |-----------|----------------|--------|
-| `quickbooks.getIncomeTrend` | Parse `income_trend` cache into `{ monthlyTotals, fetchedAt }` | NEW query in `quickbooks.ts` |
-| `quickbooksActions.fetchIncomeTrend` | Fetch QB P&L with `summarize_column_by=Month`, parse and cache | NEW internalAction in `quickbooksActions.ts` |
-| `kbInsightsActions.generateKBSummary` | Call OpenAI via existing `assistantId` + `vectorStoreId`, save summary | NEW action in new `kbInsightsActions.ts` |
-| `kbInsightsActions.extractKBKPIs` | Prompt OpenAI for structured JSON metrics from KB, save result | NEW action in new `kbInsightsActions.ts` |
-| `kbInsights.getKBSummary` | Query `kbSummaryCache` (cacheType: "summary"), return cached text + timestamp | NEW query in new `kbInsights.ts` |
-| `kbInsights.getKBKPIs` | Query `kbSummaryCache` (cacheType: "kpis"), return cached KPI JSON | NEW query in new `kbInsights.ts` |
-| `kbInsights.saveSummary` | Upsert (delete + insert) summary entry in `kbSummaryCache` | NEW mutation in new `kbInsights.ts` |
-| `kbInsights.saveKPIs` | Upsert KPI JSON entry in `kbSummaryCache` | NEW mutation in new `kbInsights.ts` |
-| `DonationPerformance.tsx` | Chart monthly income from QB — switch data source to `useIncomeTrend()` | MODIFY existing component |
-| `KBInsights.tsx` | New dashboard section: AI summary + KPI cards + "Regenerate" button | NEW component |
-| `hooks/useKnowledgeBase.ts` | `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` | NEW hook file |
-| `hooks/useQuickBooks.ts` | Add `useIncomeTrend()` | MODIFY existing file |
-| `convex/schema.ts` | Add `kbSummaryCache` table | MODIFY existing file |
-| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` + wire into `syncAllData` | MODIFY existing file |
-| `src/lib/constants.ts` | Add "kb-insights" to `DEFAULT_DASHBOARD_SECTIONS` | MODIFY existing file |
-| `src/types/index.ts` | Add "kb-insights" to `DashboardSectionId` union | MODIFY existing file |
-| `src/app/(dashboard)/dashboard/page.tsx` | Register `KBInsights` in `SECTION_COMPONENTS` | MODIFY existing file |
+| `clients` table | Permanent client identity (name, demographics) | MODIFIED: drop `programId`, `enrollmentDate`, `status`; add `gender`, `referralSource` |
+| `enrollments` table | Program participation episodes | NEW |
+| `sessions` table | Individual visit records | MODIFIED: add `enrollmentId`, `attendanceStatus`, new indexes |
+| `programDataCache` table | Sheets-sourced demographics cache | REMOVED after analytics rewrite |
+| `googleSheetsConfig` table | Sheets spreadsheet config | KEPT (grant Sheets only) |
+| `analytics.ts` | Aggregate analytics queries | MODIFIED: `getAllDemographics` reads clients/enrollments directly |
+| `clients.ts` | Client CRUD and list queries | MODIFIED: role filter via enrollments, not programId |
+| `enrollments.ts` | Enrollment CRUD | NEW FILE |
+| `sessions.ts` | Session CRUD | NEW FILE (formalize from ad-hoc patterns) |
+| `googleSheetsActions.ts` | Sheets sync | MODIFIED: remove `syncProgramData` action |
+| `googleSheetsSync.ts` | Cron sync orchestrator | MODIFIED: remove program sync calls |
+| `googleCalendarActions.ts` | Calendar sync via service account | UNCHANGED |
 
 ---
 
-## Recommended Project Structure (New Files Only)
+## New Schema Design
+
+### Table: `enrollments` (NEW)
+
+```typescript
+enrollments: defineTable({
+  clientId: v.id("clients"),
+  programId: v.id("programs"),
+  status: v.union(
+    v.literal("active"),
+    v.literal("completed"),
+    v.literal("withdrawn")
+  ),
+  enrollmentDate: v.optional(v.number()),   // epoch ms
+  exitDate: v.optional(v.number()),          // epoch ms, null while active
+  completionStatus: v.optional(v.string()),  // "graduated", "transferred", etc.
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+  createdBy: v.optional(v.id("users")),
+})
+  .index("by_clientId", ["clientId"])
+  .index("by_programId", ["programId"])
+  .index("by_status", ["status"])
+```
+
+**Rationale:** Separates program participation from client identity. A client can enroll in multiple programs over time. The `status` on the enrollment — not on the client — determines whether a client is currently active in a program. A client record is permanent; enrollments track the history.
+
+### Table: `clients` (MODIFIED)
+
+```typescript
+// BEFORE (current)
+clients: defineTable({
+  firstName, lastName,
+  programId: v.optional(v.id("programs")),   // REMOVE — moves to enrollments
+  enrollmentDate: v.optional(v.number()),     // REMOVE — moves to enrollments
+  status: v.union(...),                       // REMOVE — moves to enrollments
+  zipCode, ageGroup, ethnicity, notes, createdAt,
+})
+
+// AFTER
+clients: defineTable({
+  firstName: v.string(),
+  lastName: v.string(),
+  // Demographics stay on clients — they describe the person, not the program episode
+  zipCode: v.optional(v.string()),
+  ageGroup: v.optional(v.string()),
+  ethnicity: v.optional(v.string()),
+  gender: v.optional(v.string()),            // ADD — was missing; only in programDataCache
+  referralSource: v.optional(v.string()),    // ADD — was only in intake forms and cache
+  dateOfBirth: v.optional(v.string()),       // ADD — was only in intake forms
+  phone: v.optional(v.string()),
+  email: v.optional(v.string()),
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_lastName", ["lastName"])        // ADD — useful for name search
+```
+
+**Fields removed from `clients`:** `programId`, `enrollmentDate`, `status` — move to `enrollments`.
+
+**Fields added to `clients`:** `gender`, `referralSource`, `dateOfBirth`, `phone`, `email` — currently only in `programDataCache` or intake forms; needed for analytics queries after Sheets removal.
+
+### Table: `sessions` (MODIFIED)
+
+```typescript
+// BEFORE (current)
+sessions: defineTable({
+  clientId: v.id("clients"),
+  programId: v.optional(v.id("programs")),
+  sessionDate: v.number(),
+  sessionType: v.optional(v.string()),
+  notes: v.optional(v.string()),
+  createdBy: v.optional(v.id("users")),
+}).index("by_clientId", ["clientId"])
+
+// AFTER
+sessions: defineTable({
+  clientId: v.id("clients"),
+  enrollmentId: v.optional(v.id("enrollments")),  // ADD — links session to program episode
+  programId: v.optional(v.id("programs")),         // KEEP — denormalized for fast reporting
+  sessionDate: v.number(),
+  attendanceStatus: v.optional(v.union(            // ADD — present/absent/cancelled
+    v.literal("present"),
+    v.literal("absent"),
+    v.literal("cancelled")
+  )),
+  sessionType: v.optional(v.string()),
+  notes: v.optional(v.string()),
+  createdBy: v.optional(v.id("users")),
+}).index("by_clientId", ["clientId"])
+  .index("by_enrollmentId", ["enrollmentId"])   // ADD
+  .index("by_sessionDate", ["sessionDate"])     // ADD — fixes full-table scan in analytics
+  .index("by_programId", ["programId"])         // ADD — program-level session queries
+```
+
+**Why keep `programId` on sessions:** Allows fast program-level session count queries without joining through enrollments. Denormalized but pragmatic for reporting.
+
+**Why add `by_sessionDate` index:** `getSessionVolume` and `getSessionTrends` currently do full table scans (confirmed in `analytics.ts`). The index enables `q.gte("sessionDate", thirtyDaysAgo)` range queries without loading all sessions.
+
+---
+
+## Recommended Project Structure
 
 ```
 convex/
-├── kbInsightsActions.ts     # "use node" — OpenAI calls for KB extraction
-├── kbInsights.ts            # queries + mutations for kbSummaryCache table
+├── schema.ts                   # MODIFIED — add enrollments, modify clients/sessions
+├── clients.ts                  # MODIFIED — remove programId queries, role filter via enrollments
+├── enrollments.ts              # NEW — CRUD for enrollment records
+├── sessions.ts                 # NEW — formalize session CRUD with attendanceStatus
+├── analytics.ts                # MODIFIED — getAllDemographics reads clients table directly
+├── googleSheetsActions.ts      # MODIFIED — remove syncProgramData
+├── googleSheetsSync.ts         # MODIFIED — remove program sync calls
+├── googleSheetsInternal.ts     # MODIFIED — remove upsertProgramParticipant
+├── crons.ts                    # UNCHANGED — sheets-sync cron stays for grant sync
+
+scripts/
+├── migrateV2.ts               # NEW — one-time: backfill enrollments from existing clients
+├── importFromSpreadsheet.ts   # NEW — import cleaned spreadsheet → new data model
 
 src/
-├── components/dashboard/
-│   └── KBInsights.tsx       # New dashboard section component
-├── hooks/
-│   └── useKnowledgeBase.ts  # Hooks: useKBSummary, useKBKPIs, useRefreshKBSummary
-```
-
-Modified files:
-
-```
-convex/schema.ts             # Add kbSummaryCache table
-convex/quickbooks.ts         # Add getIncomeTrend query
-convex/quickbooksActions.ts  # Add fetchIncomeTrend action + wire to syncAllData
-src/hooks/useQuickBooks.ts   # Add useIncomeTrend hook
-src/components/dashboard/DonationPerformance.tsx  # Switch data source
-src/lib/constants.ts         # Add "kb-insights" to DEFAULT_DASHBOARD_SECTIONS
-src/types/index.ts           # Add "kb-insights" to DashboardSectionId union
-src/app/(dashboard)/dashboard/page.tsx  # Register KBInsights in SECTION_COMPONENTS
+├── app/(dashboard)/clients/page.tsx          # MODIFIED — unified list, no role-tab split
+├── app/(dashboard)/admin/page.tsx            # MODIFIED — remove program Sheets config section
+├── components/analytics/DemographicsTab.tsx  # MODIFIED — remove sheetsConfig gate
+├── hooks/useAnalytics.ts                     # MINOR — hook signatures unchanged
 ```
 
 ---
 
 ## Architectural Patterns
 
-### Pattern 1: Cache-then-Query (already established — use for income trend + KB)
+### Pattern 1: Enrollment-Centric Status
 
-**What:** External service data (QB, OpenAI) is fetched in Convex actions, stored in Convex tables, then served via lightweight queries. React components query Convex tables — never external APIs directly.
+**What:** Client status ("active", "completed", "withdrawn") lives on the `enrollments` table, not `clients`. A client record is permanent. To determine if a client is currently active, check whether any enrollment has `status: "active"`.
 
-**When to use:** All new external data. KB summaries and income trend data follow this same flow as QB and Google Sheets already do.
+**When to use:** Any time the UI needs to filter by active/inactive or count active participants. Always read enrollment status, never a status field on the client.
 
-**Trade-offs:** Slight staleness (seconds on cron refresh, instant on manual trigger), but avoids latency in UI renders and prevents rate-limit spikes on every page load.
+**Trade-offs:** One more join in list queries, but correct semantics. A client who completed Legal and later enrolled in Co-Parent doesn't lose their Legal program history. Analytics "active client count" reflects actual enrollment state.
 
-**Application to v1.2:**
+**Example:**
 ```typescript
-// convex/kbInsightsActions.ts ("use node")
-export const generateKBSummary = action({
+// Get active client count — join through enrollments
+export const getActiveClientCount = query({
+  args: {},
   handler: async (ctx) => {
-    const config = await ctx.runQuery(api.aiDirector.getConfig);
-    if (!config?.assistantId || !config?.vectorStoreId) {
-      throw new Error("AI Director not configured");
-    }
-    const openai = new OpenAI({ apiKey: await getOpenAIApiKey(ctx) });
-    const thread = await openai.beta.threads.create({
-      messages: [{ role: "user", content: KB_SUMMARY_PROMPT }],
-    });
-    const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
-      assistant_id: config.assistantId,
-    });
-    // extract text, store via mutation
-    await ctx.runMutation(api.kbInsights.saveSummary, {
-      content: summaryText,
-      generatedAt: Date.now(),
-    });
-  },
-});
-
-// convex/kbInsights.ts
-export const getKBSummary = query({
-  handler: async (ctx) => {
-    return await ctx.db.query("kbSummaryCache")
-      .withIndex("by_type", q => q.eq("cacheType", "summary"))
-      .first();
+    const activeEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+    // Distinct client IDs with at least one active enrollment
+    const activeClientIds = new Set(activeEnrollments.map((e) => e.clientId));
+    return { count: activeClientIds.size };
   },
 });
 ```
 
-### Pattern 2: Three-State Loading (already established — maintain exactly)
+### Pattern 2: Demographics on Client Record
 
-**What:** `undefined` = loading, `null` = not configured / no data, `data` = ready. All dashboard components follow this. It is critical that new components match this exactly to avoid flash-of-wrong-state.
+**What:** All demographic fields (`gender`, `ethnicity`, `ageGroup`, `zipCode`, `referralSource`) live on the `clients` table — not on `enrollments` or `programDataCache`. Demographics describe the person, not the program episode.
 
-**When to use:** Every new `useQuery` call on dashboard components.
+**When to use:** `getAllDemographics` in `analytics.ts` queries the `clients` table directly. No Sheets sync, no cache join needed for demographic breakdowns.
 
-**Application to v1.2:**
+**Trade-offs:** Requires migration to populate `gender` and `referralSource` on existing client records (currently only in intake forms or programDataCache). One-time migration cost, permanently simpler queries afterward.
+
+**Example:**
 ```typescript
-// KBInsights.tsx
-export default function KBInsights() {
-  const summary = useKBSummary();   // returns undefined | null | { content, generatedAt }
-  const kpis = useKBKPIs();         // returns undefined | null | { content, generatedAt }
+// getAllDemographics — reads clients table directly, no Sheets dependency
+export const getAllDemographics = query({
+  args: {},
+  handler: async (ctx) => {
+    const clients = await ctx.db.query("clients").collect();
+    const total = clients.length;
+    const ethnicityDistribution = toSortedDistribution(clients, (c) => c.ethnicity);
+    const genderDistribution = toSortedDistribution(clients, (c) => c.gender);
+    const ageDistribution = toSortedDistribution(clients, (c) => c.ageGroup);
+    const referralSource = toSortedDistribution(clients, (c) => c.referralSource).slice(0, 10);
+    return { total, ethnicityDistribution, genderDistribution, ageDistribution, referralSource };
+  },
+});
+```
 
-  // Loading: any query still undefined
-  if (summary === undefined || kpis === undefined) {
-    return <KBInsightsSkeleton />;
-  }
+### Pattern 3: Role-Based Filtering via Enrollments
 
-  // Empty state: no KB files uploaded or no summary generated yet
-  if (summary === null) {
-    return (
-      <EmptyState
-        message="No KB summary generated yet."
-        action={{ label: "Go to Admin > Knowledge Base", href: "/admin" }}
-      />
-    );
-  }
+**What:** The existing role filtering (lawyers see legal clients only, psychologists see co-parent clients only) moves from a `programId` index query to an enrollments-based join in `clients.listWithPrograms`.
 
-  // Render summary + KPI cards
+**When to use:** `clients.listWithPrograms` powers the `/clients` page. The unified list shows all programs together but still role-filters by enrollment program type.
+
+**Trade-offs:** Slightly more join logic than the old `by_programId` direct index query. Worth it for correctness — a client enrolled in both programs appears for both roles.
+
+**Example:**
+```typescript
+// In clients.listWithPrograms — role filtering via enrollments
+if (user.role === "lawyer") {
+  const legalProgramIds = new Set(
+    programs.filter((p) => p.type === "legal").map((p) => p._id)
+  );
+  const legalEnrollments = await ctx.db
+    .query("enrollments")
+    .withIndex("by_programId")
+    .collect();
+  const filtered = legalEnrollments.filter((e) => legalProgramIds.has(e.programId));
+  const allowedClientIds = new Set(filtered.map((e) => e.clientId));
+  clients = clients.filter((c) => allowedClientIds.has(c._id));
 }
 ```
 
-### Pattern 3: Trigger-on-Demand Action (already established by triggerSync)
+### Pattern 4: Google OAuth — Service Account Already Unified
 
-**What:** Long-running operations (OpenAI calls, ~5-30 seconds) are triggered via `useAction`, not `useQuery`. The result is persisted to a Convex table, and the UI re-renders reactively when that table updates.
+**What:** Both Google Sheets (grants) and Google Calendar use the same service account credentials: `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` environment variables. There is no user OAuth token for Google — both integrations use a service account with read-only access to explicitly-shared resources.
 
-**When to use:** KB summary regeneration. User clicks "Regenerate" in `KBInsights.tsx` → `useAction(api.kbInsightsActions.generateKBSummary)` → action writes to `kbSummaryCache` → `useQuery(api.kbInsights.getKBSummary)` reactively re-renders.
+**Current state:** Both `googleCalendarActions.ts` and `googleSheetsActions.ts` already read the same env vars directly. This is already unified at the env var level. No `googleOAuthToken` table, no callback routes, no user authorization flow exists.
 
-**Trade-offs:** User sees stale cached data until action completes. Show a spinner on the "Regenerate" button with local `useState` during the action call. Do not disable the entire section.
+**What "Unify Google OAuth" actually means in v2.0:** Remove the `googleSheetsConfig` records with `purpose: "program_legal"` and `purpose: "program_coparent"` (since those Sheets are no longer synced). Remove the admin UI sections that configure program Sheets. Grant Sheets config and Calendar config remain unchanged.
 
+**What does NOT need to change:** The env vars, the `googleCalendarConfig` table, the `googleSheetsConfig` table (kept for grant Sheets), or either actions file's credential loading pattern.
+
+### Pattern 5: Batched Migration via CLI Script
+
+**What:** One-time data migration runs as a Node.js script using `ConvexHttpClient`, not as a single Convex mutation. Operations batch in groups of 50 across separate mutation calls.
+
+**Why:** Convex mutations have a write limit per transaction (~8,000 writes). A single migration mutation touching hundreds of clients, creating enrollments, and patching demographics will hit this limit and fail partway through.
+
+**Example pattern (from `scripts/seedClients.ts`):**
 ```typescript
-// hooks/useKnowledgeBase.ts
-export function useRefreshKBSummary() {
-  return useAction(api.kbInsightsActions.generateKBSummary);
+// scripts/migrateV2.ts — batch enrollment creation
+const BATCH_SIZE = 50;
+for (let i = 0; i < clientsWithProgram.length; i += BATCH_SIZE) {
+  const batch = clientsWithProgram.slice(i, i + BATCH_SIZE);
+  const result = await client.mutation(api.enrollments.importBatch, {
+    enrollments: batch.map((c) => ({
+      clientId: c._id,
+      programId: c.programId!,
+      status: c.status,
+      enrollmentDate: c.enrollmentDate,
+    })),
+  });
+  console.log(`Batch ${i/BATCH_SIZE + 1}: ${result.created} created`);
 }
-
-// KBInsights.tsx — regenerate handler
-const refreshSummary = useRefreshKBSummary();
-const extractKPIs = useExtractKBKPIs();
-const [isGenerating, setIsGenerating] = useState(false);
-
-const handleRegenerate = async () => {
-  setIsGenerating(true);
-  try {
-    // Run both in parallel
-    await Promise.all([refreshSummary({}), extractKPIs({})]);
-  } finally {
-    setIsGenerating(false);
-  }
-};
 ```
-
-### Pattern 4: Singleton Cache with cacheType Index
-
-**What:** `kbSummaryCache` stores two cache types (summary text, KPI JSON) in a single table, discriminated by a `cacheType` field with an index. This mirrors the singleton pattern used by `aiDirectorConfig`, `alertConfig`, and `quickbooksConfig` (all queried with `.first()`).
-
-**When to use:** Small number of cache entries that are replaced wholesale on regeneration. There is one org-wide summary and one org-wide KPI set.
-
-**Trade-offs:** Simple to query. No complex key management. The upsert requires a delete-then-insert pattern since Convex does not have an upsert primitive.
-
-```typescript
-// convex/schema.ts addition:
-kbSummaryCache: defineTable({
-  cacheType: v.union(v.literal("summary"), v.literal("kpis")),
-  content: v.string(),          // summary text OR JSON-stringified KPI object
-  generatedAt: v.number(),
-  fileCount: v.optional(v.number()),  // how many KB files were in scope
-}).index("by_type", ["cacheType"]),
-
-// convex/kbInsights.ts — upsert mutation pattern:
-export const saveSummary = mutation({
-  args: { content: v.string(), generatedAt: v.number(), fileCount: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db.query("kbSummaryCache")
-      .withIndex("by_type", q => q.eq("cacheType", "summary"))
-      .first();
-    if (existing) await ctx.db.delete(existing._id);
-    await ctx.db.insert("kbSummaryCache", { cacheType: "summary", ...args });
-  },
-});
-```
-
-### Pattern 5: Reuse Existing OpenAI Assistant for New Query Types
-
-**What:** `aiDirectorConfig` already stores `assistantId` and `vectorStoreId`. KB extraction actions call `ctx.runQuery(api.aiDirector.getConfig)` to get these — the exact same pattern used by `aiDirectorActions.sendMessage`.
-
-**Why this is correct:** The existing assistant already has `file_search` enabled against the "DEC Knowledge Base" vector store. Creating a new assistant for KB extraction would waste OpenAI quota and add schema complexity with zero benefit.
-
-**Critical implementation detail:** Override the assistant's default behavior via a specific user message rather than relying on the system prompt. Each extraction thread is ephemeral and standalone.
 
 ---
 
 ## Data Flow
 
-### Flow 1: KB Summary Generation (On-Demand)
+### Current Flow (v1.3 — what exists now)
 
 ```
-User clicks "Regenerate Summary" button in KBInsights dashboard section
-    ↓
-KBInsights.tsx → useAction(api.kbInsightsActions.generateKBSummary)
-    ↓
-kbInsightsActions.generateKBSummary (Convex action, "use node")
-    ↓ ctx.runQuery(api.aiDirector.getConfig) → { assistantId, vectorStoreId }
-    ↓
-OpenAI Assistants API — creates new thread with KB_SUMMARY_PROMPT
-Runs against existing assistant → file_search retrieves relevant KB docs automatically
-OpenAI returns summary text (bullet points)
-    ↓ ctx.runMutation(api.kbInsights.saveSummary, { content, generatedAt })
-kbSummaryCache table (cacheType: "summary") — delete existing, insert new
-    ↓ Convex reactive query subscription fires automatically
-useQuery(api.kbInsights.getKBSummary) in KBInsights.tsx re-renders with new summary
+Google Sheets (program data)
+    ↓ (30-min cron: googleSheetsSync.runSync → syncProgramData)
+programDataCache table
+    ↓ (analytics.getAllDemographics)
+DemographicsTab.tsx — gated: sheetsConfig === null → "Connect Google Sheets"
+
+clients table (programId field)
+    ↓ (clients.listWithPrograms — programId → programs join)
+/clients page — role filtered by programId
 ```
 
-### Flow 2: KB KPI Extraction (On-Demand, same trigger)
+### New Flow (v2.0 — after migration)
 
 ```
-Same "Regenerate" button triggers both generateKBSummary AND extractKBKPIs via Promise.all
-    ↓
-kbInsightsActions.extractKBKPIs (Convex action, "use node")
-    ↓ Same assistantId + vectorStoreId
-    ↓ Prompt: "Extract structured metrics as JSON: { activeClients, ... }"
-OpenAI returns JSON string
-    ↓ Validate JSON parseable (catch parse errors, store raw if invalid)
-    ↓ ctx.runMutation(api.kbInsights.saveKPIs, { content: jsonStr, generatedAt })
-kbSummaryCache table (cacheType: "kpis") — delete existing, insert new
-    ↓ reactive re-render
-KBInsights.tsx parses JSON, renders individual KPI stat cards
+Cleaned spreadsheet (one-time import)
+    ↓ (scripts/importFromSpreadsheet.ts or scripts/migrateV2.ts)
+clients table (gender, referralSource, dateOfBirth populated)
++ enrollments table (clientId, programId, status, enrollmentDate)
++ sessions table (clientId, enrollmentId, sessionDate, attendanceStatus)
+
+clients table (demographics fields)
+    ↓ (analytics.getAllDemographics — no Sheets config check)
+DemographicsTab.tsx — always shows data, "No client data yet" empty state only
+
+enrollments table
+    ↓ (clients.listWithPrograms — role filter via enrollment.programId)
+/clients page — unified list, no program-tab split, role filtered via enrollments
 ```
 
-### Flow 3: Income Trend Chart (Automated via 15-min Cron)
+### Google OAuth Data Flow (confirmed unchanged)
 
 ```
-QB cron fires every 15 min → quickbooksActions.syncAllData (internal action)
-    ↓ Add: ctx.runAction(internal.quickbooksActions.fetchIncomeTrend, {})
-fetchIncomeTrend (new internalAction)
-    ↓ QB API: ProfitAndLoss?summarize_column_by=Month&start_date=YYYY-01-01&end_date=YYYY-12-31
-QB returns month-column P&L report (columns are month labels, rows are account groups)
-    ↓ Parse income rows across month columns → { "YYYY-MM": totalIncome } map
-    ↓ ctx.runMutation(internal.quickbooksInternal.cacheReport,
-        { reportType: "income_trend", data: JSON.stringify(monthlyMap) })
-quickbooksCache table (reportType: "income_trend")
-    ↓ reactive re-render
-DonationPerformance.tsx ← useIncomeTrend() ← api.quickbooks.getIncomeTrend
-    ↓ Renders line chart with real monthly QB income data
+GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY (env vars)
+    ↓ (read directly in both actions files — already unified)
+googleCalendarActions.ts → Google Calendar API → googleCalendarCache table
+googleSheetsActions.ts  → Google Sheets API   → grantsCache table
 ```
 
-### Flow 4: Dashboard Section Registration
+No token store, no user OAuth, no callback routes. Both already share the same service account.
 
-```
-1. constants.ts — add "kb-insights" to DEFAULT_DASHBOARD_SECTIONS array
-   (with title: "KB Insights", description: "AI-generated summary from knowledge base")
-2. types/index.ts — add "kb-insights" to DashboardSectionId union
-3. dashboard/page.tsx — add KBInsights component to SECTION_COMPONENTS map
-4. DashboardSection wraps KBInsights with existing move-up/move-down/hide controls (zero new code)
-```
+### Key Data Flows
+
+1. **Client creation (new flow):** `clients.create` inserts client identity → `enrollments.create` inserts enrollment with programId and status. Two separate mutations from the UI "Add Client" flow. The `/clients` page "Add Client" modal becomes a two-step form: client identity first, program enrollment second.
+
+2. **Session logging (new flow):** `sessions.create` takes `clientId` + `enrollmentId` (optional for legacy compatibility) + `sessionDate` + `attendanceStatus`. The `/clients/[id]` detail page queries sessions via `by_clientId` index.
+
+3. **Analytics demographics (rewritten flow):** `analytics.getAllDemographics` reads `clients` table directly — no Sheets config check, no `programDataCache` join. `analytics.getActiveClientCount` reads `enrollments` with `by_status` index filter. `analytics.getSessionTrends` uses `by_sessionDate` index range query instead of full table scan.
+
+4. **Data export (new):** A Convex query returns all clients + enrollments + sessions as structured JSON. Frontend downloads via `JSON.stringify` → `Blob` → `<a>` click. No external library.
 
 ---
 
-## Integration Points — New vs. Modified
+## Migration Path for Existing Data
 
-### New Convex Files
+### What Exists in the Database Now
 
-| File | Type | Purpose |
-|------|------|---------|
-| `convex/kbInsightsActions.ts` | Action file ("use node") | OpenAI calls for summary and KPI extraction |
-| `convex/kbInsights.ts` | Query/mutation file | CRUD for `kbSummaryCache` table |
+From direct schema inspection:
+- `clients` table: `firstName`, `lastName`, `programId` (optional), `enrollmentDate` (optional), `status` ("active"/"completed"/"withdrawn"), `zipCode`, `ageGroup`, `ethnicity`, `notes`, `createdAt`
+- `sessions` table: `clientId`, `programId` (optional), `sessionDate`, `sessionType`, `notes`, `createdBy` — already exists with data
+- `legalIntakeForms`: linked to `clientId` via `clientId` field; contains `ethnicity`, `zipCode`, `age`, `referralSource`
+- `coparentIntakeForms`: linked to `clientId`; contains `ethnicity`, `zipCode`, `age`, `referralSource`
+- `programDataCache`: Sheets-synced rows keyed by `sheetRowId` — contains `gender`, `ageGroup`, `ethnicity`, `zipCode`, `referralSource`, `programOutcome`, `sessionCount` — **no `clientId` link** (no reliable join to clients)
 
-### Modified Convex Files
+### Migration Steps (one-time, ordered)
 
-| File | Change | Reason |
-|------|--------|--------|
-| `convex/schema.ts` | Add `kbSummaryCache` table | Persist generated summaries and KPI JSON |
-| `convex/quickbooks.ts` | Add `getIncomeTrend` query | Read `income_trend` cache for frontend |
-| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` internalAction | Fetch monthly P&L from QB API |
-| `convex/quickbooksActions.ts` | Add `fetchIncomeTrend` call to `syncAllData` | Include in existing 15-min cron |
+**Step 1 — Additive schema deploy:** Add `enrollments` table. Add `gender`, `referralSource`, `dateOfBirth`, `phone`, `email` to `clients` as `v.optional` (existing data unaffected). Add `enrollmentId`, `attendanceStatus`, and new indexes to `sessions`. Mark `programId`, `enrollmentDate`, `status` on clients as still-optional (do NOT remove yet). Deploy via `npx convex dev --once`. This is a non-breaking change — existing code continues working.
 
-### New Frontend Files
+**Step 2 — Create enrollments from existing clients:** `scripts/migrateV2.ts` reads all clients with a `programId`. For each, inserts one `enrollments` record: `{ clientId, programId, status: client.status, enrollmentDate: client.enrollmentDate, createdAt }`. Runs in batches of 50. Idempotent — checks if enrollment already exists before inserting. Log created vs. skipped counts.
 
-| File | Purpose |
-|------|---------|
-| `src/components/dashboard/KBInsights.tsx` | Dashboard section: AI summary + KB KPI cards + Regenerate button |
-| `src/hooks/useKnowledgeBase.ts` | `useKBSummary()`, `useKBKPIs()`, `useRefreshKBSummary()`, `useExtractKBKPIs()` |
+**Step 3 — Populate missing demographics on clients:** For each client, check linked `legalIntakeForms` or `coparentIntakeForms` via `by_clientId` index. Patch `gender`, `referralSource`, `dateOfBirth`, `phone`, `email` from intake form data if null on the client record. Best-effort — not all clients have intake forms.
 
-### Modified Frontend Files
+**Step 4 — Analytics backend rewrite deploy:** Updated `analytics.getAllDemographics` reads `clients` table. Updated `analytics.getActiveClientCount` reads `enrollments`. Updated `analytics.getSessionTrends` uses `by_sessionDate` index. Deploy. Verify counts match between old and new queries before removing Sheets sync.
 
-| File | Change | Reason |
-|------|--------|--------|
-| `src/hooks/useQuickBooks.ts` | Add `useIncomeTrend()` | Hook for new QB monthly income data |
-| `src/components/dashboard/DonationPerformance.tsx` | Switch `useDonations()` → `useIncomeTrend()` | `getDonations` always returns null; income trend is the real data source |
-| `src/lib/constants.ts` | Add "kb-insights" to `DEFAULT_DASHBOARD_SECTIONS` | Register for dashboard layout |
-| `src/types/index.ts` | Add "kb-insights" to `DashboardSectionId` union | TypeScript type coverage |
-| `src/app/(dashboard)/dashboard/page.tsx` | Add `KBInsights` to `SECTION_COMPONENTS` | Wire component to section registry |
+**Step 5 — Frontend updates:** Update `DemographicsTab.tsx` to remove `useSheetsConfig()` check. Update `clients.listWithPrograms` to join via enrollments. Update `/clients` page for unified list.
+
+**Step 6 — Remove Sheets program sync:** Remove `syncProgramData` from `googleSheetsActions.ts`. Remove those calls from `googleSheetsSync.ts`. Remove `upsertProgramParticipant` from `googleSheetsInternal.ts`. Remove program Sheets config sections from admin UI. Deploy.
+
+**Step 7 — Schema cleanup deploy:** Remove `programId`, `enrollmentDate`, `status` from `clients` schema definition. Remove `programDataCache` table from schema. Deploy. Convex silently ignores orphaned fields on existing documents — no data loss.
+
+### Migration Risk: Gender and Referral Source Data
+
+The biggest data gap is that `gender` and `referralSource` currently exist only in `programDataCache` (keyed by Sheets row number, no `clientId` link). Name-matching `programDataCache` rows to `clients` records is fragile.
+
+**Recommended approach:** If the cleaned master spreadsheet is available (referenced in milestone requirements), use `scripts/importFromSpreadsheet.ts` to import clients with full demographics directly, deduplicating against existing clients by name match. This is cleaner than a DB-level fuzzy join. If the spreadsheet is not available, accept that `gender` and `referralSource` will be null on migrated clients and will populate only for new clients going forward.
 
 ---
 
-## Donation Chart: The Correct Data Source
+## Integration Points
 
-The existing `getDonations` query **always returns `null`** — it looks for a `"donations"` reportType cache entry that is never populated. The comment in `convex/quickbooks.ts` (lines 323-327) explicitly states this required a defunct PayPal integration. The `DonationPerformance` component already handles `null` gracefully with an empty state message.
+### Existing Modules: What Changes vs. What Stays
 
-**Solution:** Do not build a separate donations endpoint. Use the QB **P&L report with monthly columns** to produce monthly income totals. This is the same P&L data QB already fetches in `fetchProfitAndLoss`, requested with an additional `summarize_column_by=Month` parameter.
+| Module | Change Type | What Changes |
+|--------|-------------|-------------|
+| `convex/schema.ts` | MODIFIED | Add `enrollments`; add fields to `clients`; add indexes + field to `sessions`; remove `programDataCache` |
+| `convex/clients.ts` | MODIFIED | `listWithPrograms`: role filter via enrollments; `getStats`/`getActiveClientCount` via enrollments; `create`/`update`: remove programId/status/enrollmentDate args |
+| `convex/analytics.ts` | MODIFIED | `getAllDemographics`: reads clients table; `getActiveClientCount`: reads enrollments by_status; `getSessionTrends`/`getSessionVolume`: use by_sessionDate index |
+| `convex/enrollments.ts` | NEW | `list`, `create`, `update`, `remove`, `listByClient`, `importBatch` (internal, for migration) |
+| `convex/sessions.ts` | NEW | Formalized CRUD with `attendanceStatus`; extract from ad-hoc creation patterns |
+| `convex/googleSheetsActions.ts` | MODIFIED | Remove `syncProgramData` action and program calls in `triggerSync` |
+| `convex/googleSheetsSync.ts` | MODIFIED | Remove program sync calls; keep grant sync only |
+| `convex/googleSheetsInternal.ts` | MODIFIED | Remove `upsertProgramParticipant` mutation |
+| `convex/crons.ts` | UNCHANGED | `sheets-sync` cron stays — still syncs grants |
+| `convex/googleCalendarActions.ts` | UNCHANGED | Already uses env vars directly; no Sheets config dependency |
+| `convex/googleCalendarInternal.ts` | UNCHANGED | |
+| `convex/googleCalendarSync.ts` | UNCHANGED | |
+| `src/components/analytics/DemographicsTab.tsx` | MODIFIED | Remove `useSheetsConfig()` check; remove "Connect Google Sheets" empty state gate; always shows data |
+| `src/hooks/useAnalytics.ts` | MINOR | `useAllDemographics` return shape gains `genderDistribution` field |
+| `src/hooks/useGrantTracker.ts` | UNCHANGED | Still uses `api.googleSheets.*` for grants |
+| `src/app/(dashboard)/clients/page.tsx` | MODIFIED | Unified list; no program-type tab by role; show enrollment program per client |
+| `src/app/(dashboard)/admin/page.tsx` | MODIFIED | Remove Google Sheets "Program Sync" tab sections; keep grant Sheets config |
+| `scripts/migrateV2.ts` | NEW | Backfill enrollments from existing client.programId + demographics from intake forms |
+| `scripts/importFromSpreadsheet.ts` | NEW | Import cleaned spreadsheet → clients + enrollments + sessions in new data model |
 
-**QB API call for `fetchIncomeTrend`:**
-```
-GET /v3/company/{realmId}/reports/ProfitAndLoss
-  ?start_date={YYYY}-01-01
-  &end_date={YYYY}-12-31
-  &summarize_column_by=Month
-  &minorversion=65
-```
+### Internal Boundaries
 
-The response has monthly columns instead of a single total column. Parse the Income section rows across each month column to produce a `Record<string, number>` keyed as `"YYYY-MM"`.
-
-**Shape stored in `quickbooksCache` as `reportType: "income_trend"`:**
-```typescript
-// JSON-stringified, same pattern as all other QB cache entries
-{
-  "2025-01": 12500,
-  "2025-02": 9800,
-  "2025-03": 14200,
-  // ... up to 12 months
-}
-```
-
-**`getIncomeTrend` query return shape:**
-```typescript
-{
-  monthlyTotals: Record<string, number>;  // "YYYY-MM" -> total income amount
-  fetchedAt: number;
-}
-```
-
-`DonationPerformance.tsx` already has the line chart rendering logic for `monthlyTotals` — it reads `data.monthlyTotals` and renders the last 12 months. The only required changes to the component are:
-1. Replace `useDonations()` import and call with `useIncomeTrend()` from `useQuickBooks.ts`
-2. Update chart label from "Monthly Donations" to "Monthly Income" (QB income includes grants + other revenue, not just donations)
-3. Keep all existing chart rendering code — the data shape is compatible
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| `enrollments.ts` ↔ `clients.ts` | `clientId` foreign key | `clients.remove` must check for existing enrollments before deleting (mirrors how `programs.remove` currently checks for `clients`) |
+| `sessions.ts` ↔ `enrollments.ts` | `enrollmentId` field (optional) | Sessions can exist without enrollment link for legacy data compatibility |
+| `analytics.ts` ↔ `clients.ts` | Direct table reads | No shared functions; analytics reads `clients` and `enrollments` tables directly |
+| `analytics.ts` ↔ `programDataCache` | REMOVED after migration | |
+| `DemographicsTab.tsx` ↔ `googleSheets.ts` | REMOVED | `useSheetsConfig()` call deleted; demographics no longer gated on Sheets config |
 
 ---
 
-## KB Extraction: Prompt Design
+## Build Order (Phase Dependencies)
 
-### Summary Prompt (for `generateKBSummary`)
+Phases must be ordered to avoid Convex schema violations and broken intermediate states.
 
-```
-You are summarizing the DEC (Dads Evoking Change) knowledge base for the Executive Director.
-Review all uploaded documents and write a concise executive summary using 3-5 bullet points.
-Cover: key programs and their status, recent milestones, strategic priorities, impact highlights.
-Format: Start each line with "•". Be specific and factual. Only include information found in the documents.
-Do not fabricate data. If no relevant documents are found, say so.
-```
+**Phase 1 — Schema Foundation (deploy first, unblocks everything)**
+Add `enrollments` table, add fields to `clients` and `sessions`, add new indexes. Run `npx convex dev --once`. Non-breaking additive change — existing code continues working after deploy.
 
-### KPI Extraction Prompt (for `extractKBKPIs`)
+**Phase 2 — Enrollment Backend**
+New `enrollments.ts` file: `list`, `create`, `update`, `remove`, `listByClient`, `importBatch` (internal mutation for migration). Follows existing `clients.ts` CRUD pattern with `requireRole` + audit log.
 
-```
-Search the knowledge base documents and extract organizational metrics.
-Return ONLY a valid JSON object with these exact keys (use null for any metric not found):
+**Phase 3 — Sessions Backend**
+New `sessions.ts` file: formalize session CRUD with `attendanceStatus`. Add queries using new `by_sessionDate` and `by_enrollmentId` indexes.
 
-{
-  "activeClients": <number or null>,
-  "programsOffered": <number or null>,
-  "sessionsCompleted": <number or null>,
-  "familiesServed": <number or null>,
-  "staffCount": <number or null>,
-  "volunteerCount": <number or null>,
-  "customMetric1Label": <string or null>,
-  "customMetric1Value": <string or null>,
-  "customMetric2Label": <string or null>,
-  "customMetric2Value": <string or null>,
-  "sourceDocs": [<document names where data was found>]
-}
+**Phase 4 — Migration Script**
+`scripts/migrateV2.ts`: read all clients with `programId`, create enrollment records via `enrollments.importBatch` in batches of 50. Patch demographics from intake forms. Run once. Verify counts in Convex dashboard.
 
-Do not fabricate numbers. Return null for any metric not present in the documents.
-```
+**Phase 5 — Analytics Backend Rewrite**
+Update `analytics.getAllDemographics` to read `clients` table. Update `getActiveClientCount` to read `enrollments`. Update `getSessionVolume` and `getSessionTrends` to use `by_sessionDate` index range query. Deploy and verify against known client counts.
 
-**KPI JSON parsing in frontend:** Wrap `JSON.parse(kpis.content)` in a try/catch. If parsing fails (OpenAI returned non-JSON), display the raw content as text rather than crashing.
+**Phase 6 — Frontend: Unified Client List and Analytics**
+Update `clients.listWithPrograms` to join via enrollments for role filtering. Update `/clients` page for unified list display. Remove `useSheetsConfig()` from `DemographicsTab.tsx`. Remove "Connect Google Sheets" empty state gate.
+
+**Phase 7 — Remove Sheets Program Sync**
+Remove `syncProgramData` from `googleSheetsActions.ts`, `googleSheetsSync.ts`, `googleSheetsInternal.ts`. Remove program Sheets config sections from admin UI. Deploy. Only after analytics rewrite is confirmed working.
+
+**Phase 8 — Schema Cleanup**
+Remove `programId`, `enrollmentDate`, `status` from `clients` schema definition. Remove `programDataCache` table from schema. Deploy. Convex silently handles orphaned fields on existing documents.
+
+**Phase 9 — Data Export**
+Add `clients.exportAll` query returning clients + enrollments + sessions as structured JSON. Wire to frontend download button.
 
 ---
 
-## Schema Addition
+## Anti-Patterns
 
-```typescript
-// convex/schema.ts — add inside defineSchema({...}), after knowledgeBase table
+### Anti-Pattern 1: Keeping programDataCache and Bridging It to Clients by Name Match
 
-kbSummaryCache: defineTable({
-  cacheType: v.union(v.literal("summary"), v.literal("kpis")),
-  content: v.string(),          // summary text OR JSON-stringified KPI object
-  generatedAt: v.number(),
-  fileCount: v.optional(v.number()),
-}).index("by_type", ["cacheType"]),
-```
+**What people do:** Keep `programDataCache` running, rewrite analytics to do a fuzzy name join between `programDataCache` rows and `clients` records to get `gender` and `referralSource`.
+
+**Why it's wrong:** `programDataCache` rows have no `clientId` — they are Sheets rows keyed by row number. Name matching is fragile (nicknames, parsing differences, duplicates). Keeping the cache means keeping the Sheets sync cron, config records, and all sync infrastructure — defeating the purpose of v2.0 (app as source of truth). The join complexity is higher than migrating the fields once.
+
+**Do this instead:** Migrate `gender` and `referralSource` to the `clients` table during the one-time migration. Query `clients` directly in `getAllDemographics`. Accept that some historical clients may have null values for fields not captured in intake forms.
 
 ---
 
-## Anti-Patterns to Avoid
+### Anti-Pattern 2: Putting Status on the Client Instead of the Enrollment
 
-### Anti-Pattern 1: Calling OpenAI from a Convex Query
+**What people do:** Keep `status` on the `clients` table — treating a client as globally "active" or "completed."
 
-**What people do:** Call OpenAI API inside a Convex `query` to generate fresh summaries on every page load.
+**Why it's wrong:** A client who completes Legal and later enrolls in Co-Parent would need their status toggled back to "active," destroying the completed state. A client in two programs simultaneously has an ambiguous single status. The active client count on the dashboard becomes semantically wrong.
 
-**Why it's wrong:** Convex queries run in a deterministic read-only context — they cannot make network calls. This will throw a runtime error. Additionally, OpenAI file_search runs take 5-30 seconds, which cannot block a dashboard render.
-
-**Do this instead:** Actions only for OpenAI calls. Queries only read from Convex tables. The trigger-on-demand action pattern (Pattern 3 above) is correct.
-
-### Anti-Pattern 2: Creating a New OpenAI Assistant for KB Extraction
-
-**What people do:** Create a separate assistant for KB summary/KPI extraction with its own `assistantId` stored in a new config table.
-
-**Why it's wrong:** The existing `aiDirectorConfig.assistantId` already has `file_search` enabled and the "DEC Knowledge Base" vector store attached. A new assistant would duplicate setup, waste OpenAI quota (assistant storage costs), and add schema/config complexity.
-
-**Do this instead:** Reuse `assistantId` and `vectorStoreId` from `aiDirector.getConfig`. Override per-request behavior with specific extraction prompts in the thread message.
-
-### Anti-Pattern 3: Storing KPIs as Individual Table Rows
-
-**What people do:** Create a `kbKPIs` table with one row per metric: `{ metricName: "activeClients", value: "150", generatedAt: number }`.
-
-**Why it's wrong:** Adds schema complexity, requires collecting multiple rows per render, and makes atomic regeneration fragile (partial update leaves stale KPIs mixed with new ones). KB KPIs are regenerated as a set.
-
-**Do this instead:** Store KPI JSON as a single `content` string in `kbSummaryCache` (cacheType: "kpis"). This mirrors how `quickbooksCache.data` stores entire QB reports as JSON strings. Parse in the frontend component.
-
-### Anti-Pattern 4: Adding KB Insights as a New Route
-
-**What people do:** Create a `/kb-insights` page to display the KB summary and KPIs.
-
-**Why it's wrong:** The dashboard uses a reorderable section system — `SECTION_COMPONENTS` map, `DEFAULT_DASHBOARD_SECTIONS` array, `DashboardSection` wrapper. A new route fragments the "single-pane-of-glass" command center model and bypasses the existing hide/reorder user preferences system.
-
-**Do this instead:** Register `KBInsights` as a new entry in `SECTION_COMPONENTS` and `DEFAULT_DASHBOARD_SECTIONS`. It renders inside the existing dashboard with move/hide controls automatically provided by `DashboardSection`.
-
-### Anti-Pattern 5: Auto-Regenerating KB Summary on Every QB Cron Cycle
-
-**What people do:** Add KB summary generation to the 15-minute QB sync cron in `crons.ts`.
-
-**Why it's wrong:** OpenAI file_search threads are slow (5-30 seconds) and cost tokens. KB documents change rarely — typically only when an admin uploads a new file via Admin > Knowledge Base. Running regeneration every 15 minutes wastes OpenAI quota with redundant identical results.
-
-**Do this instead:** Manual trigger only ("Regenerate" button in `KBInsights.tsx`). Optionally, trigger automatically when a new file is uploaded by extending `knowledgeBaseActions.uploadToOpenAI` to call `ctx.runAction(api.kbInsightsActions.generateKBSummary, {})` after the upload completes. This is the correct event boundary: KB changes → summary invalidated → regenerate.
+**Do this instead:** `status` lives on `enrollments`. A client is "active in a program" when they have an enrollment with `status: "active"`. `getActiveClientCount` queries `enrollments` filtered by status, collects distinct `clientId` values. The `/clients` unified list derives "active" badge from whether the client has any active enrollment.
 
 ---
 
-## Build Order (Dependencies First)
+### Anti-Pattern 3: Building a New googleOAuthConfig Table to "Unify" Google Auth
 
-```
-Step 1: Schema change — Add kbSummaryCache table (schema.ts)
-        Deploy: npx convex dev --once
-        [Required before any kbInsights queries/mutations can be registered]
+**What people do:** Create a new `googleOAuthConfig` table to store unified Google credentials shared between Calendar and Sheets.
 
-Step 2: Convex backend for KB (independent of Step 3)
-        convex/kbInsights.ts — queries + mutations for kbSummaryCache
-        convex/kbInsightsActions.ts — generateKBSummary + extractKBKPIs actions
-        [Depends on Step 1]
+**Why it's wrong:** Both services already read `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` directly from environment variables — confirmed by direct inspection of both `googleCalendarActions.ts` and `googleSheetsActions.ts`. There is no user OAuth token for Google. A new config table adds schema complexity for zero functional gain.
 
-Step 3: Convex backend for income trend (independent of Steps 1-2, can be parallel)
-        convex/quickbooks.ts — add getIncomeTrend query
-        convex/quickbooksActions.ts — add fetchIncomeTrend internalAction
-        convex/quickbooksActions.ts — wire fetchIncomeTrend into syncAllData
-        [Self-contained; no schema changes needed]
+**Do this instead:** Nothing. The service account credentials are already unified at the env var level. "Unify Google OAuth" means removing the program-specific Sheets config records and their admin UI, not adding infrastructure.
 
-Step 4: Frontend hooks (depends on Steps 2 and 3)
-        src/hooks/useKnowledgeBase.ts — new hook file
-        src/hooks/useQuickBooks.ts — add useIncomeTrend()
+---
 
-Step 5: KBInsights component (depends on Step 4)
-        src/components/dashboard/KBInsights.tsx
+### Anti-Pattern 4: One Large Migration Mutation
 
-Step 6: DonationPerformance update (depends on Step 4, independent of Step 5)
-        Switch useDonations() to useIncomeTrend()
-        Update chart title and label copy
+**What people do:** Write a single Convex mutation that reads all clients, creates enrollments, patches demographics, and clears `programDataCache` in one transaction.
 
-Step 7: Dashboard registration (depends on Steps 5 and 6)
-        src/lib/constants.ts — add kb-insights section metadata
-        src/types/index.ts — add kb-insights to DashboardSectionId
-        src/app/(dashboard)/dashboard/page.tsx — add KBInsights to SECTION_COMPONENTS
-```
+**Why it's wrong:** Convex mutations have a write limit per transaction. With hundreds of clients, creating that many enrollment records plus demographic patches in one call will exceed the limit and fail partway through, leaving the database in a partial state.
+
+**Do this instead:** Use `scripts/migrateV2.ts` as a CLI script with `ConvexHttpClient`, batching operations in groups of 50 via separate mutation calls (each has its own transaction boundary). Make the script idempotent — check if an enrollment already exists before creating. Log progress per batch.
+
+---
+
+### Anti-Pattern 5: Removing programId from Sessions During Schema Cleanup
+
+**What people do:** Drop `programId` from the `sessions` table since sessions now link through `enrollments`.
+
+**Why it's wrong:** Several analytics queries group sessions by program type. Joining `sessions → enrollments → programs` on every analytics aggregation is slower and more complex than keeping the denormalized `programId` on sessions. The existing session creation code already sets `programId`.
+
+**Do this instead:** Keep `programId` on sessions as a denormalized field. Set it from the enrollment's `programId` at session creation time. Fast program-level session count queries work without triple-join. The redundancy is acceptable — the `programId` on a session records which program it belonged to at the time of the session, which is semantically correct even if an enrollment is later transferred.
 
 ---
 
 ## Scaling Considerations
 
-This system serves a single nonprofit with single-digit concurrent users. Scaling is not a near-term concern.
+| Scale | Architecture Adjustments |
+|-------|--------------------------|
+| Current (~200-500 clients) | Full table scans on `clients` are fine. New `by_sessionDate` index on sessions handles range queries well. `enrollments` full scan acceptable for aggregation queries. |
+| 1k-5k clients | `by_lastName` index on clients covers name search. `by_status` index on enrollments covers active count without full scan. Queries remain efficient. |
+| 10k+ clients | Paginate `listWithPrograms`. Add `by_status_programId` composite index on enrollments. Consider caching demographic aggregates in a summary table updated on client create/update. |
 
-| Concern | Current Scale | Notes |
-|---------|---------------|-------|
-| OpenAI API calls | On-demand only (manual trigger) | No rate-limit risk at this usage level |
-| KB document count | ~5-20 files expected | File_search works well under 100 files; no change needed |
-| kbSummaryCache rows | 2 rows maximum | One summary entry, one KPI entry |
-| QB income_trend fetch | Added to 15-min cron | One extra API call per sync; QB rate limits are generous |
-| OpenAI cost | Charged per thread token | One thread per regeneration; infrequent = negligible cost |
+### Scaling Priorities
+
+1. **First bottleneck (resolved in v2.0):** `getSessionVolume` and `getSessionTrends` full table scans on sessions. Solved by `by_sessionDate` index added in schema migration.
+
+2. **Second bottleneck (future):** `getAllDemographics` full table scan on `clients`. At 500 clients this is fine. At 10k+, cache aggregate counts in a `demographicsCache` table updated via Convex reactive mutations when client demographics change.
 
 ---
 
 ## Sources
 
-- Direct inspection: `convex/schema.ts` (26 tables, all reviewed — kbSummaryCache does not yet exist)
-- Direct inspection: `convex/quickbooks.ts` — `getDonations` comment on lines 323-327 confirms always-null state and reason
-- Direct inspection: `convex/quickbooksActions.ts` — `fetchProfitAndLoss` shows QB API call pattern; `summarize_column_by=Month` is a standard QB Reports API parameter (HIGH confidence from QB API docs + confirmed by existing P&L date param pattern)
-- Direct inspection: `convex/aiDirectorActions.ts` — confirms `assistantId` + `vectorStoreId` reuse pattern in `sendMessage`
-- Direct inspection: `convex/knowledgeBaseActions.ts` — confirms upload pipeline and existing vectorStoreId attachment
-- Direct inspection: `src/components/dashboard/DonationPerformance.tsx` — confirms `monthlyTotals: Record<string, number>` is the expected data shape, chart rendering already implemented
-- Direct inspection: `src/app/(dashboard)/dashboard/page.tsx` — confirms `SECTION_COMPONENTS` map and `DEFAULT_DASHBOARD_SECTIONS` registration pattern
-- Direct inspection: `convex/crons.ts` — confirms 15-min QB sync schedule, `syncAllData` is the entrypoint to extend
-- Direct inspection: `src/hooks/useQuickBooks.ts` — confirms hook pattern for new `useIncomeTrend` addition
+**All HIGH confidence — from direct codebase inspection:**
+
+- `convex/schema.ts` — confirmed all 26 table structures; `clients` has `programId`/`enrollmentDate`/`status`; `sessions` has no `by_sessionDate` index; `programDataCache` exists with no `clientId` field
+- `convex/analytics.ts` — confirmed `getAllDemographics` reads `programDataCache`; `getSessionVolume` does full table scan (`ctx.db.query("sessions").collect()`)
+- `convex/clients.ts` — confirmed `listWithPrograms` role filtering uses `by_programId` index on clients
+- `convex/googleSheetsActions.ts` — confirmed `syncProgramData` reads `GOOGLE_SERVICE_ACCOUNT_EMAIL` env var directly; same var as Calendar
+- `convex/googleCalendarActions.ts` — confirmed Calendar also reads `GOOGLE_SERVICE_ACCOUNT_EMAIL` env var directly; no shared config table between Calendar and Sheets
+- `convex/googleSheetsInternal.ts` — confirmed `upsertProgramParticipant` writes to `programDataCache` with no `clientId` field
+- `convex/crons.ts` — confirmed `sheets-sync` cron runs `googleSheetsSync.runSync`
+- `convex/googleSheetsSync.ts` — confirmed program sync and grant sync are both called from `runSync`
+- `scripts/seedClients.ts` — confirmed batched migration pattern (`ConvexHttpClient` + batch size 20 in groups)
+- `src/components/analytics/DemographicsTab.tsx` — confirmed `useSheetsConfig()` gate; "Connect Google Sheets" empty state blocks analytics when no Sheets config exists
 
 ---
 
-*Architecture research for: DEC DASH 2.0 v1.2 Intelligence milestone*
+*Architecture research for: DEC DASH 2.0 v2.0 Data Foundation — Client/Enrollment/Session refactor, Google OAuth unification, analytics rewrite*
 *Researched: 2026-03-01*

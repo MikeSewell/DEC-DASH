@@ -1,8 +1,381 @@
 # Pitfalls Research
 
-**Domain:** Nonprofit executive dashboard — Next.js 15 + Convex + Google Calendar integration + dashboard data population + proactive alerts + HTML email templates + KB-powered KPI extraction + AI summary panel + QB income/donation charts
-**Researched:** 2026-03-01 (v1.2 Intelligence update; v1.0–v1.1 pitfalls preserved below)
-**Confidence:** HIGH (codebase inspected directly; external API pitfalls verified with official docs and community sources)
+**Domain:** Nonprofit executive dashboard — Next.js 15 + Convex — v2.0 Data Foundation (schema refactor, data migration, Sheets removal, OAuth unification)
+**Researched:** 2026-03-01 (v2.0 Data Foundation milestone; v1.0–v1.3 pitfalls preserved below)
+**Confidence:** HIGH (codebase inspected directly; Convex migration patterns verified with official docs and stack.convex.dev)
+
+---
+
+# v2.0 Data Foundation — New Pitfalls
+
+These pitfalls are specific to: Convex schema refactoring with existing data, migrating from Google Sheets to app-as-source-of-truth, introducing the Client → Enrollment → Session model, changing foreign key relationships, and unifying Google OAuth configuration.
+
+---
+
+## Critical Pitfalls
+
+### Pitfall 1: Convex Schema Push Fails Because Existing Data Does Not Match the New Schema
+
+**What goes wrong:**
+You add new required fields or change an existing field's type in `schema.ts` and run `npx convex dev --once`. The push fails with a schema validation error because existing documents in the database do not match the new schema. The deployment is blocked until you either revert the schema or manually fix every existing document.
+
+**Why it happens:**
+Convex enforces strict schema validation on every push. The rule is: "Convex will not let you change the type to something that doesn't conform to the data in production" and "Convex will not let you remove a field from a schema if that field still has data in the database." This applies to the shared dev/prod deployment (`aware-finch-86`) — schema mismatches block deployment immediately. The most common triggers in v2.0: adding `enrollmentId: v.id("enrollments")` as a required field on sessions when existing sessions have `programId` instead; removing `programId` from the `clients` table when existing clients have that field populated; adding a non-optional `gender` field to `clients` when most existing records have it as `undefined`.
+
+**How to avoid:**
+Follow the three-step migration pattern for every schema change:
+
+1. Add new fields as `v.optional(...)` first. Push this schema — existing documents pass validation because the field can be absent.
+2. Run a migration mutation (internal mutation, no auth requirement) to backfill the new field on all existing documents. Use pagination: process 100 documents at a time to avoid Convex OCC transaction conflicts.
+3. Only after all documents are backfilled, push a new schema making the field required. Now all documents conform.
+
+Never make a field required in the same schema push that introduces it. Never remove a field while documents still contain it. Use `v.optional` as a staging area during migration.
+
+**Warning signs:**
+- `npx convex dev --once` fails with "Schema validation failed" or "Document does not match schema"
+- Error message references a specific table and field name
+- Any attempt to make an existing optional field required without running a migration first
+
+**Phase to address:**
+Schema Migration phase (Phase 1 of v2.0) — establish the three-step pattern as the explicit process before touching any field in `clients`, `sessions`, or adding `enrollments`.
+
+---
+
+### Pitfall 2: Removing `programId` From `clients` Breaks RBAC Filtering for Lawyers and Psychologists
+
+**What goes wrong:**
+The `clients.listWithPrograms` query, `clients.getStats`, and `clients.getStatsByProgram` all filter by `programId` to enforce role-based access — lawyers see only clients in legal programs, psychologists see only co-parent program clients. When `programId` moves from `clients` to the new `enrollments` table, these filters stop working. Lawyers and psychologists suddenly see all clients, creating a privacy breach. The filter logic uses `.withIndex("by_programId", ...)` which relies on the index that will be removed.
+
+**Why it happens:**
+The current RBAC model is baked into the `programId` field directly on `clients`. The query pattern is:
+```
+clients.filter(c => legalProgramIds.has(c.programId))
+```
+When the data model changes to Client → Enrollment (where one client can have multiple enrollments in different programs), this simple filter no longer works. You cannot filter clients by their program membership without a join through the `enrollments` table. The code in `clients.ts`, `analytics.ts`, and `clients/page.tsx` all assume `programId` is directly on the client record.
+
+**How to avoid:**
+Before removing `programId` from `clients`, audit every query and frontend component that uses it for RBAC filtering. Rewrite all role-based filters to join through `enrollments`:
+
+```typescript
+// Old pattern (breaks after migration)
+clients.filter(c => c.programId && legalProgramIds.has(c.programId))
+
+// New pattern (joins through enrollments)
+const legalEnrollments = await ctx.db.query("enrollments")
+  .filter(e => legalProgramIds.has(e.programId))
+  .collect();
+const legalClientIds = new Set(legalEnrollments.map(e => e.clientId));
+clients.filter(c => legalClientIds.has(c._id))
+```
+
+This new pattern requires an index on `enrollments.by_programId`. Keep `programId` as `v.optional` on `clients` during the transition period so existing code doesn't break before the RBAC rewrite is complete.
+
+**Warning signs:**
+- Lawyers or psychologists can see clients from all programs after the migration
+- `clients.listWithPrograms` returns unfiltered results when called with a role-scoped user
+- `getStats` returns counts that include programs the user should not see
+- TypeScript errors when `c.programId` is accessed on a client record after the field is removed
+
+**Phase to address:**
+Schema Migration phase — RBAC filter rewrite must happen in the same phase as the `enrollments` table introduction, before `programId` is removed from `clients`.
+
+---
+
+### Pitfall 3: Removing Google Sheets Sync Leaves `getAllDemographics` Returning Empty Data
+
+**What goes wrong:**
+`analytics.getAllDemographics` currently reads from `programDataCache`, which is populated by the Google Sheets sync cron. After the Sheets sync is removed and `programDataCache` is no longer populated, `getAllDemographics` returns `{ total: 0, ... }`. The Demographics tab on the analytics page shows the "No program data synced yet" empty state indefinitely. The analytics page appears broken to Kareem even though the new Convex-native data exists in the `clients` and `enrollments` tables — the query just isn't reading from the right source yet.
+
+**Why it happens:**
+`getAllDemographics` in `analytics.ts` was written to read `programDataCache` (the Sheets-synced table). `DemographicsTab.tsx` also checks `sheetsConfig === null` and shows a "Connect Google Sheets" message if Sheets is not configured. After removing Sheets, the sheetsConfig check returns `null`, and the demographics tab shows a Sheets-specific empty state with a link to `/admin` — a confusing message when the data is actually in Convex and Sheets is intentionally gone.
+
+**How to avoid:**
+The analytics rewrite must happen in the same phase as Sheets removal. The sequence:
+
+1. Write the new `getAllDemographics` query reading from `clients` + `enrollments` tables.
+2. Remove the `sheetsConfig === null` guard from `DemographicsTab.tsx` (or replace it with a data-is-empty guard).
+3. Remove the Sheets cron job from `crons.ts`.
+4. Delete the `programDataCache` table from `schema.ts` only after the new query is verified.
+
+Do not remove the Sheets sync before the replacement analytics query is deployed and verified. Test the new query returns data before cutting over.
+
+**Warning signs:**
+- Demographics tab shows "Connect Google Sheets" or "No program data synced yet" after migration
+- `getAllDemographics` returns `total: 0` when clients table has records
+- `DemographicsTab.tsx` still imports `useSheetsConfig` after Sheets removal
+- `programDataCache` table is empty but still exists and causes stale "0 records" confusion
+
+**Phase to address:**
+Sheets Removal + Analytics Rewrite phase — these are co-dependent and must be executed together, not sequentially.
+
+---
+
+### Pitfall 4: Cron Job Removal From `crons.ts` Requires Schema Cleanup in the Right Order
+
+**What goes wrong:**
+You remove the Sheets sync from `crons.ts` and push the schema. The cron job stops running. However, the `googleSheetsConfig` table and the `programDataCache` table still exist in the schema. If you then try to remove these tables from `schema.ts`, the push fails because existing documents are still in those tables. Alternatively, if you delete the table data first through the Convex dashboard, you may delete the `googleSheetsConfig` row that stores the admin-configured spreadsheet ID — making it harder to debug if you need to reference it later.
+
+**Why it happens:**
+Removing a Convex table requires two steps: (1) delete all documents from the table, then (2) remove the table definition from `schema.ts`. If you try to remove the table from the schema while documents exist, the push fails. The `googleSheetsConfig` table also has a reference in `alertConfig`'s `sheetsStalenessHours` field — the alert system currently checks `googleSheetsConfig` sync timestamps to generate a "Sheets stale" alert. Removing Sheets without updating the alerts module causes a runtime error in `alerts.ts`.
+
+**How to avoid:**
+Follow this specific order for Sheets removal:
+
+1. Remove the `sheets-sync` cron from `crons.ts` and push — cron stops.
+2. Update `alerts.ts` to remove the Sheets staleness check (the section at line 156 that queries `googleSheetsConfig`). Push.
+3. Remove the `sheetsStalenessHours` field from `alertConfig` schema — but only after confirming no running `alertConfig` rows have this field populated, or mark it `v.optional` first.
+4. Clear all documents from `programDataCache` via the Convex dashboard.
+5. Clear all documents from `googleSheetsConfig` via the Convex dashboard.
+6. Remove `programDataCache` and `googleSheetsConfig` table definitions from `schema.ts`. Push.
+7. Remove the `googleSheetsConfig`, `googleSheetsInternal`, `googleSheetsActions`, `googleSheetsSync` backend files.
+8. Remove frontend references: `useSheetsConfig`, `GoogleSheetsConfig` component, the Sheets admin tab.
+
+Skipping steps causes either blocked pushes or runtime errors in production.
+
+**Warning signs:**
+- Schema push fails with "table has existing documents" after removing a table definition
+- `alerts.ts` throws a runtime error referencing `googleSheetsConfig` after the table is removed from the schema
+- The Sheets admin tab in `/admin` still appears but its queries throw errors
+- `sheetsStalenessHours` field referenced in `alertConfig.ts` default config causes a TypeScript error
+
+**Phase to address:**
+Sheets Removal phase — document the exact removal sequence before starting; each push must be validated before proceeding to the next step.
+
+---
+
+### Pitfall 5: Data Migration from Spreadsheet Creates Duplicate Clients Already in Convex
+
+**What goes wrong:**
+The one-time import script creates new `clients`, `enrollments`, and `sessions` records from the cleaned spreadsheet data. Many clients were previously imported into Convex via the existing `importLegalBatch` and `importCoparentBatch` mutations. The import script creates duplicates — two records for "John Smith" in the Legal program, one from the old import and one from the new migration. Demographics double-count; session analytics count sessions twice; the client list shows duplicates.
+
+**Why it happens:**
+The existing import scripts deduplicate by `firstName + lastName` within a single program. However, the new migration script is creating records with different field structures (demographics now on the `clients` record instead of the intake form, enrollments as a separate table). The deduplication logic may not fire correctly if the script checks for existing `clients` by name but finds the old record has different fields or is linked to the old `programId` structure. Additionally, the spreadsheet may contain names with slightly different spelling or casing than what was previously imported (e.g., "José" vs "Jose", "Smith Jr." vs "Smith").
+
+**How to avoid:**
+The migration script must check for existing clients before inserting:
+
+1. Build an in-memory index of all existing clients by normalized name key: `${firstName.toLowerCase().trim()}_${lastName.toLowerCase().trim()}`.
+2. For each spreadsheet row, check if a client with that name key already exists in Convex.
+3. If the client exists: update their demographics fields (ethnicity, ageGroup, zipCode, referralSource) if the spreadsheet has richer data. Create an enrollment linking them to the program if one doesn't already exist.
+4. If the client does not exist: create a new client record.
+5. Run the script in a dry-run mode first that reports `{ wouldCreate, wouldUpdate, wouldSkip }` without writing anything.
+
+Also verify the final client count matches expectations before deleting `programDataCache` data.
+
+**Warning signs:**
+- Client list shows visibly duplicate entries after migration
+- `clients.getStats` total count is higher than expected (roughly 2x the real client count)
+- Demographics charts show inflated totals
+- The same person appears twice in the client list with slightly different data
+
+**Phase to address:**
+Data Migration phase — the dry-run validation must pass before any data is written. Do not run in production without reviewing the dry-run output.
+
+---
+
+### Pitfall 6: `sessions` Table Full-Table Scan Gets Slower After Session Records Are Added
+
+**What goes wrong:**
+`analytics.getSessionVolume` and `analytics.getSessionTrends` both call `await ctx.db.query("sessions").collect()` with no index — a full table scan. The existing codebase comment acknowledges this: "getSessionVolume does a full-table scan on sessions (no by_sessionDate index) — works at current scale." After the v2.0 migration imports historical session data from spreadsheets (potentially 500–2,000 historical session records), this query becomes measurably slower. After 12+ months of real use, it will be slow enough to cause noticeable UI lag on the analytics page.
+
+**Why it happens:**
+The `sessions` table schema currently has no `by_sessionDate` index. Convex queries without indexes must scan every document. At the current scale (likely <100 sessions), this is imperceptible. With historical migration data, session count jumps to the real operational total — potentially hundreds. Convex query performance degrades linearly with document count on un-indexed full scans.
+
+**How to avoid:**
+Add the `by_sessionDate` index to the `sessions` table in `schema.ts` during the v2.0 schema work. This is a non-destructive schema change — adding an index does not require migrating existing data:
+
+```typescript
+sessions: defineTable({
+  ...existing fields...
+}).index("by_clientId", ["clientId"])
+  .index("by_sessionDate", ["sessionDate"])  // ADD THIS
+```
+
+Then update `getSessionVolume` and `getSessionTrends` to use the index:
+```typescript
+.withIndex("by_sessionDate", q => q.gte("sessionDate", thirtyDaysAgo))
+```
+
+This also enables enrollment-scoped session queries in the future (`by_enrollmentId`).
+
+**Warning signs:**
+- Analytics page loads noticeably slower after migration data is imported
+- Convex function execution time for `getSessionTrends` increases from <10ms to >100ms
+- Convex dashboard shows high read unit consumption on `getSessionTrends` queries
+
+**Phase to address:**
+Schema Migration phase — add the index proactively before importing historical data, not after performance degrades.
+
+---
+
+### Pitfall 7: `googleSheetsConfig` Table Has a `purpose` Field Used by Multi-Config Sync — Removing It Breaks Calendar Config Reference
+
+**What goes wrong:**
+The `googleSheetsConfig` table has a `by_purpose` index and a `purpose` field that differentiates between multiple sync configurations (e.g., `"program_coparent"`, `"program_legal"`, grant tracker). The `googleCalendarConfig` table is a separate table — it is not related to Sheets. However, `googleSheetsActions.syncProgramData` queries `getConfigByPurpose` to find the right Sheets config row for each program type. If you partially remove Sheets infrastructure but leave `googleSheetsInternal.getConfigByPurpose` alive (because it's referenced somewhere), you create a broken dependency chain that is hard to trace.
+
+Additionally, the `googleCalendarActions.ts` uses a separate service account credential (`GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY`) — the same env vars used by Sheets. The goal is to "unify Google OAuth" — but the Calendar integration currently uses a service account (no OAuth token rotation needed) while the hypothetical "unified" OAuth would use user-facing OAuth with refresh tokens. These are fundamentally different auth patterns.
+
+**Why it happens:**
+"Unify Google OAuth" may be interpreted as consolidating the service account credential configuration into a single admin config row — not replacing service account auth with user OAuth. The Sheets admin config stores `serviceAccountEmail` in `googleSheetsConfig`. Calendar config in `googleCalendarConfig` stores only calendar IDs (it reads service account credentials directly from env vars). After removing Sheets, there is no longer a UI-configurable home for `serviceAccountEmail`. The Calendar config also needs to display what service account is in use for the admin to verify it.
+
+**How to avoid:**
+Do not conflate "remove Sheets dependency" with "remove Google service account config." The service account credentials are still needed for Calendar. The correct scoping for "unify Google OAuth" in v2.0 is:
+
+1. Remove the `googleSheetsConfig` table (Sheets-specific settings: spreadsheetId, sheetName, serviceAccountEmail per program).
+2. Retain a single `googleOAuthConfig` or keep the service account email/key in env vars only (current pattern).
+3. The Calendar admin tab should show the configured service account email (read from env vars, not the DB) for visibility.
+4. Do not add a user-facing OAuth flow for Calendar — the service account pattern requires no token rotation and is more reliable for server-side cron use.
+
+If the actual intent is to move service account config into the DB (like `googleSheetsConfig` currently does for `serviceAccountEmail`), add a dedicated `googleServiceAccountConfig` singleton table and update the Calendar config UI to use it.
+
+**Warning signs:**
+- After removing `googleSheetsConfig`, Calendar sync fails silently because its auth code imports from a now-deleted module
+- `getConfigByPurpose` throws "table not found" errors if called from any code that still references it
+- Admin UI shows no service account email after Sheets tab is removed, creating confusion about what credentials Calendar uses
+
+**Phase to address:**
+Google OAuth Unification phase — explicitly define scope before implementation: "remove Sheets-specific config" is not the same as "remove all Google service account config." The Calendar config UI should be updated to clearly show auth status without depending on Sheets config.
+
+---
+
+## Technical Debt Patterns
+
+Shortcuts that seem reasonable but create long-term problems.
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Keeping `programId` on `clients` as deprecated optional during transition | No RBAC breakage during migration | Two sources of truth for program membership; queries must handle both | Acceptable only for the duration of the migration phase; remove before v2.0 ships |
+| Importing sessions without a `by_sessionDate` index | Faster initial migration, no index build time | Full-table scan degrades as session count grows; analytics slow down | Never — add the index in the same schema push as the table definition |
+| Using `schemaValidation: false` to bypass migration failures | Unblocks deployment immediately | TypeScript types no longer match runtime data; silent type mismatches corrupt queries | Never in production; only acceptable as a last resort debugging step in dev, reverted immediately |
+| Leaving `programDataCache` populated after new analytics queries are deployed | Provides a fallback data source | Stale Sheets data and live Convex data coexist; demographics can double-count or contradict | Never — clear `programDataCache` atomically when switching analytics to the new queries |
+| Running the data migration script without a dry-run pass | Faster to implement | Duplicates or data errors are written to production and require manual cleanup | Never — always implement dry-run mode with output review before writing to production |
+
+---
+
+## Integration Gotchas
+
+Common mistakes when removing or changing external service dependencies.
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Google Sheets → Convex analytics | Removing Sheets sync before the replacement analytics query is verified | Deploy and verify new Convex-native demographics query returns correct data before removing `sheets-sync` cron |
+| Convex cron removal | Removing cron function from `crons.ts` without removing its references in `alerts.ts` | Audit all files that reference the removed cron or table before pushing; `alerts.ts` checks `googleSheetsConfig` staleness |
+| `clients.programId` removal | Removing the field from schema before all RBAC query rewrites are pushed | Keep `programId` as `v.optional` until every RBAC query using it has been replaced with enrollment-join logic |
+| Spreadsheet data import | Importing raw spreadsheet values without normalizing (mixed case, trailing spaces, null strings) | Normalize all string fields: trim whitespace, normalize empty strings to `undefined`, standardize ethnicity/age group values to match the Convex schema enum values before import |
+| Google service account auth | Confusing user-facing OAuth (token refresh flow) with service account auth (env vars, no tokens) | Calendar uses service account — no token rotation needed. Do not add a token refresh cron for Calendar the way QB has one for OAuth |
+
+---
+
+## Performance Traps
+
+Patterns that work at small scale but fail as session/client data grows.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| Full-table scan on `sessions` for analytics | Analytics page load increases from <50ms to >500ms after migration | Add `by_sessionDate` index to sessions table before importing historical data | At ~500 session records with current implementation |
+| Full-table scan on `clients` for RBAC filtering | Client list loads slowly for lawyers/psychologists after unification | Add `by_enrollmentId` index on enrollments table; filter by enrollment first | At ~1,000 client records |
+| Enrollment join done in memory (load all enrollments, filter in JS) | Acceptable at current scale; becomes slow when clients have multiple enrollments across programs | Use `enrollments.by_clientId` index for per-client enrollment lookups; use `enrollments.by_programId` for program-scoped filtering | At ~2,000 enrollment records |
+| Migration script inserting records one-by-one in a loop without batching | Migration takes minutes instead of seconds; risks hitting Convex mutation timeouts | Insert in batches of 50 with `Promise.all`; use `internalMutation` to avoid auth overhead on each insert | Immediately with >200 records |
+
+---
+
+## Security Mistakes
+
+Domain-specific security issues relevant to v2.0 changes.
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Running data migration mutations without role gating | Any user can trigger a batch insert/update if the mutation is public | All migration mutations must be `internalMutation` — they should only be callable from CLI (`npx convex run`), not from the frontend |
+| Migrating client PII from spreadsheet without audit log entries | No record of when data was imported, by whom, or what changed | Log a bulk import event to `auditLogs` at the start and end of each migration run: `{ action: "bulk_import", entityType: "clients", details: "imported 47 records from spreadsheet" }` |
+| Keeping `importLegalBatch` and `importCoparentBatch` public mutations after migration | These unauthenticated batch insert mutations remain callable by anyone with the Convex URL | After migration is complete, convert these to `internalMutation` or add `requireRole` guards |
+| Removing `sheetsStalenessHours` from `alertConfig` before removing the alert that uses it | TypeScript type mismatch; runtime reads `undefined` for a field expected to be a number; alert staleness thresholds silently fall back to `NaN` | Remove the staleness alert check in `alerts.ts` before removing the field from `alertConfig` schema |
+
+---
+
+## UX Pitfalls
+
+Common user experience mistakes when migrating from one data source to another.
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Switching Demographics tab from Sheets data to Convex data mid-release without coordinating expected counts | Kareem sees different total counts before and after release; may report a bug when counts are actually correct | Prepare Kareem for the number change before deployment; explain the data sources are different |
+| Demographics tab shows empty state during the migration window (Sheets removed, Convex query not yet deployed) | Analytics page appears completely broken | Never remove Sheets and deploy analytics rewrite in separate deployments; do both in the same push |
+| Unified client list no longer shows program tabs for lawyers/psychologists after removing `programId` | Role-restricted users lose their program-specific view before the enrollment-based filter is working | Do not remove program tab filtering from `clients/page.tsx` until enrollment-join RBAC is verified working for restricted roles |
+| Data export is added but exports in a format Kareem cannot use | Admin runs export, gets a JSON file, does not know how to open it | Export as CSV with human-readable headers; for a nonprofit admin, Excel/CSV is far more useful than JSON |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+Things that appear complete in v2.0 but are missing critical pieces.
+
+- [ ] **Schema migration:** Verify that ALL existing `sessions` records (not just new ones) have an `enrollmentId` after migration — spot-check 5 random sessions in the Convex dashboard
+- [ ] **RBAC after migration:** Log in as a `lawyer` role user and verify they see ONLY legal program clients, not all clients
+- [ ] **RBAC after migration:** Log in as a `psychologist` role user and verify they see ONLY co-parent program clients
+- [ ] **Demographics tab:** Verify the Demographics tab shows real data after Sheets removal — check that `total > 0` and the values match known client counts
+- [ ] **Sheets removal:** Verify `alerts.ts` no longer references `googleSheetsConfig` — running the alerts query after Sheets tables are removed should not throw
+- [ ] **Sheets removal:** Verify the admin page no longer has a non-functional Google Sheets tab after the table is removed
+- [ ] **Data migration:** Verify the imported client count matches the spreadsheet row count (minus header, minus blank rows, minus duplicates)
+- [ ] **Session index:** Confirm `getSessionTrends` uses `by_sessionDate` index — check Convex function execution stats show low read units
+- [ ] **Export:** Verify the data export produces a valid CSV that opens correctly in Excel with no encoding issues (test with names that have special characters like accents)
+
+---
+
+## Recovery Strategies
+
+When v2.0 pitfalls occur despite prevention, how to recover.
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Schema push blocked by validation errors | LOW | Revert the schema change; make the new field `v.optional`; push the optional version; run migration; then make required |
+| Duplicate clients created by migration script | MEDIUM | Query for clients with identical first+last name; manually delete duplicates via Convex dashboard; recheck analytics totals |
+| RBAC breaks after `programId` removed (all users see all clients) | HIGH | Immediately revert to a schema with `programId` still present; the RBAC filter code must be rewritten before the field is removed; this is not a quick fix |
+| Demographics tab empty after Sheets removal | LOW | Verify new `getAllDemographics` query is deployed; if not, redeploy with the replacement query; data is safe in the `clients` table |
+| Sheets staleness alert errors after table removal | LOW | Push a patch to `alerts.ts` removing the Sheets staleness check; the error is at query time, not at data time — no data is lost |
+| Migration script ran without dry-run, creating bad data | HIGH | Use Convex dashboard to bulk-delete records created after the migration timestamp; re-run with dry-run mode and verify before re-importing |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+How roadmap phases should address these pitfalls.
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Schema push blocked by validation errors | Schema Migration (Phase 1) | Push schema with all new fields as `v.optional`; verify no validation errors |
+| RBAC breaks after `programId` removal | Schema Migration (Phase 1) | Log in as lawyer and psychologist roles; verify filtered client lists |
+| Session full-table scan performance | Schema Migration (Phase 1) | Confirm `by_sessionDate` index exists; verify analytics query uses it |
+| `getAllDemographics` empty after Sheets removal | Sheets Removal + Analytics Rewrite (same phase) | Verify `total > 0` after deployment using real client data |
+| Cron and table removal order | Sheets Removal phase | Follow documented 8-step removal sequence; validate at each step |
+| Duplicate clients from migration | Data Migration phase | Always run dry-run first; review output before executing writes |
+| Sheets staleness alert runtime errors | Sheets Removal phase | Remove alert check before removing table; test `getAlerts` query after Sheets table is gone |
+| Import mutations remain public after migration | Data Migration phase (cleanup step) | Convert `importLegalBatch` and `importCoparentBatch` to internal after migration completes |
+| Google service account confusion | OAuth Unification phase | Confirm Calendar sync still works after Sheets is removed; verify env vars are still present |
+
+---
+
+## Sources
+
+**v2.0 Data Foundation sources:**
+- Convex intro to migrations (three-step pattern, schema validation rules): [https://stack.convex.dev/intro-to-migrations](https://stack.convex.dev/intro-to-migrations)
+- Convex stateful online migrations using mutations: [https://stack.convex.dev/migrating-data-with-mutations](https://stack.convex.dev/migrating-data-with-mutations)
+- Convex lightweight zero-downtime migrations: [https://stack.convex.dev/lightweight-zero-downtime-migrations](https://stack.convex.dev/lightweight-zero-downtime-migrations)
+- Convex schema documentation (validation rules, schemaValidation option): [https://docs.convex.dev/database/schemas](https://docs.convex.dev/database/schemas)
+- Convex migrations component: [https://www.convex.dev/components/migrations](https://www.convex.dev/components/migrations)
+- Convex table deletion via dashboard: [https://docs.convex.dev/dashboard/deployments/data](https://docs.convex.dev/dashboard/deployments/data)
+- Google OAuth refresh token limits and expiry: [https://developers.google.com/identity/protocols/oauth2](https://developers.google.com/identity/protocols/oauth2)
+- Google OAuth service account vs user OAuth patterns: [https://developers.google.com/identity/protocols/oauth2/web-server](https://developers.google.com/identity/protocols/oauth2/web-server)
+- Direct codebase inspection: `convex/schema.ts`, `convex/clients.ts`, `convex/sessions.ts`, `convex/analytics.ts`, `convex/googleSheetsSync.ts`, `convex/googleSheetsActions.ts`, `convex/alerts.ts`, `convex/crons.ts`, `convex/alertConfig.ts`, `src/components/analytics/DemographicsTab.tsx`, `src/app/(dashboard)/clients/page.tsx`, `src/hooks/useAnalytics.ts`
+
+---
+*v2.0 Data Foundation pitfalls research for: DEC DASH 2.0*
+*Researched: 2026-03-01*
+
+---
+
+---
+
+# v1.0–v1.3 Pitfalls (Preserved)
 
 ---
 
@@ -530,28 +903,26 @@ Google Calendar integration phase — must handle timezone in the data model fro
 
 ## Sources
 
+**v2.0 Data Foundation sources:**
+- Convex intro to migrations: [https://stack.convex.dev/intro-to-migrations](https://stack.convex.dev/intro-to-migrations)
+- Convex stateful online migrations: [https://stack.convex.dev/migrating-data-with-mutations](https://stack.convex.dev/migrating-data-with-mutations)
+- Convex lightweight zero-downtime migrations: [https://stack.convex.dev/lightweight-zero-downtime-migrations](https://stack.convex.dev/lightweight-zero-downtime-migrations)
+- Convex schema documentation: [https://docs.convex.dev/database/schemas](https://docs.convex.dev/database/schemas)
+- Convex migrations component: [https://www.convex.dev/components/migrations](https://www.convex.dev/components/migrations)
+- Convex table deletion: [https://docs.convex.dev/dashboard/deployments/data](https://docs.convex.dev/dashboard/deployments/data)
+- Google OAuth token limits: [https://developers.google.com/identity/protocols/oauth2](https://developers.google.com/identity/protocols/oauth2)
+
 **v1.2 Intelligence sources:**
 - OpenAI Structured Outputs hallucination behavior: [https://platform.openai.com/docs/guides/structured-outputs](https://platform.openai.com/docs/guides/structured-outputs)
-- Structured outputs schema enforcement and hallucination risks: [https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/best-practices-for-structured-extraction-from-documents-using-azure-openai/4397282](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/best-practices-for-structured-extraction-from-documents-using-azure-openai/4397282)
-- OpenAI Assistants file_search instability and production challenges: [https://community.openai.com/t/breaking-changes-in-openai-api-responses-v2-vector-store-file-search-instability/1354202](https://community.openai.com/t/breaking-changes-in-openai-api-responses-v2-vector-store-file-search-instability/1354202)
-- RAG hallucination mitigation 2025: [https://community.openai.com/t/mitigating-hallucinations-in-rag-a-2025-review/1362063](https://community.openai.com/t/mitigating-hallucinations-in-rag-a-2025-review/1362063)
-- AI token cost management and rate limiting: [https://skywork.ai/blog/ai-api-cost-throughput-pricing-token-math-budgets-2025/](https://skywork.ai/blog/ai-api-cost-throughput-pricing-token-math-budgets-2025/)
 - QuickBooks API limitations: [https://satvasolutions.com/blog/top-5-quickbooks-api-limitations-to-know-before-developing-qbo-app](https://satvasolutions.com/blog/top-5-quickbooks-api-limitations-to-know-before-developing-qbo-app)
-- QuickBooks nonprofit reporting terminology (Statement of Activity): [https://www.dancingnumbers.com/run-profit-and-loss-report-in-quickbooks-online/](https://www.dancingnumbers.com/run-profit-and-loss-report-in-quickbooks-online/)
-- QuickBooks P&L API structure and chart building challenges: [https://blog.synchub.io/articles/building-meaningful-charts-using-quickbooks-reporting-api](https://blog.synchub.io/articles/building-meaningful-charts-using-quickbooks-reporting-api)
 - Convex action cache and invalidation strategy: [https://stack.convex.dev/caching-in](https://stack.convex.dev/caching-in)
-- React dashboard performance and lazy loading pitfalls: [https://www.bootstrapdash.com/blog/react-dashboard-performance](https://www.bootstrapdash.com/blog/react-dashboard-performance)
-- Nonprofit AI data privacy considerations: [https://nationbuilder.com/responsible-ai-guide-nonprofits-2025](https://nationbuilder.com/responsible-ai-guide-nonprofits-2025)
-- Direct codebase inspection: `convex/knowledgeBase.ts`, `convex/knowledgeBaseActions.ts`, `convex/aiDirectorActions.ts`, `convex/quickbooks.ts`, `convex/quickbooksActions.ts`, `src/components/dashboard/DonationPerformance.tsx`, `src/components/dashboard/ExecutiveSnapshot.tsx`, `convex/schema.ts`, `convex/crons.ts`
 
 **v1.0–v1.1 sources:**
 - Google Calendar API sharing concepts: [https://developers.google.com/workspace/calendar/api/concepts/sharing](https://developers.google.com/workspace/calendar/api/concepts/sharing)
-- Service account calendar access pattern: [https://medium.com/iceapple-tech-talks/integration-with-google-calendar-api-using-service-account-1471e6e102c8](https://medium.com/iceapple-tech-talks/integration-with-google-calendar-api-using-service-account-1471e6e102c8)
-- Constant Contact custom code email design guidelines: [https://developer.constantcontact.com/api_guide/design_code_emails.html](https://developer.constantcontact.com/api_guide/design_code_emails.html)
 - QuickBooks refresh token rotation: [https://nango.dev/blog/quickbooks-oauth-refresh-token-invalid-grant](https://nango.dev/blog/quickbooks-oauth-refresh-token-invalid-grant)
 - Convex `useQuery` undefined vs null patterns: [https://docs.convex.dev/client/react](https://docs.convex.dev/client/react)
 - Convex cron job error handling: [https://docs.convex.dev/scheduling/cron-jobs](https://docs.convex.dev/scheduling/cron-jobs)
 
 ---
-*Pitfalls research for: DEC DASH 2.0 — v1.2 Intelligence milestone (KB KPI extraction + AI summary + donation charts)*
+*Pitfalls research for: DEC DASH 2.0 — v2.0 Data Foundation milestone*
 *Updated: 2026-03-01*

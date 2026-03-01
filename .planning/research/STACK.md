@@ -1,295 +1,443 @@
 # Stack Research
 
-**Domain:** Nonprofit Executive Dashboard — v1.2 Intelligence (KB extraction, AI summaries, donation charts)
+**Domain:** Convex data model refactor + data migration + export + analytics rewrite (DEC DASH v2.0 Data Foundation)
 **Researched:** 2026-03-01
-**Confidence:** HIGH for OpenAI path; HIGH for QB income-by-month path; MEDIUM for file content retrieval limitation
+**Confidence:** HIGH
 
 ---
 
 ## Context: What Already Exists (Do Not Re-Research)
 
-This is a subsequent milestone. The base stack is locked and fully operational:
+This is a subsequent milestone. The base stack is locked and fully operational.
 
-| Already Installed | Version | Role in v1.2 |
+| Already Installed | Version | Role in v2.0 |
 |-------------------|---------|--------------|
-| openai | ^6.22.0 | **Central to ALL three v1.2 features** — extend existing patterns |
-| convex | ^1.32.0 | Backend, caching, real-time queries — extend existing tables |
-| chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 | **Donation charts** — already registered and used in ProfitLoss.tsx, DonationPerformance.tsx |
-| next | 16.1.6 | App Router, client components |
-| tailwindcss | ^4 | Design system — no changes |
-| date-fns | ^4.1.0 | Date formatting for chart labels |
-| googleapis | ^171.4.0 | Existing QB/Sheets/Calendar — no role in v1.2 |
+| `convex` | 1.32.0 | Schema, queries, mutations — ALL new backend work happens here |
+| `xlsx` | 0.18.5 | Already used by import scripts; covers Excel export + migration script reading |
+| `googleapis` | 171.4.0 | Calendar + Sheets service account auth — service account credentials already unified |
+| `date-fns` | 4.1.0 | Date formatting for export and analytics labels |
+| `dotenv` | 17.3.1 | env loading for CLI migration scripts |
+| `next` | 16.1.6 | App Router — export UI is a client component, no server route needed |
+| `@convex-dev/auth` | 0.0.90 | Auth — no changes |
 
-**Key insight: v1.2 adds zero new npm packages.** All three features are achievable within the existing openai SDK, Convex backend, and chart.js stack. The work is entirely new Convex actions and frontend components.
-
----
-
-## Feature 1: KB-Powered KPI Cards (Structured Extraction from Documents)
-
-### What needs to happen
-
-The Knowledge Base (KB) files already live in Convex Storage (`knowledgeBase` table) and in the OpenAI vector store. The task is: read the stored documents and extract structured numbers (client counts, program stats, impact metrics) and surface them as dashboard KPI cards.
-
-### The File Content Retrieval Constraint
-
-**CRITICAL — HIGH confidence (verified via OpenAI community, multiple sources):**
-
-Files uploaded with `purpose: "assistants"` **cannot be downloaded** via `openai.files.content()`. The API returns `400 - Not allowed to download files of purpose: assistants`. This is an explicit OpenAI restriction, not a bug.
-
-This rules out: fetch the file → parse the text → send to GPT.
-
-### Recommended Approach: Chat Completions + file_search Tool
-
-Use the existing OpenAI Assistants API thread/run pattern (already working in `aiDirectorActions.ts`) to ask a structured extraction question, then parse the response as JSON.
-
-**Why this approach (HIGH confidence):**
-- The vector store already indexes all KB documents via file_search
-- The existing `aiDirectorActions.ts` already does `openai.beta.threads.runs.createAndPoll()` with `assistant_id` and gets back text
-- Structured Outputs (`response_format: { type: "json_object" }`) works with gpt-4o and gpt-4o-mini — both already in use
-- No new authentication, no new API endpoints
-
-**Structured extraction pattern using existing openai SDK v6:**
-
-```typescript
-// In a new convex/kbActions.ts — "use node" required
-// Uses the existing vector store + assistant config
-
-const thread = await openai.beta.threads.create({
-  messages: [{
-    role: "user",
-    content: `Search the knowledge base documents and extract these metrics as JSON.
-    Return ONLY valid JSON matching this structure:
-    {
-      "totalClientsServed": number | null,
-      "activeProgramCount": number | null,
-      "impactMetrics": [{ "label": string, "value": string }],
-      "summaryText": string
-    }
-    Use null for any metric not found in the documents.`
-  }]
-});
-
-const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
-  assistant_id: config.assistantId,
-  // response_format does NOT apply to Assistants API runs
-});
-
-// Parse the assistant's text response as JSON
-const text = assistantMsg.content[0].text.value;
-const extracted = JSON.parse(text); // wrap in try/catch
-```
-
-**Why NOT `response_format: json_schema` with the Assistants API:**
-The Assistants API runs do NOT support `response_format` with `json_schema` type — that parameter applies to Chat Completions only, not thread runs. Instead, the system prompt instructs the model to return JSON, and the application parses the text response.
-
-**Why NOT Chat Completions with `tool_resources`:**
-The `file_search` tool resource is only available on the Assistants API, not on standalone `chat.completions.create()` calls. To search the vector store, you must use the Assistants API threads/runs path.
-
-**Why NOT Zod for schema enforcement:**
-Zod (`zodResponseFormat`) adds a runtime dependency and only works with `chat.completions.parse()`, not the Assistants API runs path. Since the extraction prompt instructs JSON output and we validate with try/catch + null fallbacks, Zod is unnecessary overhead.
-
-### Caching Pattern
-
-Store extracted KB metrics in a new `kbInsights` Convex table to avoid redundant OpenAI API calls on every page load.
-
-```typescript
-// Schema addition in convex/schema.ts
-kbInsights: defineTable({
-  extractedAt: v.number(),
-  totalClientsServed: v.optional(v.number()),
-  activeProgramCount: v.optional(v.number()),
-  impactMetrics: v.string(),   // JSON array of { label, value }
-  summaryText: v.optional(v.string()),
-  triggeredBy: v.id("users"),
-}),
-```
-
-**Trigger:** Manual button ("Refresh KB Insights") in the dashboard panel — NOT a cron. Document content changes infrequently; automatic polling would waste OpenAI API credits.
+**Key finding: v2.0 adds zero new npm packages.** All five features are achievable within the existing installed stack.
 
 ---
 
-## Feature 2: AI Summary Panel
+## Feature 1: Client → Enrollment → Session Data Model
 
-### What needs to happen
+### No New Packages Required
 
-A dashboard panel that shows 3-5 key organizational takeaways ("AI Summary") derived from KB documents. Manually regenerated by the admin. Stored in Convex so it loads instantly on subsequent visits.
+This is pure Convex schema and backend work. The data model refactor involves:
 
-### Approach: Same Assistants API Thread Pattern
+1. **New `enrollments` table** — links client to program with status and dates
+2. **Modified `sessions` table** — add `enrollmentId` foreign key and `by_sessionDate` index
+3. **Modified `clients` table** — add `gender` field (currently only on `programDataCache`); remove `programId` after migration
 
-This is a simpler variant of Feature 1 — same OpenAI call, different prompt asking for narrative takeaways rather than structured numbers.
+### Schema Additions
 
-**Prompt strategy:**
+**New table: `enrollments`**
+
+```typescript
+enrollments: defineTable({
+  clientId: v.id("clients"),
+  programId: v.id("programs"),
+  enrollmentDate: v.optional(v.number()),
+  status: v.union(
+    v.literal("active"),
+    v.literal("completed"),
+    v.literal("withdrawn")
+  ),
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_clientId", ["clientId"])
+  .index("by_programId", ["programId"])
+  .index("by_clientId_programId", ["clientId", "programId"])
 ```
-Search the knowledge base and write 3-5 bullet point takeaways about
-organizational health, program impact, or notable trends. Be specific.
-Use numbers from the documents where available. Return as plain text.
+
+**Modified table: `sessions`** — add `enrollmentId`, add `by_sessionDate` index, add `attendanceStatus`
+
+```typescript
+sessions: defineTable({
+  clientId: v.id("clients"),
+  enrollmentId: v.optional(v.id("enrollments")),   // NEW — optional during migration
+  programId: v.optional(v.id("programs")),
+  sessionDate: v.number(),
+  attendanceStatus: v.optional(v.union(             // NEW
+    v.literal("attended"),
+    v.literal("no_show"),
+    v.literal("cancelled")
+  )),
+  sessionType: v.optional(v.string()),
+  notes: v.optional(v.string()),
+  createdBy: v.optional(v.id("users")),
+})
+  .index("by_clientId", ["clientId"])
+  .index("by_enrollmentId", ["enrollmentId"])       // NEW
+  .index("by_sessionDate", ["sessionDate"])          // NEW — fixes known full-table scan
 ```
 
-**Why same pattern as Feature 1 (HIGH confidence):**
-- The vector store file_search is the only way to query KB document contents programmatically
-- The response is plain text (no JSON needed), so no structured output formatting required
-- Same `aiDirectorActions.ts` pattern — create thread, run with assistant_id, read message
+**Modified table: `clients`** — add `gender`, keep `programId` as optional during migration
 
-**Storage:** Reuse the `kbInsights` table — add `summaryText v.string()` column (included above).
+```typescript
+clients: defineTable({
+  firstName: v.string(),
+  lastName: v.string(),
+  programId: v.optional(v.id("programs")),     // Keep optional; remove in second deploy after migration
+  enrollmentDate: v.optional(v.number()),       // Keep optional; remove after migration
+  status: v.union(v.literal("active"), v.literal("completed"), v.literal("withdrawn")),
+  zipCode: v.optional(v.string()),
+  ageGroup: v.optional(v.string()),
+  gender: v.optional(v.string()),              // NEW — currently only in programDataCache
+  ethnicity: v.optional(v.string()),
+  referralSource: v.optional(v.string()),      // NEW — currently only in programDataCache
+  notes: v.optional(v.string()),
+  createdAt: v.number(),
+})
+  .index("by_programId", ["programId"])         // Keep during migration; remove after
+```
 
-**Display:** A card on the dashboard with a "Regenerate" button (calls the Convex action), showing last-generated timestamp. The card is read from `useQuery(api.kbInsights.getLatest)`.
+### Migration Safety Pattern
+
+**Rule: Make fields optional before migration, required after.** Convex requires all documents to conform to schema. The migration window where some clients have `enrollmentId` on their sessions and others don't requires `enrollmentId: v.optional(...)` during that window. After migration completes, make it required.
+
+**Two-deploy approach:**
+1. Deploy 1: Add new tables, add optional fields to existing tables → run migration script
+2. Deploy 2: Remove old fields, tighten types → after verifying data integrity
 
 ---
 
-## Feature 3: Donation Performance Charts from QB Income Accounts
+## Feature 2: Unified Google OAuth for Calendar
 
-### Current State
+### No New Packages Required — Credentials Already Unified
 
-`DonationPerformance.tsx` exists but shows an empty state because `quickbooks.getDonations` always returns `null` — the `"donations"` cache key is never populated. The comment in `quickbooks.ts` confirms: "QB doesn't have a dedicated donations entity."
+Both `googleCalendarActions.ts` and `googleSheetsActions.ts` currently read the same environment variables:
 
-### Recommended Approach: QB P&L Income by Month
-
-Use the existing QuickBooks `ProfitAndLoss` report API with `summarize_column_by=Month` to get monthly income broken down by income account category (donations, grants, program revenue, etc.).
-
-**API call (MEDIUM confidence — confirmed via multiple QB developer community sources):**
-```
-GET /v3/company/{realmId}/reports/ProfitAndLoss
-  ?start_date=2025-01-01
-  &end_date=2025-12-31
-  &summarize_column_by=Month
-  &minorversion=65
-```
-
-**Response structure:** The `Columns.Column` array contains one entry per month. Income rows under the `Income` group section contain `ColData` arrays where each index maps to a month column. The existing `extractCategories()` helper in `quickbooks.ts` works on the row structure — it needs to be extended to handle multi-column (monthly) data instead of the single-column (YTD total) format.
-
-**Why this over separate-month queries (HIGH confidence):**
-- One API call returns 12 months of data vs. 12 separate calls — avoids hitting QB rate limits
-- The `quickbooksActions.ts` already calls `fetchProfitAndLoss` with start/end dates — extend it with a new `fetchProfitAndLossByMonth` variant
-- The `profit_loss_by_month` cache key follows the existing `profit_loss` / `profit_loss_prior_year` naming pattern
-
-**New Convex internalAction:**
 ```typescript
-// In convex/quickbooksActions.ts — add alongside existing fetchProfitAndLoss
-export const fetchProfitAndLossByMonth = internalAction({
+// Already in both files — same service account credentials
+credentials: {
+  client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+}
+```
+
+The "unification" task is removing the **Sheets sync for program data** — not adding new auth infrastructure.
+
+### What Changes (Deletion Work)
+
+| What to Remove | Location | Why |
+|----------------|----------|-----|
+| `syncProgramData` action | `googleSheetsActions.ts` | App becomes source of truth; no longer needed |
+| `sheets-sync` cron (program data) | `crons.ts` | Or narrow it to grant sync only |
+| `programDataCache` table | `schema.ts` | After analytics rewrite is live |
+| Sheets config for `program_legal`, `program_coparent` | Admin UI / `googleSheetsConfig` docs | Purpose-scoped configs no longer needed |
+
+**Keep:**
+- `syncGrantTracker` — Sheets still used for grant tracking cache
+- `googleCalendarSync` — no change
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY` env vars — still needed for both Calendar and Sheets (grants)
+
+### Decision: Service Account is Correct
+
+Do NOT add OAuth2 user-flow credentials (client_id + client_secret + refresh_token cycle) for Calendar. Service account is the right pattern for server-to-server read-only access where no user interaction is needed. This is already validated in the codebase and noted in PROJECT.md as a good decision.
+
+---
+
+## Feature 3: One-Time Data Migration from Cleaned Spreadsheet
+
+### No New Packages Required
+
+Follow the exact pattern of `scripts/importCoparent.ts`, which is already in the codebase:
+
+| Technology | Version | Purpose | Already There? |
+|------------|---------|---------|----------------|
+| `xlsx` | 0.18.5 | Read Excel/CSV spreadsheet rows | Yes |
+| `convex/browser` `ConvexHttpClient` | via `convex` 1.32.0 | Call Convex mutations from Node.js script | Yes — same as `importCoparent.ts` |
+| `dotenv` | 17.3.1 | Load `.env.local` for `NEXT_PUBLIC_CONVEX_URL` | Yes |
+| `tsx` (via `npx tsx`) | dev tool | Run TypeScript script without compile step | Yes — same invocation as existing scripts |
+
+### Migration Script Pattern
+
+```typescript
+// scripts/importV2Data.ts — follows importCoparent.ts pattern exactly
+import * as XLSX from "xlsx";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../convex/_generated/api";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
+const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+// Read spreadsheet → normalize rows → deduplicate by firstName+lastName
+// Call internalMutation in batches of 20-25 rows
+// Each batch is idempotent (skip duplicates by name)
+```
+
+**Batching:** 20-25 rows per mutation call matches `importGrantMatrix.ts` pattern. Provides natural restart capability if interrupted mid-run.
+
+### Internal Migration Mutation for Existing Data
+
+A separate `internalMutation` in `convex/migrateToEnrollments.ts` handles migrating the existing `clients.programId` data into the new `enrollments` table:
+
+```typescript
+// convex/migrateToEnrollments.ts
+export const run = internalMutation({
   handler: async (ctx) => {
-    const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
-    const startDate = `${new Date().getFullYear()}-01-01`;
-    const endDate = getToday();
+    const clients = await ctx.db.query("clients").collect();
+    for (const client of clients) {
+      if (!client.programId) continue;
+      // Check if enrollment already exists (idempotent)
+      const existing = await ctx.db.query("enrollments")
+        .withIndex("by_clientId_programId", q =>
+          q.eq("clientId", client._id).eq("programId", client.programId!)
+        ).first();
+      if (existing) continue;
+      await ctx.db.insert("enrollments", {
+        clientId: client._id,
+        programId: client.programId,
+        enrollmentDate: client.enrollmentDate,
+        status: client.status,
+        createdAt: client.createdAt,
+      });
+    }
+  }
+});
+// Run: npx convex run migrateToEnrollments:run
+```
 
-    const response = await fetch(
-      `${baseUrl}/v3/company/${realmId}/reports/ProfitAndLoss` +
-      `?start_date=${startDate}&end_date=${endDate}` +
-      `&summarize_column_by=Month&minorversion=65`,
-      { headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" } }
+**Why NOT `@convex-dev/migrations` 0.3.1:** This package adds a component system requiring `convex.config.ts` changes, a component install step, and infrastructure overhead. The dataset is hundreds of clients — not millions. The existing `npx convex run` pattern (used by `seedPrograms.ts` in this project) handles the same task with zero new dependencies. The `@convex-dev/migrations` component is appropriate at scale (100K+ documents needing paginated batching), not here.
+
+---
+
+## Feature 4: Data Export (CSV and Excel)
+
+### No New Packages Required
+
+**CSV export — native Blob API only.** Build a shared utility function:
+
+```typescript
+// src/lib/exportUtils.ts
+export function downloadCsv(rows: Record<string, unknown>[], filename: string) {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  const escape = (val: unknown) =>
+    typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))
+      ? `"${val.replace(/"/g, '""')}"` : String(val ?? "");
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map(row => headers.map(h => escape(row[h])).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+```
+
+**Excel export — existing `xlsx` 0.18.5.** Already in `package.json`, already used in import scripts. Use `XLSX.utils.json_to_sheet()` + `XLSX.writeFile()`:
+
+```typescript
+// src/lib/exportUtils.ts
+import * as XLSX from "xlsx";
+
+export function downloadXlsx(rows: Record<string, unknown>[], sheetName: string, filename: string) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename);
+}
+```
+
+**Convex query for export data:** Add an `exportAll` query to `clients.ts` that returns a flat denormalized dataset (clients + enrollments joined). Role-gated to admin/manager. At current scale (hundreds of records), collecting the full table and joining in-memory is fine — no pagination needed.
+
+```typescript
+// convex/clients.ts — add export query
+export const exportAll = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, "admin", "manager");
+    const clients = await ctx.db.query("clients").collect();
+    const enrollments = await ctx.db.query("enrollments").collect();
+    const programs = await ctx.db.query("programs").collect();
+    const programMap = new Map(programs.map(p => [p._id, p.name]));
+    const enrollmentsByClient = new Map<string, typeof enrollments>();
+    for (const e of enrollments) {
+      const k = e.clientId as string;
+      enrollmentsByClient.set(k, [...(enrollmentsByClient.get(k) ?? []), e]);
+    }
+    return clients.map(c => ({
+      firstName: c.firstName,
+      lastName: c.lastName,
+      gender: c.gender ?? "",
+      ageGroup: c.ageGroup ?? "",
+      ethnicity: c.ethnicity ?? "",
+      zipCode: c.zipCode ?? "",
+      referralSource: c.referralSource ?? "",
+      programs: enrollmentsByClient.get(c._id as string)
+        ?.map(e => programMap.get(e.programId) ?? "")
+        .join("; ") ?? "",
+      status: c.status,
+    }));
+  }
+});
+```
+
+### What NOT to Add
+
+- Do NOT add `react-csv` or `papaparse` — native Blob API and `xlsx` cover all export needs without extra bundle size
+- Do NOT upgrade `xlsx` to CDN version 0.20.x — SheetJS moved off npm after 0.18.5; changing the install source adds risk; 0.18.5 fully supports `json_to_sheet` and `writeFile`
+
+---
+
+## Feature 5: Analytics Rewrite (Sheets → Convex)
+
+### No New Packages Required
+
+The `getAllDemographics` query in `analytics.ts` currently reads from `programDataCache` (Google Sheets data). After the data model refactor, it reads from `clients` + `enrollments`.
+
+### Key Gap: `gender` Field
+
+`programDataCache` has a `gender` field. The current `clients` table does not. Adding `gender: v.optional(v.string())` to `clients` schema (covered in Feature 1 above) fills this gap during data migration.
+
+### Rewritten Analytics Query Pattern
+
+```typescript
+// convex/analytics.ts — replace getAllDemographics
+export const getAllDemographics = query({
+  args: {},
+  handler: async (ctx) => {
+    const clients = await ctx.db.query("clients").collect();
+    const enrollments = await ctx.db.query("enrollments").collect();
+
+    // Determine active status: client is "active" if any enrollment is active
+    const activeClientIds = new Set(
+      enrollments.filter(e => e.status === "active").map(e => e.clientId as string)
+    );
+    const completedClientIds = new Set(
+      enrollments.filter(e => e.status === "completed").map(e => e.clientId as string)
     );
 
-    const data = await response.json();
-    await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
-      reportType: "profit_loss_by_month",
-      data: JSON.stringify(data),
-      periodStart: startDate,
-      periodEnd: endDate,
-    });
-  },
+    const total = clients.length;
+    const active = clients.filter(c => activeClientIds.has(c._id as string)).length;
+    const completed = clients.filter(c => completedClientIds.has(c._id as string)).length;
+
+    const toSortedDistribution = (field: (c: typeof clients[0]) => string | undefined) => {
+      const map: Record<string, number> = {};
+      for (const c of clients) {
+        const val = field(c) ?? "Unknown";
+        map[val] = (map[val] ?? 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    };
+
+    return {
+      total, active, completed,
+      genderDistribution: toSortedDistribution(c => c.gender),
+      ethnicityDistribution: toSortedDistribution(c => c.ethnicity),
+      ageDistribution: toSortedDistribution(c => c.ageGroup),
+      referralSource: toSortedDistribution(c => c.referralSource).slice(0, 10),
+      // outcomeDistribution requires a new field or enrollment-level outcome tracking
+    };
+  }
 });
 ```
 
-**Frontend chart (HIGH confidence — already using Chart.js):**
-The existing `DonationPerformance.tsx` already registers `Line`, `CategoryScale`, `LinearScale`, etc. from chart.js. The donation chart needs the same chart type (Line, already implemented) with month labels on X-axis and income category amounts on Y-axis. The existing chart configuration patterns from `ProfitLoss.tsx` and `DonationPerformance.tsx` are directly reusable.
+### `by_sessionDate` Index Fixes Known Full-Table Scan
 
-**Income category filtering:** The monthly P&L response groups income rows under the `Income` section. Parse the row names to find donation-relevant categories (e.g., rows named "Donations", "Contributions", "Individual Giving") vs. grant income. This filtering uses the existing `extractCategories` helper logic.
+PROJECT.md notes: "`getSessionVolume` does a full-table scan on sessions (no by_sessionDate index) — works at current scale." Adding the index in Feature 1 schema changes eliminates this. The `getSessionTrends` and `getSessionVolume` queries in `analytics.ts` can then use:
 
----
-
-## New Convex Tables Required
-
-| Table | Purpose | When Populated |
-|-------|---------|----------------|
-| `kbInsights` | Cache KB extraction results + AI summary | Manual trigger (user clicks "Refresh") |
-
-No other schema additions needed. The QB monthly data uses the existing `quickbooksCache` table with a new `profit_loss_by_month` report type key.
-
----
-
-## New Convex Functions Required
-
-| File | Function | Type | Purpose |
-|------|----------|------|---------|
-| `convex/kbActions.ts` (new) | `extractKbInsights` | action | Queries vector store, extracts structured metrics + summary |
-| `convex/kbInsights.ts` (new) | `saveInsights`, `getLatest` | mutation + query | Persist and read KB extraction results |
-| `convex/quickbooksActions.ts` (extend) | `fetchProfitAndLossByMonth` | internalAction | Fetch QB P&L with summarize_column_by=Month |
-| `convex/quickbooks.ts` (extend) | `getProfitAndLossByMonth` | query | Read and parse monthly income data from cache |
-
----
-
-## Installation
-
-```bash
-# No new packages needed.
-# All v1.2 features use existing: openai ^6.22.0, convex ^1.32.0, chart.js ^4.5.1
+```typescript
+const recent = await ctx.db
+  .query("sessions")
+  .withIndex("by_sessionDate", q => q.gte("sessionDate", thirtyDaysAgo))
+  .collect();
 ```
 
 ---
 
-## Alternatives Considered
+## Summary: New Packages
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| Assistants API thread + file_search | `openai.files.content()` then parse | Files uploaded with purpose "assistants" cannot be downloaded — API returns 400 error. Confirmed by multiple community sources. |
-| Assistants API thread + file_search | Chat Completions with `file_ids` in messages | `file_ids` in message content only works for "vision" purpose files (images), not assistants-purpose documents |
-| QB `summarize_column_by=Month` (one call) | 12 separate P&L calls, one per month | Rate limit risk, slower sync, more complex caching — one call is cleaner |
-| `response_format: { type: "json_object" }` in prompt | `zodResponseFormat` with Zod schema | Assistants API runs don't support response_format parameter; Zod not needed when parsing text response with try/catch + null fallbacks |
-| Manual trigger for KB refresh | Cron-based automatic KB extraction | KB documents change infrequently (admin uploads them); polling wastes OpenAI credits; manual trigger is explicit and auditable |
-| Convex `kbInsights` table | `appSettings` KV store | Structured table allows future multiple snapshots, timestamps, user attribution; KV would serialize as a JSON blob |
+**None required for v2.0.** All features use only what is already installed.
+
+| Package | Already Installed | Used For in v2.0 |
+|---------|-------------------|------------------|
+| `convex` 1.32.0 | Yes | New schema tables, queries, internalMutations |
+| `xlsx` 0.18.5 | Yes | Migration script reading + Excel export |
+| `googleapis` 171.4.0 | Yes | No new usage — Calendar stays, Sheets program sync removed |
+| `dotenv` 17.3.1 | Yes | Migration CLI scripts |
+| `date-fns` 4.1.0 | Yes | Date formatting in export labels |
 
 ---
 
-## What NOT to Use
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| `pdf-parse`, `pdfjs-dist`, or similar PDF parsing libraries | Cannot access KB files directly — they're in OpenAI's vector store, not readable via Convex Storage download | Assistants API file_search which already has them indexed |
-| LangChain or LlamaIndex | Full RAG frameworks — massive overhead for a single-purpose extraction action already using OpenAI SDK directly | Raw openai SDK calls (already installed, already used) |
-| Separate vector store or embedding pipeline | OpenAI vector store already indexes KB files automatically on upload | Reuse existing `vectorStoreId` from `aiDirectorConfig` table |
-| `zod` package | Optional but adds a new runtime dependency; not needed for the Assistants API path | Prompt engineering for JSON output + try/catch parsing |
-| Recharts or D3.js | Adding a second charting library when chart.js is already registered and used | chart.js + react-chartjs-2 (existing) |
-| GoFundMe / PayPal API | Out of scope per PROJECT.md; QB income accounts capture donation totals adequately | QB ProfitAndLoss with summarize_column_by=Month |
+| `@convex-dev/migrations` 0.3.1 | Component overhead, `convex.config.ts` changes — overkill for hundreds of records | `internalMutation` + `npx convex run` (already proven by `seedPrograms.ts`) |
+| `react-csv` or `papaparse` | Unnecessary bundle weight; native Blob API + `xlsx` covers all export cases | Native `Blob` + `URL.createObjectURL` for CSV; `xlsx` for Excel |
+| `@convex-dev/aggregate` | Pre-computed aggregates for millions of documents — overkill at nonprofit scale | In-memory aggregation in Convex queries (same pattern as existing analytics) |
+| `xlsx` CDN upgrade to 0.20.x | SheetJS moved off npm after 0.18.5; changing install source adds deployment risk | Stay on 0.18.5 — fully supports all write operations needed |
+| OAuth2 user-flow for Calendar | Adds client_id/secret/refresh cycle; service account already works and is validated | Existing service account pattern (`GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY`) |
+| Separate BI tool or analytics DB | Overkill; Convex in-memory joins are sufficient at hundreds-to-low-thousands scale | Convex queries in `analytics.ts` with in-memory join |
+| Next.js API route for export | Unnecessary server hop; Blob API generates files entirely client-side | Client-side `downloadCsv` / `downloadXlsx` utility functions |
+
+---
+
+## Stack Patterns by Scenario
+
+**If migrating existing `clients.programId` data:**
+- Deploy schema with `enrollments` table and all new optional fields first
+- Run `npx convex run migrateToEnrollments:run` to create enrollment records
+- Verify in admin UI that all clients have enrollments
+- Deploy schema again to remove `programId` + `enrollmentDate` from `clients` and tighten `enrollmentId` on `sessions`
+
+**If the cleaned spreadsheet has new clients not yet in Convex:**
+- Use `scripts/importV2Data.ts` (new CLI script, same pattern as `importCoparent.ts`)
+- Deduplication by `firstName+lastName` makes the script idempotent — safe to re-run
+
+**If removing Sheets program data sync:**
+- Delete `syncProgramData` from `googleSheetsActions.ts`
+- Keep or narrow the `sheets-sync` cron to only call `syncGrantTracker`
+- Keep `googleSheetsConfig` table and grant sync infrastructure intact
+- Delete `programDataCache` table from schema after `getAllDemographics` is fully rewritten
+
+**If `programDataCache` has data `clients` table is missing:**
+- Check what fields exist in `programDataCache` but not `clients` before deleting
+- The known gap is `gender` and `referralSource` — add both to `clients` schema
+- `programOutcome` in `programDataCache` has no equivalent — needs a design decision (add to clients? add to enrollments? skip?)
 
 ---
 
 ## Version Compatibility
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| openai ^6.22.0 | Assistants API v2 (beta) | `openai.beta.threads`, `openai.beta.threads.runs.createAndPoll` — all used in existing `aiDirectorActions.ts` |
-| openai ^6.22.0 | `json_object` response_format | Works with gpt-4o and gpt-4o-mini for Chat Completions; NOT applicable to Assistants API runs |
-| chart.js ^4.5.1 + react-chartjs-2 ^5.3.1 | Monthly income line/bar charts | Same component pattern as existing `ProfitLoss.tsx` and `DonationPerformance.tsx` |
-| convex ^1.32.0 | New `kbInsights` table schema | Schema addition via `npx convex dev --once` |
-| date-fns ^4.1.0 | Month label formatting for charts | `format(new Date(year, month - 1), 'MMM yy')` for chart X-axis labels |
-
----
-
-## Integration Points with Existing Code
-
-| New Code | Existing Code It Touches | How |
-|----------|--------------------------|-----|
-| `kbActions.ts` | `aiDirectorConfig` table | Reads `assistantId` + `vectorStoreId` via `api.aiDirector.getConfig` |
-| `kbActions.ts` | `openaiHelpers.ts` | Reuses `getOpenAIApiKey(ctx)` — exact same helper |
-| `fetchProfitAndLossByMonth` | `quickbooksInternal.cacheReport` | Stores into `quickbooksCache` with new report type key |
-| `fetchProfitAndLossByMonth` | `getAuthenticatedConfig()` | Uses existing private helper already in `quickbooksActions.ts` |
-| `getProfitAndLossByMonth` query | `quickbooksCache` table | Reads `by_reportType` index with key `"profit_loss_by_month"` |
-| `syncAllData` in `quickbooksActions.ts` | Add `fetchProfitAndLossByMonth` call | Add to the existing sequential sync chain — runs on 15-min cron automatically |
-| `DonationPerformance.tsx` | Convex `useQuery(api.quickbooks.getProfitAndLossByMonth)` | Replace the non-functional `useDonations()` hook |
-| New KB dashboard panel | `dashboardPrefs` section order | Add `"kb-insights"` as a new section ID in `DEFAULT_DASHBOARD_SECTIONS` |
+| Package | Version | Compatible With | Notes |
+|---------|---------|-----------------|-------|
+| `convex` | 1.32.0 | `@convex-dev/auth` 0.0.90 | Tested in production |
+| `xlsx` | 0.18.5 | Node.js 20+ (scripts) + browser (export) | `json_to_sheet` + `writeFile` both confirmed working |
+| `googleapis` | 171.4.0 | Convex actions with `"use node"` | Existing pattern — no change |
+| `date-fns` | 4.1.0 | TypeScript 5.x | No breaking changes expected |
 
 ---
 
 ## Sources
 
-- **OpenAI community: "Not allowed to download files of purpose: assistants"** — https://community.openai.com/t/not-allowed-to-download-files-of-purpose-assistants/528220 — file download restriction confirmed (HIGH confidence — multiple independent community reports + portkey.ai error library)
-- **OpenAI Structured Outputs guide** — https://platform.openai.com/docs/guides/structured-outputs — `json_schema` response_format for Chat Completions; Assistants API runs use prompt engineering (HIGH confidence)
-- **OpenAI Node SDK DeepWiki: Structured Outputs** — https://deepwiki.com/openai/openai-node/5.4-structured-outputs-and-parsing — Zod is optional peer dep; raw JSON schema passable (MEDIUM confidence)
-- **QB ProfitAndLoss API `summarize_column_by` parameter** — Multiple QB community sources confirm `summarize_column_by=Month` is a valid API parameter returning monthly columns in the report structure (MEDIUM confidence — Intuit dev docs not directly fetchable; confirmed via multiple third-party developer discussions)
-- **react-chartjs-2 v5.3.1 docs** — https://react-chartjs-2.js.org/ — version confirmed, ESM/CJS both supported, compatible with chart.js v4 (HIGH confidence)
-- **Existing codebase read** — `convex/aiDirectorActions.ts`, `convex/knowledgeBase.ts`, `convex/quickbooks.ts`, `convex/schema.ts`, `src/components/dashboard/DonationPerformance.tsx` — pattern verification (HIGH confidence — read directly)
-- **WebSearch: "QuickBooks API summarize_column_by Month income"** — confirmed parameter exists; response has Column array with month entries and Row ColData indexed by month (MEDIUM confidence — WebSearch only, not official doc)
+- Convex index docs — https://docs.convex.dev/database/reading-data/indexes/ — `by_sessionDate` index pattern; optional field migration strategy (HIGH confidence — official docs)
+- Convex migration patterns — https://stack.convex.dev/intro-to-migrations — batch internalMutation vs `@convex-dev/migrations` component tradeoffs (HIGH confidence — official Convex blog)
+- `@convex-dev/migrations` npm — https://www.npmjs.com/package/@convex-dev/migrations — v0.3.1 confirmed; component install overhead confirmed (HIGH confidence)
+- SheetJS CSV/XLSX write docs — https://docs.sheetjs.com/docs/solutions/output/ — `json_to_sheet`, `writeFile`, `sheet_to_csv` all confirmed in 0.18.5 (HIGH confidence — official docs)
+- SheetJS npm page — https://www.npmjs.com/package/xlsx — 0.18.5 confirmed as last public npm release; CDN note verified (HIGH confidence)
+- Google OAuth2 service account docs — https://developers.google.com/identity/protocols/oauth2/service-account — service account is correct for server-to-server Calendar read (HIGH confidence — official Google docs)
+- Codebase read — `convex/schema.ts`, `convex/analytics.ts`, `convex/clients.ts`, `convex/googleCalendarActions.ts`, `convex/googleSheetsActions.ts`, `convex/crons.ts`, `scripts/importCoparent.ts`, `PROJECT.md` — all patterns verified directly in code (HIGH confidence)
 
 ---
 
-*Stack research for: DEC DASH 2.0 v1.2 Intelligence — KB data extraction, AI summary, donation charts*
+*Stack research for: DEC DASH 2.0 v2.0 Data Foundation — Client/Enrollment/Session model, Google OAuth cleanup, data migration, export, analytics rewrite*
 *Researched: 2026-03-01*
