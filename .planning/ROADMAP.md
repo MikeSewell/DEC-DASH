@@ -54,7 +54,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
 - [x] **Phase 12: Demographics Tab** - Gender, ethnicity, age group, referral source, outcome rates, and zip code charts using existing Sheets data (completed 2026-03-01)
 - [x] **Phase 13: Client Activity Tab** - Session trends, goal status breakdown, and intake volume charts backed by new aggregate queries (completed 2026-03-01)
 - [x] **Phase 14: Operations Tab** - Staff activity feed, per-user action stats, and expense categorization metrics from audit log + allocation data (completed 2026-03-01)
-- [ ] **Phase 15: Donation Performance Charts** - QB monthly income trend chart with account breakdown and admin designation UI
+- [x] **Phase 15: Donation Performance Charts** - QB monthly income trend chart with account breakdown and admin designation UI (completed 2026-03-01)
 
 ## Phase Details
 
@@ -152,4 +152,4 @@ Plans:
 | 12. Demographics Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 13. Client Activity Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 14. Operations Tab | 2/2 | Complete    | 2026-03-01 | - |
-| 15. Donation Performance Charts | 1/2 | In Progress|  | - |
+| 15. Donation Performance Charts | 2/2 | Complete   | 2026-03-01 | - |
