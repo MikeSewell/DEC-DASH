@@ -174,7 +174,7 @@ Plans:
 | 13. Client Activity Tab | v1.3 | 2/2 | Complete | 2026-03-01 |
 | 14. Operations Tab | v1.3 | 2/2 | Complete | 2026-03-01 |
 | 15. Donation Performance Charts | v1.3 | 2/2 | Complete | 2026-03-01 |
-| 16. Schema Foundation | 1/1 | Complete   | 2026-03-01 | - |
+| 16. Schema Foundation | 1/1 | Complete    | 2026-03-01 | - |
 | 17. Enrollment and Sessions Backend | v2.0 | 0/TBD | Not started | - |
 | 18. Data Migration | v2.0 | 0/TBD | Not started | - |
 | 19. Analytics Backend Rewrite | v2.0 | 0/TBD | Not started | - |
