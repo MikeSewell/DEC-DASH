@@ -16,6 +16,7 @@ import ProfitLoss from "@/components/dashboard/ProfitLoss";
 import ProgramsCoparent from "@/components/dashboard/ProgramsCoparent";
 import ProgramsLegal from "@/components/dashboard/ProgramsLegal";
 import ClientActivity from "@/components/dashboard/ClientActivity";
+import AnalyticsCards from "@/components/dashboard/AnalyticsCards";
 import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import WhatNeedsAttention from "@/components/dashboard/WhatNeedsAttention";
 import Spinner from "@/components/ui/Spinner";
@@ -29,6 +30,7 @@ const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
   "donation-performance": DonationPerformance,
   "profit-loss": ProfitLoss,
   "client-activity": ClientActivity,
+  "analytics-cards": AnalyticsCards,
   "programs-coparent": ProgramsCoparent,
   "programs-legal": ProgramsLegal,
   "calendar": CalendarWidget,

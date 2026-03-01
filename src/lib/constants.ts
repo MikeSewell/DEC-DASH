@@ -45,6 +45,11 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Active clients and program breakdown",
   },
   {
+    id: "analytics-cards",
+    title: "Analytics Snapshot",
+    description: "Active clients, session volume, and intake trends",
+  },
+  {
     id: "calendar",
     title: "Calendar",
     description: "Upcoming events and schedule",

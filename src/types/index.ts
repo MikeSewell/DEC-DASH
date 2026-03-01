@@ -46,6 +46,7 @@ export type DashboardSectionId =
   | "programs-coparent"
   | "programs-legal"
   | "client-activity"
+  | "analytics-cards"
   | "calendar";
 
 // Analytics page tabs
