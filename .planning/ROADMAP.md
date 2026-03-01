@@ -35,7 +35,7 @@ Full details: `milestones/v1.1-ROADMAP.md`
 
 **Milestone Goal:** Surface knowledge base data and donation trends directly on the dashboard — AI-extracted KPIs, auto-generated summaries, and QB income visualizations.
 
-- [ ] **Phase 8: KB KPI Extraction** — Schema, Chat Completions extraction action, and KPI stat cards on dashboard
+- [x] **Phase 8: KB KPI Extraction** — Schema, Chat Completions extraction action, and KPI stat cards on dashboard (completed 2026-03-01)
 - [ ] **Phase 9: AI Summary Panel** — Assistants API narrative summary with manual regeneration and status indicators
 - [ ] **Phase 10: Donation Performance Charts** — QB monthly income trend chart with account breakdown and admin designation UI
 
@@ -97,6 +97,6 @@ Plans:
 | 5. Dashboard KPI Trends | v1.1 | 1/1 | Complete | 2026-02-28 |
 | 6. Calendar Enhancements | v1.1 | 1/1 | Complete | 2026-02-28 |
 | 7. Alert Configuration & Persistence | v1.1 | 2/2 | Complete | 2026-02-28 |
-| 8. KB KPI Extraction | 1/2 | In Progress|  | - |
+| 8. KB KPI Extraction | 2/2 | Complete   | 2026-03-01 | - |
 | 9. AI Summary Panel | v1.2 | 0/2 | Not started | - |
 | 10. Donation Performance Charts | v1.2 | 0/2 | Not started | - |

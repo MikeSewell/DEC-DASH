@@ -10,7 +10,7 @@ Requirements for v1.2 Intelligence milestone. Each maps to roadmap phases.
 ### KB Extraction
 
 - [x] **KB-01**: Admin can trigger extraction of organizational metrics (client counts, program stats, impact numbers) from KB documents via Chat Completions with json_schema
-- [ ] **KB-02**: Extracted KPI values display as dashboard stat cards with the source document name and extraction timestamp
+- [x] **KB-02**: Extracted KPI values display as dashboard stat cards with the source document name and extraction timestamp
 - [x] **KB-03**: All extraction schema fields are nullable — returns null when a metric is not explicitly found in documents (no hallucinated values)
 - [x] **KB-04**: Extraction results are cached in Convex kbSummaryCache table and served reactively to the dashboard
 
@@ -58,7 +58,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | KB-01 | Phase 8 | Complete |
-| KB-02 | Phase 8 | Pending |
+| KB-02 | Phase 8 | Complete |
 | KB-03 | Phase 8 | Complete |
 | KB-04 | Phase 8 | Complete |
 | SUM-01 | Phase 9 | Pending |

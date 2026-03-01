@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Intelligence
-status: in_progress
-last_updated: "2026-03-01T02:15:00Z"
+status: unknown
+last_updated: "2026-03-01T02:18:53.632Z"
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 6
-  completed_plans: 1
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 
 ## Current Position
 
-Phase: 8 of 10 (KB KPI Extraction)
-Plan: 1 of 2 in current phase (08-01 complete — kbSummaryCache schema deployed, kbInsights.ts + kbInsightsActions.ts live)
-Status: In progress — ready for 08-02 frontend dashboard
-Last activity: 2026-03-01 — 08-01 complete (schema deployed, all 3 tasks committed)
+Phase: 8 of 10 (KB KPI Extraction) — COMPLETE
+Plan: 2 of 2 in current phase (08-02 complete — KBInsights.tsx dashboard section live)
+Status: Phase 8 complete — ready for Phase 9 (AI Summary Panel)
+Last activity: 2026-03-01 — 08-02 complete (KBInsights.tsx + registration committed)
 
-Progress: [#░░░░░░░░░] 17% (1/6 plans)
+Progress: [##░░░░░░░░] 33% (2/6 plans)
 
 ## Performance Metrics
 
@@ -40,7 +40,7 @@ Progress: [#░░░░░░░░░] 17% (1/6 plans)
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 8. KB KPI Extraction | 1/2 | 20 min | 20 min |
+| 8. KB KPI Extraction | 2/2 | 22 min | 11 min |
 | 9. AI Summary Panel | 0/2 | — | — |
 | 10. Donation Performance Charts | 0/2 | — | — |
 
@@ -49,6 +49,7 @@ Progress: [#░░░░░░░░░] 17% (1/6 plans)
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 08 P01 | 20 min | 3 tasks | 4 files |
+| Phase 08 P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -67,10 +68,12 @@ From 08-01 execution:
 - conflictValue/conflictDocument are v.optional(v.string()) in Convex but type: ["string", "null"] in KPI_SCHEMA (OpenAI strict mode requires all fields in required array)
 - [Phase 08]: v.null() not v.null_() — Convex current API uses v.null() for nullable validators; plan spec was incorrect
 - [Phase 08]: conflictValue/conflictDocument: v.optional(v.string()) in Convex schema but type: [string,null] in KPI_SCHEMA — OpenAI strict mode requires all fields in required array
+- [Phase 08]: MetricCard as inline component: simple enough for co-location in KBInsights.tsx
+- [Phase 08]: Combined extracting state: isExtracting = local || cache.extracting for responsive UX across sessions
 
 ### Pending Todos
 
-- Execute 08-02 frontend dashboard (wires getCache + extractMetrics to KB KPI panel)
+- Execute Phase 9 (AI Summary Panel) — 09-01 backend, 09-02 frontend
 - Validate real QB P&L JSON shape (summarize_column_by=Month) before writing income parser in Phase 10-01
 - Deploy to production after milestone: npm run build + rsync + pm2 restart
 
@@ -83,5 +86,5 @@ From 08-01 execution:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 08-01-PLAN.md — kbSummaryCache schema + kbInsights.ts + kbInsightsActions.ts deployed to Convex
+Stopped at: Completed 08-02-PLAN.md — KBInsights.tsx created, kb-insights registered in types/constants/dashboard
 Resume file: None
