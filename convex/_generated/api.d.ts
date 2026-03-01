@@ -30,6 +30,7 @@ import type * as coparentIntake from "../coparentIntake.js";
 import type * as crons from "../crons.js";
 import type * as dashboardPrefs from "../dashboardPrefs.js";
 import type * as debug from "../debug.js";
+import type * as enrollments from "../enrollments.js";
 import type * as expenseActions from "../expenseActions.js";
 import type * as googleCalendar from "../googleCalendar.js";
 import type * as googleCalendarActions from "../googleCalendarActions.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboardPrefs: typeof dashboardPrefs;
   debug: typeof debug;
+  enrollments: typeof enrollments;
   expenseActions: typeof expenseActions;
   googleCalendar: typeof googleCalendar;
   googleCalendarActions: typeof googleCalendarActions;
