@@ -159,7 +159,34 @@ export default defineSchema({
     ethnicity: v.optional(v.string()),
     notes: v.optional(v.string()),
     createdAt: v.number(),
+    // v2.0 demographic fields (Phase 16)
+    gender: v.optional(v.string()),
+    referralSource: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),    // ISO "YYYY-MM-DD"
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
   }).index("by_programId", ["programId"]),
+
+  enrollments: defineTable({
+    clientId: v.id("clients"),
+    programId: v.id("programs"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("active"),
+      v.literal("on_hold"),
+      v.literal("completed"),
+      v.literal("withdrawn")
+    ),
+    enrollmentDate: v.number(),
+    exitDate: v.optional(v.number()),
+    exitReason: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_programId", ["programId"])
+    .index("by_status", ["status"]),
 
   sessions: defineTable({
     clientId: v.id("clients"),
@@ -168,7 +195,19 @@ export default defineSchema({
     sessionType: v.optional(v.string()),
     notes: v.optional(v.string()),
     createdBy: v.optional(v.id("users")),
-  }).index("by_clientId", ["clientId"]),
+    // v2.0 attendance and enrollment fields (Phase 16)
+    attendanceStatus: v.optional(v.union(
+      v.literal("attended"),
+      v.literal("missed"),
+      v.literal("excused"),
+      v.literal("cancelled")
+    )),
+    enrollmentId: v.optional(v.id("enrollments")),
+    duration: v.optional(v.number()),       // minutes, for grant reporting
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_sessionDate", ["sessionDate"]),
 
   clientGoals: defineTable({
     clientId: v.id("clients"),
