@@ -11,7 +11,7 @@ import {
   BarElement,
 } from "chart.js";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
