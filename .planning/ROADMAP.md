@@ -134,7 +134,10 @@ Plans:
   4. The Admin console no longer shows a Google Sheets program config section, and the Sheets program sync cron no longer runs
   5. Google Calendar data continues syncing correctly after the Sheets program configuration is removed
   6. The proactive alerts panel no longer shows a Sheets staleness warning for program data
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 20-01-PLAN.md — Rewrite client queries for enrollment-based RBAC and enrich client detail page with enrollments section
+- [ ] 20-02-PLAN.md — Remove Sheets program sync from cron/action/alerts, remove admin Sheets tab, verify Calendar independence
 
 ### Phase 21: Schema Cleanup
 **Goal**: The Convex schema accurately reflects only the new data model — legacy fields and deprecated tables are fully removed after their documents have been cleared
@@ -180,6 +183,6 @@ Plans:
 | 17. Enrollment and Sessions Backend | 1/1 | Complete    | 2026-03-01 | - |
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
 | 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
-| 20. Frontend and Sheets Removal | v2.0 | 0/TBD | Not started | - |
+| 20. Frontend and Sheets Removal | v2.0 | 0/2 | Not started | - |
 | 21. Schema Cleanup | v2.0 | 0/TBD | Not started | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |
