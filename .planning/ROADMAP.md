@@ -50,7 +50,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
 
 ## Phases
 
-- [ ] **Phase 11: Analytics Foundation + Dashboard Cards** - /analytics route with sidebar nav, tab structure, and three dashboard KPI cards for clients/sessions/intake
+- [x] **Phase 11: Analytics Foundation + Dashboard Cards** - /analytics route with sidebar nav, tab structure, and three dashboard KPI cards for clients/sessions/intake (completed 2026-03-01)
 - [ ] **Phase 12: Demographics Tab** - Gender, ethnicity, age group, referral source, outcome rates, and zip code charts using existing Sheets data
 - [ ] **Phase 13: Client Activity Tab** - Session trends, goal status breakdown, and intake volume charts backed by new aggregate queries
 - [ ] **Phase 14: Operations Tab** - Staff activity feed, per-user action stats, and expense categorization metrics from audit log + allocation data
@@ -68,7 +68,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
   3. Dashboard shows an active client count card with a live total across all programs
   4. Dashboard shows a session volume card with sessions logged in the last 30 days
   5. Dashboard shows an intake trend indicator comparing new intakes this month vs. last month
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 11-01: Analytics route scaffold (/analytics page, tab nav component, sidebar nav registration with role gating)
@@ -148,7 +148,7 @@ Plans:
 | 7. Alert Configuration & Persistence | v1.1 | 2/2 | Complete | 2026-02-28 |
 | 8. KB KPI Extraction | v1.2 | 2/2 | Complete | 2026-03-01 |
 | 9. AI Summary Panel | v1.2 | 2/2 | Complete | 2026-03-01 |
-| 11. Analytics Foundation + Dashboard Cards | 1/2 | In Progress|  | - |
+| 11. Analytics Foundation + Dashboard Cards | 2/2 | Complete   | 2026-03-01 | - |
 | 12. Demographics Tab | v1.3 | 0/2 | Not started | - |
 | 13. Client Activity Tab | v1.3 | 0/2 | Not started | - |
 | 14. Operations Tab | v1.3 | 0/2 | Not started | - |

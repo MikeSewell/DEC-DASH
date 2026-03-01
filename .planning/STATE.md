@@ -8,7 +8,7 @@ progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 10
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,26 +23,33 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 11 of 15 (Analytics Foundation + Dashboard Cards)
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase (phase complete)
 Status: In progress
-Last activity: 2026-03-01 — 11-01 complete: /analytics route with tab navigation, BarChart2 sidebar icon
+Last activity: 2026-03-01 — 11-02 complete: analytics dashboard cards (active clients, session volume, intake trend)
 
-Progress: [█░░░░░░░░░] 10% (v1.3) — 1/10 plans complete
+Progress: [██░░░░░░░░] 20% (v1.3) — 2/10 plans complete
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v1.3)
+- Total plans completed: 2 (v1.3)
 - Average duration: ~2 min
-- Total execution time: ~2 min
+- Total execution time: ~4 min
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 11    | 01   | 2min     | 2     | 4     |
+| 11    | 02   | 2min     | 2     | 6     |
 
 ## Accumulated Context
 
 ### Decisions
+
+From 11-02:
+- Used StatCardGridSkeleton count=3 directly (same pattern as ClientActivity.tsx) — count prop confirmed
+- Inline StatCard component in AnalyticsCards.tsx (not shared) matching ClientActivity.tsx pattern
+- analytics-cards inserted after client-activity in DEFAULT_DASHBOARD_SECTIONS order
+- Intake trend uses by_createdAt index range queries for efficient month filtering
 
 From 11-01:
 - AnalyticsTab uses 'client-activity' (with dash) to match URL-safe naming convention consistent with DashboardSectionId
@@ -70,5 +77,5 @@ Carried from v1.2:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 11-01-PLAN.md — /analytics route with tab navigation live
+Stopped at: Completed 11-02-PLAN.md — analytics dashboard cards (active clients, session volume, intake trend) live
 Resume file: None

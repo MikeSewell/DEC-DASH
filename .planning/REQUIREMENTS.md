@@ -9,9 +9,9 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
 ### Dashboard Cards
 
-- [ ] **DASH-01**: User sees an active client count card on the dashboard showing total active clients across all programs
-- [ ] **DASH-02**: User sees a session volume card on the dashboard showing sessions logged in the last 30 days
-- [ ] **DASH-03**: User sees an intake trend indicator on the dashboard showing new intakes this month vs. last month
+- [x] **DASH-01**: User sees an active client count card on the dashboard showing total active clients across all programs
+- [x] **DASH-02**: User sees a session volume card on the dashboard showing sessions logged in the last 30 days
+- [x] **DASH-03**: User sees an intake trend indicator on the dashboard showing new intakes this month vs. last month
 
 ### Analytics Page
 
@@ -78,9 +78,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DASH-01 | Phase 11 | Pending |
-| DASH-02 | Phase 11 | Pending |
-| DASH-03 | Phase 11 | Pending |
+| DASH-01 | Phase 11 | Complete |
+| DASH-02 | Phase 11 | Complete |
+| DASH-03 | Phase 11 | Complete |
 | PAGE-01 | Phase 11 | Complete |
 | PAGE-02 | Phase 11 | Complete |
 | DEMO-01 | Phase 12 | Pending |
