@@ -336,6 +336,138 @@ export const getDonations = query({
   },
 });
 
+// Get all QB income-type accounts (for admin designation UI)
+export const getIncomeAccounts = query({
+  handler: async (ctx) => {
+    const cached = await ctx.db
+      .query("quickbooksCache")
+      .withIndex("by_reportType", (q) => q.eq("reportType", "accounts"))
+      .first();
+    if (!cached) return null;
+
+    const raw = JSON.parse(cached.data);
+    const allAccounts: any[] = raw?.QueryResponse?.Account ?? [];
+
+    const incomeAccounts = allAccounts
+      .filter((a: any) => a.AccountType === "Income" || a.AccountType === "Other Income")
+      .map((a: any) => ({
+        id: a.Id as string,
+        name: a.Name as string,
+        accountType: a.AccountType as string,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return { accounts: incomeAccounts, fetchedAt: cached.fetchedAt };
+  },
+});
+
+// Get monthly income trend data filtered by admin-designated accounts
+export const getIncomeTrend = query({
+  handler: async (ctx) => {
+    const cached = await ctx.db
+      .query("quickbooksCache")
+      .withIndex("by_reportType", (q) => q.eq("reportType", "income_trend"))
+      .first();
+    if (!cached) return null;
+
+    // Read designated accounts from appSettings
+    const setting = await ctx.db
+      .query("appSettings")
+      .withIndex("by_key", (q) => q.eq("key", "donation_income_accounts"))
+      .first();
+
+    // If no accounts designated, return null with a flag
+    const designatedAccounts: string[] = setting?.value
+      ? JSON.parse(setting.value)
+      : [];
+
+    if (designatedAccounts.length === 0) {
+      return { configured: false as const, months: [], accounts: [], fetchedAt: cached.fetchedAt };
+    }
+
+    const raw = JSON.parse(cached.data);
+
+    // Extract month labels from column headers
+    // QB P&L with summarize_column_by=Month returns Columns.Column array
+    const columns: any[] = raw?.Columns?.Column ?? [];
+    // First column is "Account" label, remaining are month columns, last may be "Total"
+    const monthColumns: string[] = [];
+    for (let i = 1; i < columns.length; i++) {
+      const colTitle = columns[i]?.ColTitle ?? "";
+      if (colTitle.toLowerCase() === "total") continue;
+      monthColumns.push(colTitle);
+    }
+
+    // Parse income rows from the report
+    const rows: any[] = raw?.Rows?.Row ?? [];
+    const accountMonthlyData: Record<string, number[]> = {};
+
+    for (const row of rows) {
+      const group = (row.group ?? "").toLowerCase();
+      if (group.includes("income") && !group.includes("netincome") && !group.includes("net income")) {
+        extractMonthlyIncomeRows(row, designatedAccounts, monthColumns.length, accountMonthlyData);
+      }
+    }
+
+    // Build result: monthly totals and per-account breakdown
+    const months = monthColumns.map((label, i) => {
+      let total = 0;
+      const breakdown: Record<string, number> = {};
+      for (const [accountName, values] of Object.entries(accountMonthlyData)) {
+        const val = values[i] ?? 0;
+        total += val;
+        if (val !== 0) breakdown[accountName] = val;
+      }
+      return { label, total, breakdown };
+    });
+
+    return {
+      configured: true as const,
+      months,
+      accounts: Object.keys(accountMonthlyData),
+      fetchedAt: cached.fetchedAt,
+    };
+  },
+});
+
+// Helper: recursively extract monthly values for designated income accounts
+function extractMonthlyIncomeRows(
+  sectionRow: any,
+  designatedAccounts: string[],
+  monthCount: number,
+  result: Record<string, number[]>
+) {
+  const subRows: any[] = sectionRow.Rows?.Row ?? [];
+  for (const sub of subRows) {
+    if (sub.type === "Section" && sub.Header) {
+      // Sub-section: check if the header name matches a designated account
+      const headerName = sub.Header?.ColData?.[0]?.value ?? "";
+      if (designatedAccounts.includes(headerName)) {
+        // Use summary row for this section's monthly values
+        const summaryColData: any[] = sub.Summary?.ColData ?? [];
+        // Skip first column (label) and last column if "Total"
+        const values: number[] = [];
+        for (let i = 1; i <= monthCount; i++) {
+          values.push(parseFloat(summaryColData[i]?.value ?? "0"));
+        }
+        result[headerName] = values;
+      } else {
+        // Recurse into sub-sections to find matching accounts
+        extractMonthlyIncomeRows(sub, designatedAccounts, monthCount, result);
+      }
+    } else if (sub.type === "Data" && sub.ColData) {
+      const accountName = sub.ColData[0]?.value ?? "";
+      if (designatedAccounts.includes(accountName)) {
+        const values: number[] = [];
+        for (let i = 1; i <= monthCount; i++) {
+          values.push(parseFloat(sub.ColData[i]?.value ?? "0"));
+        }
+        result[accountName] = values;
+      }
+    }
+  }
+}
+
 // Save OAuth tokens from callback
 export const saveTokens = mutation({
   args: {

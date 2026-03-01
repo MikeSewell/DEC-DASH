@@ -47,6 +47,14 @@ export function useDonations() {
   return useQuery(api.quickbooks.getDonations);
 }
 
+export function useIncomeTrend() {
+  return useQuery(api.quickbooks.getIncomeTrend);
+}
+
+export function useIncomeAccounts() {
+  return useQuery(api.quickbooks.getIncomeAccounts);
+}
+
 export function useQuickBooksSync() {
   const triggerSync = useAction(api.quickbooksActions.triggerSync);
   return { triggerSync };

@@ -7,6 +7,7 @@ import { api } from "../../../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import UserManagement from "@/components/admin/UserManagement";
 import QuickBooksConnect from "@/components/admin/QuickBooksConnect";
+import { useIncomeAccounts } from "@/hooks/useQuickBooks";
 import ConstantContactConnect from "@/components/admin/ConstantContactConnect";
 import GoogleSheetsConfig from "@/components/admin/GoogleSheetsConfig";
 import GoogleCalendarConfig from "@/components/admin/GoogleCalendarConfig";
@@ -134,7 +135,12 @@ export default function AdminPage() {
       case "users":
         return <UserManagement />;
       case "quickbooks":
-        return <QuickBooksConnect />;
+        return (
+          <div className="space-y-6">
+            <QuickBooksConnect />
+            <IncomeAccountConfig />
+          </div>
+        );
       case "constant-contact":
         return <ConstantContactConnect />;
       case "google-sheets":
@@ -198,6 +204,141 @@ export default function AdminPage() {
 
       {/* Tab content */}
       <div>{renderTabContent()}</div>
+    </div>
+  );
+}
+
+function IncomeAccountConfig() {
+  const incomeAccounts = useIncomeAccounts();
+  const designatedSetting = useQuery(api.settings.get, { key: "donation_income_accounts" });
+  const setSetting = useMutation(api.settings.set);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+
+  // Parse currently designated accounts
+  const designated: string[] = designatedSetting?.value
+    ? JSON.parse(designatedSetting.value)
+    : [];
+
+  // Local state for checkbox selections (initialized from designated once loaded)
+  const [selected, setSelected] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialize local selection from saved setting
+  useEffect(() => {
+    if (designatedSetting !== undefined && !initialized) {
+      setSelected(designated);
+      setInitialized(true);
+    }
+  }, [designatedSetting, initialized]);
+  // Note: `designated` is derived from `designatedSetting`, so no need to add it to deps
+
+  function handleToggle(accountName: string) {
+    setSelected((prev) =>
+      prev.includes(accountName)
+        ? prev.filter((a) => a !== accountName)
+        : [...prev, accountName]
+    );
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveMessage("");
+    try {
+      await setSetting({ key: "donation_income_accounts", value: JSON.stringify(selected) });
+      setSaveMessage("Income accounts saved. Chart will update on next render.");
+      setTimeout(() => setSaveMessage(""), 4000);
+    } catch {
+      setSaveMessage("Failed to save income accounts.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Loading state
+  if (incomeAccounts === undefined || designatedSetting === undefined) {
+    return (
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
+        <h3 className="text-base font-semibold text-foreground mb-2">Donation Income Accounts</h3>
+        <p className="text-sm text-muted">Loading account data...</p>
+      </div>
+    );
+  }
+
+  // QB not connected or no accounts synced
+  if (incomeAccounts === null || incomeAccounts.accounts.length === 0) {
+    return (
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
+        <h3 className="text-base font-semibold text-foreground mb-2">Donation Income Accounts</h3>
+        <p className="text-sm text-muted">
+          No income accounts available. Connect QuickBooks and sync data first, then return here to designate which income accounts should appear in the Donation Performance chart.
+        </p>
+      </div>
+    );
+  }
+
+  const hasChanges = JSON.stringify(selected.sort()) !== JSON.stringify([...designated].sort());
+
+  return (
+    <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-base font-semibold text-foreground">Donation Income Accounts</h3>
+        <span className={cn(
+          "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium",
+          designated.length > 0
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+        )}>
+          <span className={cn(
+            "w-1.5 h-1.5 rounded-full",
+            designated.length > 0 ? "bg-green-500" : "bg-yellow-500"
+          )} />
+          {designated.length > 0 ? `${designated.length} selected` : "Not configured"}
+        </span>
+      </div>
+      <p className="text-sm text-muted mb-4">
+        Select which QB income accounts represent donations and income sources. Selected accounts will appear in the Donation Performance chart on the dashboard.
+      </p>
+
+      <div className="space-y-2 max-h-64 overflow-y-auto border border-border rounded-lg p-3">
+        {incomeAccounts.accounts.map((account) => (
+          <label
+            key={account.id}
+            className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-surface-hover cursor-pointer transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(account.name)}
+              onChange={() => handleToggle(account.name)}
+              className="rounded border-border text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-foreground flex-1">{account.name}</span>
+            <span className="text-xs text-muted">{account.accountType}</span>
+          </label>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between mt-4">
+        <p className="text-xs text-muted">
+          {selected.length} of {incomeAccounts.accounts.length} accounts selected
+        </p>
+        <button
+          onClick={handleSave}
+          disabled={saving || !hasChanges}
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {saving ? "Saving..." : "Save Selection"}
+        </button>
+      </div>
+
+      {saveMessage && (
+        <p className={cn(
+          "mt-2 text-sm",
+          saveMessage.includes("saved") ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+        )}>
+          {saveMessage}
+        </p>
+      )}
     </div>
   );
 }
