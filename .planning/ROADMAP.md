@@ -147,7 +147,10 @@ Plans:
   1. The programDataCache table no longer exists in the Convex schema and no documents remain in it
   2. The clients schema definition no longer contains programId, enrollmentDate, or status fields
   3. The Convex schema push succeeds without validation errors after all legacy fields and tables are removed
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 21-01-PLAN.md — Clear programDataCache documents, delete dead Sheets code, rewrite dashboard components to use getAllDemographics, remove programDataCache table and sheetsStalenessHours from schema
+- [ ] 21-02-PLAN.md — Rewrite all callers of clients.programId/enrollmentDate/status to use enrollments table, update frontend forms, drop legacy fields and by_programId index from clients schema
 
 ### Phase 22: Data Export
 **Goal**: An admin can download the complete client dataset — including enrollment history and session counts — as CSV or Excel for backup and grant reporting purposes
@@ -184,5 +187,5 @@ Plans:
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
 | 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | 2/2 | Complete    | 2026-03-01 | - |
-| 21. Schema Cleanup | v2.0 | 0/TBD | Not started | - |
+| 21. Schema Cleanup | v2.0 | 0/2 | Not started | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |
