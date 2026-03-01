@@ -10,7 +10,8 @@ import {
   LinearScale,
   BarElement,
 } from "chart.js";
-import { useProgramDemographics, useSheetsConfig } from "@/hooks/useGrantTracker";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -44,39 +45,52 @@ const PIE_LEGEND = {
   },
 };
 
-export default function ProgramsCoparent() {
-  const demographics = useProgramDemographics("coparent");
-  const sheetsConfig = useSheetsConfig();
+function makeHorizontalBarOptions(label: string) {
+  return {
+    indexAxis: "y" as const,
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: CHART_TOOLTIP,
+    },
+    scales: {
+      x: {
+        grid: { color: "rgba(45,106,79,0.06)" },
+        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
+      },
+      y: {
+        grid: { display: false },
+        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
+      },
+    },
+  };
+}
 
-  if (demographics === undefined || sheetsConfig === undefined) {
+export default function ProgramsCoparent() {
+  const programs = useQuery(api.programs.list);
+  const coparentProgram = programs?.find((p) => p.type === "coparent");
+  const demographics = useQuery(
+    api.analytics.getAllDemographics,
+    coparentProgram ? { programId: coparentProgram._id } : "skip"
+  );
+
+  if (demographics === undefined || programs === undefined) {
     return <ChartSkeleton height={200} />;
   }
 
-  if (sheetsConfig === null) {
+  if (!coparentProgram || demographics === null || demographics.total === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted">
         <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
         </svg>
-        <p className="text-sm">Connect Google Sheets to view this data.</p>
-        <a href="/admin" className="text-primary hover:underline text-xs mt-2">Configure Google Sheets →</a>
+        <p className="text-sm">No co-parent program data yet.</p>
       </div>
     );
   }
 
-  if (demographics.total === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-        </svg>
-        <p className="text-sm">No co-parent program data synced yet.</p>
-        <p className="text-xs mt-1">Data will appear after the next sync cycle.</p>
-      </div>
-    );
-  }
-
-  const { total, active, completed, avgSessions, genderDistribution, ethnicityDistribution, ageDistribution, outcomeDistribution } = demographics;
+  const { total, active, completed, genderDistribution, ethnicityDistribution, ageDistribution, referralSource, zipDistribution } = demographics;
 
   const makePieData = (dist: { name: string; count: number }[]) => ({
     labels: dist.map((d) => d.name),
@@ -96,37 +110,17 @@ export default function ProgramsCoparent() {
     plugins: { legend: PIE_LEGEND, tooltip: CHART_TOOLTIP },
   };
 
-  const ethnicityBarData = {
-    labels: ethnicityDistribution.map((d) => d.name),
+  const makeBarData = (dist: { name: string; count: number }[], color: string) => ({
+    labels: dist.map((d) => d.name),
     datasets: [
       {
         label: "Participants",
-        data: ethnicityDistribution.map((d) => d.count),
-        backgroundColor: "#2D6A4F",
+        data: dist.map((d) => d.count),
+        backgroundColor: color,
         borderRadius: 8,
       },
     ],
-  };
-
-  const ethnicityBarOptions = {
-    indexAxis: "y" as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: CHART_TOOLTIP,
-    },
-    scales: {
-      x: {
-        grid: { color: "rgba(45,106,79,0.06)" },
-        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
-      },
-      y: {
-        grid: { display: false },
-        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
-      },
-    },
-  };
+  });
 
   return (
     <div className="space-y-6">
@@ -145,8 +139,8 @@ export default function ProgramsCoparent() {
           <p className="text-xs text-muted">Completed</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">{avgSessions}</p>
-          <p className="text-xs text-muted">Avg Sessions</p>
+          <p className="text-xl font-bold text-accent">{zipDistribution.length}</p>
+          <p className="text-xs text-muted">Zip Codes</p>
         </div>
       </div>
 
@@ -177,21 +171,33 @@ export default function ProgramsCoparent() {
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-3">Ethnicity</h4>
             <div style={{ height: Math.max(180, ethnicityDistribution.length * 32) }}>
-              <Bar data={ethnicityBarData} options={ethnicityBarOptions} />
+              <Bar data={makeBarData(ethnicityDistribution, "#2D6A4F")} options={makeHorizontalBarOptions("Ethnicity")} />
             </div>
           </div>
         )}
 
-        {/* Outcomes */}
-        {outcomeDistribution.length > 0 && (
+        {/* Zip Code Distribution */}
+        {zipDistribution.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-3">Program Outcomes</h4>
-            <div style={{ height: 200 }}>
-              <Pie data={makePieData(outcomeDistribution)} options={pieOptions} />
+            <h4 className="text-sm font-semibold text-foreground mb-3">Zip Code Distribution</h4>
+            <div style={{ height: Math.max(180, zipDistribution.length * 32) }}>
+              <Bar data={makeBarData(zipDistribution, "#1B5E6B")} options={makeHorizontalBarOptions("Zip Code")} />
             </div>
           </div>
         )}
       </div>
+
+      {/* Referral source */}
+      {referralSource.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-3">How Participants Found Us</h4>
+            <div style={{ height: Math.max(200, referralSource.length * 32) }}>
+              <Bar data={makeBarData(referralSource, "#6BBF59")} options={makeHorizontalBarOptions("Referral Source")} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
