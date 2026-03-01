@@ -97,6 +97,6 @@ Plans:
 | 5. Dashboard KPI Trends | v1.1 | 1/1 | Complete | 2026-02-28 |
 | 6. Calendar Enhancements | v1.1 | 1/1 | Complete | 2026-02-28 |
 | 7. Alert Configuration & Persistence | v1.1 | 2/2 | Complete | 2026-02-28 |
-| 8. KB KPI Extraction | v1.2 | 0/2 | Not started | - |
+| 8. KB KPI Extraction | 1/2 | In Progress|  | - |
 | 9. AI Summary Panel | v1.2 | 0/2 | Not started | - |
 | 10. Donation Performance Charts | v1.2 | 0/2 | Not started | - |
