@@ -52,7 +52,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
 
 - [x] **Phase 11: Analytics Foundation + Dashboard Cards** - /analytics route with sidebar nav, tab structure, and three dashboard KPI cards for clients/sessions/intake (completed 2026-03-01)
 - [x] **Phase 12: Demographics Tab** - Gender, ethnicity, age group, referral source, outcome rates, and zip code charts using existing Sheets data (completed 2026-03-01)
-- [ ] **Phase 13: Client Activity Tab** - Session trends, goal status breakdown, and intake volume charts backed by new aggregate queries
+- [x] **Phase 13: Client Activity Tab** - Session trends, goal status breakdown, and intake volume charts backed by new aggregate queries (completed 2026-03-01)
 - [ ] **Phase 14: Operations Tab** - Staff activity feed, per-user action stats, and expense categorization metrics from audit log + allocation data
 - [ ] **Phase 15: Donation Performance Charts** - QB monthly income trend chart with account breakdown and admin designation UI
 
@@ -150,6 +150,6 @@ Plans:
 | 9. AI Summary Panel | v1.2 | 2/2 | Complete | 2026-03-01 |
 | 11. Analytics Foundation + Dashboard Cards | 2/2 | Complete    | 2026-03-01 | - |
 | 12. Demographics Tab | 2/2 | Complete    | 2026-03-01 | - |
-| 13. Client Activity Tab | 1/2 | In Progress|  | - |
+| 13. Client Activity Tab | 2/2 | Complete   | 2026-03-01 | - |
 | 14. Operations Tab | v1.3 | 0/2 | Not started | - |
 | 15. Donation Performance Charts | v1.3 | 0/2 | Not started | - |
