@@ -65,10 +65,10 @@ Plans:
   2. The Regenerate button is disabled during generation and role-gated so staff/readonly roles cannot trigger costly API calls
   3. A "Generated X ago" timestamp and status indicator (idle/generating/ready/failed) is visible at all times
   4. The previous summary remains visible while a new one is being generated — the panel never shows a blank screen mid-refresh
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: Assistants API summary action + SUM cache path in kbInsightsActions.ts + kbInsights.ts summary CRUD
+- [ ] 09-01: kbSummaryCache schema extension (3 summary fields) + saveSummary/setSummaryGenerating mutations + generateSummary Chat Completions action
 - [ ] 09-02: KBInsights.tsx summary panel section (bullets, Regenerate button, status indicator, stale-data display)
 
 ### Phase 10: Donation Performance Charts
