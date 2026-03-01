@@ -15,6 +15,11 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Key metrics at a glance",
   },
   {
+    id: "kb-insights",
+    title: "Organizational Metrics",
+    description: "AI-extracted metrics from KB documents",
+  },
+  {
     id: "grant-budget",
     title: "Grant Budget",
     description: "Budget vs actual per grant",

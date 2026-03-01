@@ -38,6 +38,7 @@ export type QBReportType =
 // Dashboard section IDs
 export type DashboardSectionId =
   | "executive-snapshot"
+  | "kb-insights"
   | "grant-budget"
   | "grant-tracking"
   | "donation-performance"
