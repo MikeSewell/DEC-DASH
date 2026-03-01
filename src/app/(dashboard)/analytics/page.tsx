@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { AnalyticsTab } from "@/types";
+import DemographicsTab from "@/components/analytics/DemographicsTab";
 
 const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
   { id: "demographics", label: "Demographics" },
@@ -74,7 +75,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "demographics" && <PlaceholderContent tab="demographics" />}
+      {activeTab === "demographics" && <DemographicsTab />}
       {activeTab === "client-activity" && <PlaceholderContent tab="client-activity" />}
       {activeTab === "operations" && <PlaceholderContent tab="operations" />}
     </div>
