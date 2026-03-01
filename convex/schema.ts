@@ -393,4 +393,19 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_userId_alertKey", ["userId", "alertKey"]),
+
+  kbSummaryCache: defineTable({
+    extractedAt: v.number(),
+    documentCount: v.number(),
+    extracting: v.boolean(),
+    metrics: v.array(v.object({
+      key: v.string(),
+      label: v.string(),
+      value: v.union(v.string(), v.null()),
+      unit: v.union(v.string(), v.null()),
+      sourceDocument: v.union(v.string(), v.null()),
+      conflictValue: v.optional(v.string()),
+      conflictDocument: v.optional(v.string()),
+    })),
+  }),
 });
