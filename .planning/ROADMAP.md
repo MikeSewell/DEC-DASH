@@ -68,7 +68,7 @@ Full details: `milestones/v1.2-ROADMAP.md`
   3. Dashboard shows an active client count card with a live total across all programs
   4. Dashboard shows a session volume card with sessions logged in the last 30 days
   5. Dashboard shows an intake trend indicator comparing new intakes this month vs. last month
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 11-01: Analytics route scaffold (/analytics page, tab nav component, sidebar nav registration with role gating)
@@ -148,7 +148,7 @@ Plans:
 | 7. Alert Configuration & Persistence | v1.1 | 2/2 | Complete | 2026-02-28 |
 | 8. KB KPI Extraction | v1.2 | 2/2 | Complete | 2026-03-01 |
 | 9. AI Summary Panel | v1.2 | 2/2 | Complete | 2026-03-01 |
-| 11. Analytics Foundation + Dashboard Cards | v1.3 | 0/2 | Not started | - |
+| 11. Analytics Foundation + Dashboard Cards | 1/2 | In Progress|  | - |
 | 12. Demographics Tab | v1.3 | 0/2 | Not started | - |
 | 13. Client Activity Tab | v1.3 | 0/2 | Not started | - |
 | 14. Operations Tab | v1.3 | 0/2 | Not started | - |

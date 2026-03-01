@@ -15,8 +15,8 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
 ### Analytics Page
 
-- [ ] **PAGE-01**: User can navigate to /analytics from the sidebar (visible to admin, manager, staff roles)
-- [ ] **PAGE-02**: Analytics page has tab navigation between Demographics, Client Activity, and Operations
+- [x] **PAGE-01**: User can navigate to /analytics from the sidebar (visible to admin, manager, staff roles)
+- [x] **PAGE-02**: Analytics page has tab navigation between Demographics, Client Activity, and Operations
 
 ### Demographics
 
@@ -81,8 +81,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-01 | Phase 11 | Pending |
 | DASH-02 | Phase 11 | Pending |
 | DASH-03 | Phase 11 | Pending |
-| PAGE-01 | Phase 11 | Pending |
-| PAGE-02 | Phase 11 | Pending |
+| PAGE-01 | Phase 11 | Complete |
+| PAGE-02 | Phase 11 | Complete |
 | DEMO-01 | Phase 12 | Pending |
 | DEMO-02 | Phase 12 | Pending |
 | DEMO-03 | Phase 12 | Pending |

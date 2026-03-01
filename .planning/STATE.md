@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
-status: ready_to_plan
+status: in_progress
 last_updated: "2026-03-01"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 10
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,22 +23,31 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 11 of 15 (Analytics Foundation + Dashboard Cards)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-01 — v1.3 roadmap created, 5 phases mapped, ready to plan Phase 11
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-03-01 — 11-01 complete: /analytics route with tab navigation, BarChart2 sidebar icon
 
-Progress: [░░░░░░░░░░] 0% (v1.3)
+Progress: [█░░░░░░░░░] 10% (v1.3) — 1/10 plans complete
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v1.3)
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 1 (v1.3)
+- Average duration: ~2 min
+- Total execution time: ~2 min
+
+| Phase | Plan | Duration | Tasks | Files |
+|-------|------|----------|-------|-------|
+| 11    | 01   | 2min     | 2     | 4     |
 
 ## Accumulated Context
 
 ### Decisions
+
+From 11-01:
+- AnalyticsTab uses 'client-activity' (with dash) to match URL-safe naming convention consistent with DashboardSectionId
+- Lawyer/psychologist exclusion from /analytics achieved via existing ROLE_NAV_MAP without changes — '/analytics' not in their allowed list
+- Analytics placeholder uses per-tab conditional rendering (not CSS hide) to keep DOM clean
 
 Carried from v1.2:
 - getProgramDemographics() already exists in convex/googleSheets.ts — Demographics tab is mostly frontend
@@ -61,5 +70,5 @@ Carried from v1.2:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: v1.3 roadmap created — 5 phases (11-15), 22 requirements mapped, 100% coverage
+Stopped at: Completed 11-01-PLAN.md — /analytics route with tab navigation live
 Resume file: None
