@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Intelligence
 status: unknown
-last_updated: "2026-03-01T02:25:53.806Z"
+last_updated: "2026-03-01T03:25:00Z"
 progress:
   total_phases: 1
   completed_phases: 1
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 
 ## Current Position
 
-Phase: 9 of 10 (AI Summary Panel) — IN PROGRESS
-Plan: 1 of 2 in current phase (09-01 auto tasks complete — schema + backend; awaiting npx convex dev --once)
-Status: 09-01 checkpoint:human-action — user must run npx convex dev --once to deploy schema
-Last activity: 2026-03-01 — 09-01 schema extended, mutations and generateSummary action added
+Phase: 9 of 10 (AI Summary Panel) — COMPLETE
+Plan: 2 of 2 in current phase — both plans complete
+Status: Phase 9 complete — schema + backend (09-01) and frontend UI (09-02) done; awaiting npx convex dev --once before visual verification
+Last activity: 2026-03-01 — 09-02 AI summary panel UI added to KBInsights.tsx
 
-Progress: [###░░░░░░░] 50% (3/6 plans)
+Progress: [####░░░░░░] 67% (4/6 plans)
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Progress: [###░░░░░░░] 50% (3/6 plans)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 8. KB KPI Extraction | 2/2 | 22 min | 11 min |
-| 9. AI Summary Panel | 1/2 | 3 min | 3 min |
+| 9. AI Summary Panel | 2/2 | 5 min | 2.5 min |
 | 10. Donation Performance Charts | 0/2 | — | — |
 
 *Updated after each plan completion*
@@ -51,6 +51,7 @@ Progress: [###░░░░░░░] 50% (3/6 plans)
 | Phase 08 P01 | 20 min | 3 tasks | 4 files |
 | Phase 08 P02 | 2 | 2 tasks | 4 files |
 | Phase 09 P01 | 3 min | 2 tasks | 3 files |
+| Phase 09 P02 | 2 min | 2 tasks | 1 file |
 
 ## Accumulated Context
 
@@ -62,6 +63,11 @@ Key decisions affecting v1.2:
 - All KPI schema fields nullable — returns null when metric not found (prevents hallucination)
 - AI summary uses manual Regenerate only — no auto-trigger on load (cost runaway risk $0.50-$1.00/call)
 - QB income designation admin UI required before donation chart (account names are org-specific, can't hardcode)
+
+From 09-02 execution:
+- Bullet map parameters typed as (bullet: string, i: number) — prevents any-propagation from Convex circular type issue in api.d.ts
+- hasSummary checks both existence and length > 0 — guards empty array edge case
+- Panel renders unconditionally below metric cards per CONTEXT.md locked decision (not collapsible separately)
 
 From 09-01 execution:
 - saveSummary uses ctx.db.patch() (not delete-insert) — preserves existing metrics row during regeneration (SUM-04)
@@ -80,8 +86,8 @@ From 08-01 execution:
 
 ### Pending Todos
 
-- Run npx convex dev --once to deploy kbSummaryCache schema changes (summaryBullets, summaryGeneratedAt, summaryGenerating)
-- Execute Phase 9 09-02 (AI Summary Panel frontend — KBInsights.tsx AI summary section)
+- Run npx convex dev --once to deploy kbSummaryCache schema changes (summaryBullets, summaryGeneratedAt, summaryGenerating) — prerequisite for Phase 9 visual verification
+- Visual verification of AI summary panel in browser after Convex schema deployed
 - Validate real QB P&L JSON shape (summarize_column_by=Month) before writing income parser in Phase 10-01
 - Deploy to production after milestone: npm run build + rsync + pm2 restart
 
@@ -94,5 +100,5 @@ From 08-01 execution:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: 09-01 checkpoint:human-action — schema extension + generateSummary action committed; user must run npx convex dev --once
+Stopped at: Completed 09-02-PLAN.md — AI summary panel UI complete; Phase 9 done
 Resume file: None
