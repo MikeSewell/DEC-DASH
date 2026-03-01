@@ -20,8 +20,8 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 - [ ] **CLNT-01**: All clients displayed in one unified list regardless of program type
 - [ ] **CLNT-02**: Lawyers see only clients with legal enrollments; psychologists see only co-parent enrollments
 - [ ] **CLNT-03**: Client detail page shows all enrollments across programs with intake forms
-- [ ] **CLNT-04**: Staff can create a new enrollment for an existing client in any program
-- [ ] **CLNT-05**: Staff can log individual sessions with date, attendance status, and notes per enrollment
+- [x] **CLNT-04**: Staff can create a new enrollment for an existing client in any program
+- [x] **CLNT-05**: Staff can log individual sessions with date, attendance status, and notes per enrollment
 
 ### Data Migration
 
@@ -93,8 +93,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLNT-01 | Phase 20 | Pending |
 | CLNT-02 | Phase 20 | Pending |
 | CLNT-03 | Phase 20 | Pending |
-| CLNT-04 | Phase 17 | Pending |
-| CLNT-05 | Phase 17 | Pending |
+| CLNT-04 | Phase 17 | Complete |
+| CLNT-05 | Phase 17 | Complete |
 | MIGR-01 | Phase 18 | Pending |
 | MIGR-02 | Phase 18 | Pending |
 | MIGR-03 | Phase 18 | Pending |
