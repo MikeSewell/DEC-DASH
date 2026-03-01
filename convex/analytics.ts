@@ -1,4 +1,5 @@
 import { query } from "./_generated/server";
+import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -110,26 +111,89 @@ export const getIntakeTrend = query({
 });
 
 /**
- * Returns aggregate demographics across ALL clients from the clients table.
- * Used by the Demographics tab on the Analytics page.
- * Replaces the former programDataCache query — demographics now come directly
- * from migrated client records (Phase 18 backfilled gender, ethnicity, ageGroup,
- * referralSource for 345 of 350 clients).
- * outcomeDistribution returns [] — no programOutcome field on clients table;
- * the UI has a length > 0 guard that hides the chart automatically.
+ * Normalize free-text ethnicity values into standard categories.
+ * Intake forms had no dropdown — users typed whatever they wanted,
+ * producing 50+ variations (Black, AA, African American, etc.).
+ */
+const ETHNICITY_MAP: Record<string, string> = {
+  // Black / African American
+  "black": "Black / African American",
+  "aa": "Black / African American",
+  "african american": "Black / African American",
+  "african-american": "Black / African American",
+  "(black)": "Black / African American",
+  "black hispanic": "Black / African American",
+  // Hispanic / Latino
+  "hispanic": "Hispanic / Latino",
+  "hispanic or latino": "Hispanic / Latino",
+  "hispanic or latine": "Hispanic / Latino",
+  "latin american": "Hispanic / Latino",
+  "latino": "Hispanic / Latino",
+  "mex": "Hispanic / Latino",
+  // White
+  "white": "White",
+  "caucasian": "White",
+  "white non hispanic": "White",
+  "european": "White",
+  "european american": "White",
+  // Asian
+  "asian": "Asian",
+  "chinese": "Asian",
+  "hmong": "Asian",
+  "east indian": "Asian",
+  // Native American / Pacific Islander
+  "american indian or alaska native": "Native American / Pacific Islander",
+  "native hawaiian or other pacific islander": "Native American / Pacific Islander",
+  // Multiracial
+  "mixed": "Multiracial",
+  "latin mixed": "Multiracial",
+  "mixed race": "Multiracial",
+  "bi-racial": "Multiracial",
+  "biracial": "Multiracial",
+};
+
+function normalizeEthnicity(raw: string | undefined): string {
+  if (!raw) return "Unknown";
+  const key = raw.trim().toLowerCase();
+  return ETHNICITY_MAP[key] ?? raw.trim();
+}
+
+/**
+ * Cap a distribution to the top N entries, rolling the rest into "Other".
+ */
+function topN(
+  dist: Array<{ name: string; count: number }>,
+  n: number,
+): Array<{ name: string; count: number }> {
+  if (dist.length <= n) return dist;
+  const top = dist.slice(0, n);
+  const otherCount = dist.slice(n).reduce((sum, d) => sum + d.count, 0);
+  if (otherCount > 0) top.push({ name: "Other", count: otherCount });
+  return top;
+}
+
+/**
+ * Returns aggregate demographics from the clients table.
+ * Accepts optional programId to filter by program, or returns all clients.
+ * Ethnicity values are normalized from free-text intake data into standard categories.
  */
 export const getAllDemographics = query({
-  args: {},
-  handler: async (ctx) => {
-    const clients = await ctx.db.query("clients").collect();
+  args: { programId: v.optional(v.id("programs")) },
+  handler: async (ctx, { programId }) => {
+    const clients = programId
+      ? await ctx.db
+          .query("clients")
+          .withIndex("by_programId", (q) => q.eq("programId", programId))
+          .collect()
+      : await ctx.db.query("clients").collect();
     const total = clients.length;
     const active = clients.filter((c) => c.status === "active").length;
     const completed = clients.filter((c) => c.status === "completed").length;
 
-    const toSortedDistribution = (field: (c: (typeof clients)[0]) => string | undefined) => {
+    const toSortedDistribution = (field: (c: (typeof clients)[0]) => string) => {
       const map: Record<string, number> = {};
       for (const c of clients) {
-        const val = field(c) || "Unknown";
+        const val = field(c);
         map[val] = (map[val] ?? 0) + 1;
       }
       return Object.entries(map)
@@ -141,11 +205,11 @@ export const getAllDemographics = query({
       total,
       active,
       completed,
-      genderDistribution: toSortedDistribution((c) => c.gender),
-      ethnicityDistribution: toSortedDistribution((c) => c.ethnicity),
-      ageDistribution: toSortedDistribution((c) => c.ageGroup),
-      outcomeDistribution: [] as Array<{ name: string; count: number }>,
-      referralSource: toSortedDistribution((c) => c.referralSource).slice(0, 10),
+      genderDistribution: toSortedDistribution((c) => c.gender || "Unknown"),
+      ethnicityDistribution: topN(toSortedDistribution((c) => normalizeEthnicity(c.ethnicity)), 8),
+      ageDistribution: topN(toSortedDistribution((c) => c.ageGroup || "Unknown"), 8),
+      referralSource: toSortedDistribution((c) => c.referralSource || "Unknown").slice(0, 10),
+      zipDistribution: topN(toSortedDistribution((c) => c.zipCode || "Unknown"), 12),
     };
   },
 });

@@ -5,16 +5,14 @@ import { cn } from "@/lib/utils";
 import type { AnalyticsTab } from "@/types";
 import DemographicsTab from "@/components/analytics/DemographicsTab";
 import ClientActivityTab from "@/components/analytics/ClientActivityTab";
-import OperationsTab from "@/components/analytics/OperationsTab";
 
-const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
+const PROGRAM_TABS: { id: AnalyticsTab; label: string }[] = [
   { id: "demographics", label: "Demographics" },
   { id: "client-activity", label: "Client Activity" },
-  { id: "operations", label: "Operations" },
 ];
 
 
-export default function AnalyticsPage() {
+export default function ProgramsPage() {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("demographics");
 
   return (
@@ -22,17 +20,17 @@ export default function AnalyticsPage() {
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">
-          Analytics
+          Programs
         </h1>
         <p className="text-sm text-muted mt-1">
-          Program demographics, client activity, and operational insights.
+          Program demographics and client activity.
         </p>
       </div>
 
       {/* Tab bar */}
       <div className="border-b border-border">
         <nav className="flex gap-0 -mb-px">
-          {ANALYTICS_TABS.map((tab) => (
+          {PROGRAM_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -52,7 +50,6 @@ export default function AnalyticsPage() {
       {/* Tab content */}
       {activeTab === "demographics" && <DemographicsTab />}
       {activeTab === "client-activity" && <ClientActivityTab />}
-      {activeTab === "operations" && <OperationsTab />}
     </div>
   );
 }

@@ -15,8 +15,11 @@ export function useIntakeTrend() {
   return useQuery(api.analytics.getIntakeTrend);
 }
 
-export function useAllDemographics() {
-  return useQuery(api.analytics.getAllDemographics);
+export function useAllDemographics(programId?: string) {
+  return useQuery(
+    api.analytics.getAllDemographics,
+    programId ? { programId: programId as any } : {}
+  );
 }
 
 export function useZipCodeStats() {
