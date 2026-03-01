@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { useDonations } from "@/hooks/useQuickBooks";
+import { useIncomeTrend, useQuickBooksConfig } from "@/hooks/useQuickBooks";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
 
@@ -27,92 +27,143 @@ ChartJS.register(
   Filler
 );
 
-interface DonationEntry {
-  date: string;
-  amount: number;
-  donor?: string;
-}
-
-interface DonationsData {
-  donations?: DonationEntry[];
-  totalDonations?: number;
-  averageDonation?: number;
-  donorCount?: number;
-  monthlyTotals?: Record<string, number>;
-  fundingGoal?: number;
-  fundingGoalProgress?: number;
-}
+const PALETTE = [
+  "#1B5E6B", "#2B9E9E", "#5BBFB5", "#6BBF59",
+  "#8CC63F", "#7DD4C8", "#1A7A7A", "#2D6A4F",
+];
 
 export default function DonationPerformance() {
-  const donationsResult = useDonations();
+  const config = useQuickBooksConfig();
+  const incomeTrend = useIncomeTrend();
 
-  if (donationsResult === undefined) {
+  // Loading state
+  if (config === undefined || incomeTrend === undefined) {
     return <ChartSkeleton />;
   }
 
-  if (donationsResult === null) {
+  // QB not connected state
+  if (config === null) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted">
         <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
         </svg>
         <p className="text-sm">No donation data available yet.</p>
-        <p className="text-xs mt-1">Connect QuickBooks to import donation information.</p>
-        <a href="/admin" className="text-primary hover:underline text-xs mt-2 inline-block">Connect QuickBooks →</a>
+        <p className="text-xs mt-1">Connect QuickBooks to import income information.</p>
+        <a href="/admin?tab=quickbooks" className="text-primary hover:underline text-xs mt-2 inline-block">
+          Connect QuickBooks &rarr;
+        </a>
       </div>
     );
   }
 
-  const data = donationsResult.data as DonationsData | null;
-  if (!data) {
+  // Not configured state (DON-04)
+  if (incomeTrend === null || !incomeTrend.configured) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <p className="text-sm">No donation records found.</p>
+        <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <p className="text-sm font-medium">Configure donation accounts in Admin</p>
+        <p className="text-xs mt-1">Select which QB income accounts to display in this chart.</p>
+        <a href="/admin?tab=quickbooks" className="text-primary hover:underline text-xs mt-2 inline-block">
+          Open Admin Settings &rarr;
+        </a>
       </div>
     );
   }
 
-  const totalDonations = data.totalDonations ?? 0;
-  const avgDonation = data.averageDonation ?? 0;
-  const donorCount = data.donorCount ?? 0;
-  const fundingGoal = data.fundingGoal ?? 0;
-  const fundingProgress = data.fundingGoalProgress ?? (fundingGoal > 0 ? (totalDonations / fundingGoal) * 100 : 0);
+  // Data present — compute summary stats
+  const { months, accounts, fetchedAt } = incomeTrend;
 
-  // Build monthly chart data
-  const monthlyTotals = data.monthlyTotals ?? {};
-  const sortedMonths = Object.keys(monthlyTotals).sort();
-  const recentMonths = sortedMonths.slice(-12); // Last 12 months
+  // Grand total across all months
+  const grandTotal = months.reduce((sum, m) => sum + m.total, 0);
 
-  const chartData = {
-    labels: recentMonths.map((m) => {
-      // Format "2025-01" as "Jan 25"
-      const [year, month] = m.split("-");
-      const date = new Date(Number(year), Number(month) - 1);
-      return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-    }),
-    datasets: [
-      {
-        label: "Monthly Donations",
-        data: recentMonths.map((m) => monthlyTotals[m] ?? 0),
-        borderColor: "#2D6A4F",
-        backgroundColor: "rgba(45, 106, 79, 0.1)",
-        fill: true,
+  // Average monthly income
+  const avgMonthly = months.length > 0 ? grandTotal / months.length : 0;
+
+  // Current month vs previous month trend
+  const currentMonthTotal = months.length > 0 ? months[months.length - 1].total : 0;
+  const prevMonthTotal = months.length > 1 ? months[months.length - 2].total : 0;
+  const trendPct = prevMonthTotal > 0
+    ? Math.round(((currentMonthTotal - prevMonthTotal) / prevMonthTotal) * 100)
+    : currentMonthTotal > 0 ? 100 : 0;
+  const trendPositive = currentMonthTotal >= prevMonthTotal;
+
+  // Build chart data (DON-01 + DON-02)
+  const labels = months.map((m) => m.label);
+  const datasets: {
+    label: string;
+    data: number[];
+    borderColor: string;
+    backgroundColor: string | boolean;
+    fill?: boolean;
+    tension: number;
+    pointRadius: number;
+    pointHoverRadius: number;
+    pointBackgroundColor: string;
+    pointBorderColor: string;
+    pointBorderWidth: number;
+    borderWidth: number;
+  }[] = [];
+
+  // If multiple accounts, add a line per account
+  if (accounts.length > 1) {
+    for (let i = 0; i < accounts.length; i++) {
+      const accountName = accounts[i];
+      const color = PALETTE[i % PALETTE.length];
+      datasets.push({
+        label: accountName,
+        data: months.map((m) => m.breakdown[accountName] ?? 0),
+        borderColor: color,
+        backgroundColor: "transparent",
         tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: "#1B4332",
-        pointBorderColor: "#FFFEF9",
-        pointBorderWidth: 2,
-      },
-    ],
-  };
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: color,
+        pointBorderColor: "rgba(255,254,249,0.9)",
+        pointBorderWidth: 1.5,
+        borderWidth: 2,
+      });
+    }
+  }
+
+  // Total line (always shown)
+  datasets.push({
+    label: accounts.length > 1 ? "Total Income" : (accounts[0] ?? "Income"),
+    data: months.map((m) => m.total),
+    borderColor: "#2D6A4F",
+    backgroundColor: accounts.length > 1 ? "transparent" : "rgba(45, 106, 79, 0.1)",
+    fill: accounts.length <= 1,
+    tension: 0.3,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    pointBackgroundColor: "#1B4332",
+    pointBorderColor: "#FFFEF9",
+    pointBorderWidth: 2,
+    borderWidth: accounts.length > 1 ? 3 : 2,
+  });
+
+  const chartData = { labels, datasets };
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
-        display: false,
+        display: accounts.length > 1,
+        position: "top" as const,
+        labels: {
+          usePointStyle: true,
+          pointStyle: "circle" as const,
+          padding: 16,
+          font: { size: 11, family: "'Nunito', sans-serif" },
+        },
       },
       tooltip: {
         backgroundColor: "rgba(27,67,50,0.9)",
@@ -121,7 +172,8 @@ export default function DonationPerformance() {
         titleFont: { family: "'Nunito', sans-serif" },
         bodyFont: { family: "'Nunito', sans-serif" },
         callbacks: {
-          label: (ctx: { raw: unknown }) => formatCurrency(ctx.raw as number),
+          label: (ctx: { dataset: { label?: string }; raw: unknown }) =>
+            `${ctx.dataset.label}: ${formatCurrency(ctx.raw as number)}`,
         },
       },
     },
@@ -130,14 +182,16 @@ export default function DonationPerformance() {
         beginAtZero: true,
         ticks: {
           callback: (value: string | number) => formatCurrency(Number(value)),
+          font: { family: "'Nunito', sans-serif", size: 11 },
         },
         grid: {
           color: "rgba(45,106,79,0.06)",
         },
       },
       x: {
-        grid: {
-          display: false,
+        grid: { display: false },
+        ticks: {
+          font: { family: "'Nunito', sans-serif", size: 11 },
         },
       },
     },
@@ -148,52 +202,36 @@ export default function DonationPerformance() {
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-foreground">{formatCurrency(totalDonations)}</p>
-          <p className="text-xs text-muted mt-1">Total Donations</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(grandTotal)}</p>
+          <p className="text-xs text-muted mt-1">Total Income (12 mo)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-foreground">{formatCurrency(avgDonation)}</p>
-          <p className="text-xs text-muted mt-1">Avg Donation</p>
+          <p className="text-2xl font-bold text-foreground">{formatCurrency(avgMonthly)}</p>
+          <p className="text-xs text-muted mt-1">Avg Monthly</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-foreground">{donorCount}</p>
-          <p className="text-xs text-muted mt-1">Total Donors</p>
+          <p className={`text-2xl font-bold ${trendPositive ? "text-success" : "text-danger"}`}>
+            {trendPositive ? "+" : ""}{trendPct}%
+          </p>
+          <p className="text-xs text-muted mt-1">vs Previous Month</p>
         </div>
       </div>
 
-      {/* Funding goal progress */}
-      {fundingGoal > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-medium text-foreground">Funding Goal Progress</p>
-            <p className="text-sm text-muted">
-              {formatCurrency(totalDonations)} / {formatCurrency(fundingGoal)}
-            </p>
-          </div>
-          <div className="w-full h-3.5 rounded-full bg-surface-hover overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-primary-light transition-all duration-500"
-              style={{ width: `${Math.min(100, fundingProgress)}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted mt-1">{fundingProgress.toFixed(1)}% of goal reached</p>
-        </div>
-      )}
-
       {/* Line chart */}
-      {recentMonths.length > 0 ? (
-        <div style={{ height: 280 }}>
+      {months.length > 0 ? (
+        <div style={{ height: 300 }}>
           <Line data={chartData} options={chartOptions} />
         </div>
       ) : (
         <p className="text-sm text-muted text-center py-8">
-          No monthly donation data to chart.
+          No monthly income data to chart.
         </p>
       )}
 
-      {donationsResult.fetchedAt && (
+      {/* Sync timestamp */}
+      {fetchedAt && (
         <p className="text-xs text-muted text-right">
-          Last synced: {timeAgo(donationsResult.fetchedAt)}
+          Last synced: {timeAgo(fetchedAt)}
         </p>
       )}
     </div>
