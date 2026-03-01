@@ -18,6 +18,7 @@ import type * as allocation from "../allocation.js";
 import type * as allocationActions from "../allocationActions.js";
 import type * as allocationInternal from "../allocationInternal.js";
 import type * as allocationTypes from "../allocationTypes.js";
+import type * as analytics from "../analytics.js";
 import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as clientGoals from "../clientGoals.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   allocationActions: typeof allocationActions;
   allocationInternal: typeof allocationInternal;
   allocationTypes: typeof allocationTypes;
+  analytics: typeof analytics;
   auditLog: typeof auditLog;
   auth: typeof auth;
   clientGoals: typeof clientGoals;

@@ -80,3 +80,46 @@ export const getIntakeTrend = query({
     return { thisMonth, lastMonth, changePercent, positive };
   },
 });
+
+/**
+ * Returns aggregate demographics across ALL program types in programDataCache.
+ * Used by the Demographics tab on the Analytics page.
+ */
+export const getAllDemographics = query({
+  args: {},
+  handler: async (ctx) => {
+    const participants = await ctx.db.query("programDataCache").collect();
+
+    const total = participants.length;
+    const active = participants.filter((p) => p.status?.toLowerCase() === "active").length;
+    const completed = participants.filter((p) => p.status?.toLowerCase() === "completed").length;
+
+    const toSortedDistribution = (field: (p: (typeof participants)[0]) => string | undefined) => {
+      const map: Record<string, number> = {};
+      for (const p of participants) {
+        const val = field(p) || "Unknown";
+        map[val] = (map[val] ?? 0) + 1;
+      }
+      return Object.entries(map)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    };
+
+    const genderDistribution = toSortedDistribution((p) => p.gender);
+    const ethnicityDistribution = toSortedDistribution((p) => p.ethnicity);
+    const ageDistribution = toSortedDistribution((p) => p.ageGroup);
+    const outcomeDistribution = toSortedDistribution((p) => p.programOutcome);
+    const referralSource = toSortedDistribution((p) => p.referralSource).slice(0, 10);
+
+    return {
+      total,
+      active,
+      completed,
+      genderDistribution,
+      ethnicityDistribution,
+      ageDistribution,
+      outcomeDistribution,
+      referralSource,
+    };
+  },
+});

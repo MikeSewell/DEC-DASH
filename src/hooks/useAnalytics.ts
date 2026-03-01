@@ -14,3 +14,7 @@ export function useSessionVolume() {
 export function useIntakeTrend() {
   return useQuery(api.analytics.getIntakeTrend);
 }
+
+export function useAllDemographics() {
+  return useQuery(api.analytics.getAllDemographics);
+}
