@@ -39,7 +39,7 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 ### Infrastructure
 
 - [x] **INFR-01**: Sheets program sync cron removed (grant sync preserved)
-- [ ] **INFR-02**: programDataCache table cleared and removed from schema
+- [x] **INFR-02**: programDataCache table cleared and removed from schema
 - [ ] **INFR-03**: Legacy programId, enrollmentDate, status fields removed from clients schema
 - [x] **INFR-04**: Google Sheets program config removed from admin UI
 - [x] **INFR-05**: alerts.ts Sheets staleness check removed
@@ -103,7 +103,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ANLY-02 | Phase 19 | Complete |
 | ANLY-03 | Phase 19 | Complete |
 | INFR-01 | Phase 20 | Complete |
-| INFR-02 | Phase 21 | Pending |
+| INFR-02 | Phase 21 | Complete |
 | INFR-03 | Phase 21 | Pending |
 | INFR-04 | Phase 20 | Complete |
 | INFR-05 | Phase 20 | Complete |

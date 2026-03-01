@@ -187,5 +187,5 @@ Plans:
 | 18. Data Migration | 1/1 | Complete    | 2026-03-01 | - |
 | 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | 2/2 | Complete    | 2026-03-01 | - |
-| 21. Schema Cleanup | v2.0 | 0/2 | Not started | - |
+| 21. Schema Cleanup | 1/2 | In Progress|  | - |
 | 22. Data Export | v2.0 | 0/TBD | Not started | - |

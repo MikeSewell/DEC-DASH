@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T16:35:49.536Z"
+last_updated: "2026-03-01T17:11:56.840Z"
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 7
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 12
+  completed_plans: 11
 ---
 
 # Project State
@@ -22,10 +22,10 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 20 of 22 (Frontend and Sheets Removal — complete)
-Plan: 2 of 2 in current phase (complete)
-Status: Phase 20 complete — enrollment-based RBAC rewritten (plan 01) and Sheets program sync removed from cron, actions, alerts, and admin UI (plan 02); human-verified
-Last activity: 2026-03-01 — 20-02 executed: syncProgramData deleted, triggerSync trimmed, Section E deleted from alerts, Google Sheets admin tab and GoogleSheetsConfig.tsx removed; Calendar independence confirmed
+Phase: 21 of 22 (Schema Cleanup — in progress)
+Plan: 1 of 2 in current phase (checkpoint — awaiting human verify)
+Status: 21-01 Tasks 1+2 complete — programDataCache schema removed, dead code deleted, ProgramsLegal/ProgramsCoparent rewritten; Task 3 checkpoint awaiting user to run clearProgramDataCache + npx convex dev --once
+Last activity: 2026-03-02 — 21-01 tasks 1+2 executed: programDataCache table removed from schema, upsertProgramParticipant/getProgramDemographics/useProgramDemographics deleted, sheetsStalenessHours removed from schema/alertConfig/alerts/UI, ProgramsLegal+ProgramsCoparent rewired to getAllDemographics
 
 Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
@@ -65,6 +65,9 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 20-02]: upsertProgramParticipant left in googleSheetsInternal.ts as dead code — Phase 21 handles cleanup
 - [Phase 20-02]: sheetsStalenessHours left in alertConfig schema — Phase 21 removes it; leaving prevents schema errors
 - [Phase 20-02]: Google Calendar confirmed independent — reads googleCalendarConfig table (not googleSheetsConfig); no regression
+- [Phase 21-01]: [21-01] clearProgramDataCache internalMutation added to drain programDataCache before schema removal
+- [Phase 21-01]: [21-01] ProgramsLegal and ProgramsCoparent rewritten to use getAllDemographics from clients table — programDataCache no longer used for dashboard demographics
+- [Phase 21-01]: [21-01] avgSessions replaced with zipDistribution.length in stat cards — getAllDemographics does not compute session averages
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 20-02-PLAN.md — Sheets program sync removed from cron, actions, alerts, and admin UI; grant sync and Calendar preserved; human-verified
+Last session: 2026-03-02
+Stopped at: Checkpoint at 21-01 Task 3 — programDataCache schema removed, ProgramsLegal/ProgramsCoparent rewritten to use getAllDemographics, awaiting human verify of: npx convex run googleSheetsInternal:clearProgramDataCache then npx convex dev --once
 Resume file: None
