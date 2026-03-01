@@ -51,7 +51,7 @@ patterns-established:
 requirements-completed: [INFR-02]
 
 # Metrics
-duration: 10min
+duration: 45min
 completed: 2026-03-02
 ---
 
@@ -61,10 +61,10 @@ completed: 2026-03-02
 
 ## Performance
 
-- **Duration:** ~10 min
+- **Duration:** ~45 min
 - **Started:** 2026-03-02T16:07:30Z
-- **Completed:** 2026-03-02T16:17:00Z
-- **Tasks completed:** 2 of 3 (checkpoint at Task 3 awaiting human verification + schema deploy)
+- **Completed:** 2026-03-02
+- **Tasks completed:** 3 of 3 (all tasks complete — checkpoint approved, schema deployed)
 - **Files modified:** 9
 
 ## Accomplishments
@@ -83,7 +83,7 @@ Each task was committed atomically:
 
 1. **Task 1: Clear programDataCache, delete dead backend code, remove sheetsStalenessHours** - `d6c3c12` (feat)
 2. **Task 2: Rewrite ProgramsLegal and ProgramsCoparent to use getAllDemographics** - `8d33c5a` (feat)
-3. **Task 3: Checkpoint — human verify schema deploy** - AWAITING (checkpoint)
+3. **Task 3: Verify programDataCache removal and dashboard components** - APPROVED (human-verify checkpoint: clearProgramDataCache returned deleted: 0, npx convex dev --once deployed cleanly)
 
 ## Files Created/Modified
 
@@ -113,21 +113,14 @@ None - all file edits applied cleanly.
 
 ## User Setup Required
 
-**Checkpoint at Task 3 — human verification required before this plan is complete.**
-
-Run the following steps to complete plan 21-01:
-
-1. `npx convex run googleSheetsInternal:clearProgramDataCache` — verify returns `{ deleted: N }` (may be 0 if table was already empty)
-2. `npx convex dev --once` — deploy schema without programDataCache table; verify no schema errors
-3. Open dashboard — verify "Legal Aid Program" and "Co-Parent Counseling" sections show demographics from clients table (not "Connect Google Sheets" placeholder)
-4. Open Admin > Alerts Configuration — verify NO "Google Sheets Staleness" input field appears
-5. Open Convex dashboard — verify `programDataCache` table no longer appears in table list
+None - all verification completed. Schema deployed successfully.
 
 ## Next Phase Readiness
 
-- Schema cleanup complete once human verification in Task 3 is confirmed
-- After Task 3 verification: plan 21-01 is fully complete (INFR-02 satisfied)
-- Phase 22 (Export) can proceed after schema confirmation
+- Plan 21-01 fully complete (INFR-02 satisfied)
+- programDataCache table confirmed removed from Convex schema (user ran clearProgramDataCache: deleted: 0 then npx convex dev --once successfully)
+- Plan 21-02 (clients legacy field cleanup) can proceed immediately
+- Phase 22 (Export) can proceed after Phase 21 completes
 
 ---
 *Phase: 21-schema-cleanup*

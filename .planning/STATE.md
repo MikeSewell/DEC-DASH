@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T17:11:56.840Z"
+last_updated: "2026-03-01T17:44:08.470Z"
 progress:
   total_phases: 8
   completed_phases: 7
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 21 of 22 (Schema Cleanup — in progress)
-Plan: 1 of 2 in current phase (checkpoint — awaiting human verify)
-Status: 21-01 Tasks 1+2 complete — programDataCache schema removed, dead code deleted, ProgramsLegal/ProgramsCoparent rewritten; Task 3 checkpoint awaiting user to run clearProgramDataCache + npx convex dev --once
-Last activity: 2026-03-02 — 21-01 tasks 1+2 executed: programDataCache table removed from schema, upsertProgramParticipant/getProgramDemographics/useProgramDemographics deleted, sheetsStalenessHours removed from schema/alertConfig/alerts/UI, ProgramsLegal+ProgramsCoparent rewired to getAllDemographics
+Plan: 2 of 2 in current phase
+Status: 21-01 complete — programDataCache table removed from schema (deployed), dead code deleted, dashboard components rewired to clients table; ready for plan 21-02 (clients legacy field cleanup)
+Last activity: 2026-03-02 — 21-01 complete: clearProgramDataCache ran (deleted: 0), npx convex dev --once deployed schema without programDataCache, human verification approved
 
 Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
@@ -68,6 +68,7 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 21-01]: [21-01] clearProgramDataCache internalMutation added to drain programDataCache before schema removal
 - [Phase 21-01]: [21-01] ProgramsLegal and ProgramsCoparent rewritten to use getAllDemographics from clients table — programDataCache no longer used for dashboard demographics
 - [Phase 21-01]: [21-01] avgSessions replaced with zipDistribution.length in stat cards — getAllDemographics does not compute session averages
+- [Phase 21-schema-cleanup]: [21-01] clearProgramDataCache ran (deleted: 0) confirming table was already drained; schema deployed cleanly without programDataCache table
 
 ### Pending Todos
 
@@ -84,5 +85,5 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Checkpoint at 21-01 Task 3 — programDataCache schema removed, ProgramsLegal/ProgramsCoparent rewritten to use getAllDemographics, awaiting human verify of: npx convex run googleSheetsInternal:clearProgramDataCache then npx convex dev --once
+Stopped at: Completed 21-01 — programDataCache removed and schema deployed, ready for plan 21-02
 Resume file: None
