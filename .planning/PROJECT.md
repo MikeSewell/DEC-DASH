@@ -46,7 +46,9 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
-(No active requirements — define next milestone with `/gsd:new-milestone`)
+- [ ] Unify Google OAuth — single credentials + token store shared by Calendar and Sheets (currently fragmented)
+- [ ] Fix program data pipeline — Programs sections gated behind Sheets sync; consider KB-as-data-source fallback
+- [ ] Multi-sheet support — current sheetsConfig is a singleton; allow multiple spreadsheets or auto-discover tabs
 
 ### Out of Scope
 

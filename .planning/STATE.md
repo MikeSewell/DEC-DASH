@@ -37,6 +37,7 @@ Progress: [██████████] 100% (v1.3) — 10/10 plans complete
 
 - Deploy v1.3 to production
 - Run `/gsd:new-milestone` to define next milestone scope
+- **Saved todo:** Unify Google OAuth and fix program data pipeline (see `.planning/todos/pending/2026-03-01-unify-google-oauth-and-fix-program-data-pipeline.md`) — fragmented Google OAuth, program data gated behind Sheets, single-sheet limitation
 
 ### Blockers/Concerns
 
