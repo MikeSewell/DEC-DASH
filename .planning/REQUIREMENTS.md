@@ -42,10 +42,10 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
 ### Donation Performance
 
-- [ ] **DON-01**: Monthly income trend chart displays 12 months of QB income data on the dashboard
-- [ ] **DON-02**: Income chart breaks down revenue by QB account category
-- [ ] **DON-03**: Admin can designate which QB income accounts represent donation/income categories via admin settings
-- [ ] **DON-04**: When no accounts are designated, chart shows a "Configure donation accounts in Admin" prompt
+- [x] **DON-01**: Monthly income trend chart displays 12 months of QB income data on the dashboard
+- [x] **DON-02**: Income chart breaks down revenue by QB account category
+- [x] **DON-03**: Admin can designate which QB income accounts represent donation/income categories via admin settings
+- [x] **DON-04**: When no accounts are designated, chart shows a "Configure donation accounts in Admin" prompt
 
 ## Future Requirements
 
@@ -96,10 +96,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OPS-02 | Phase 14 | Complete |
 | OPS-03 | Phase 14 | Complete |
 | OPS-04 | Phase 14 | Complete |
-| DON-01 | Phase 15 | Pending |
-| DON-02 | Phase 15 | Pending |
-| DON-03 | Phase 15 | Pending |
-| DON-04 | Phase 15 | Pending |
+| DON-01 | Phase 15 | Complete |
+| DON-02 | Phase 15 | Complete |
+| DON-03 | Phase 15 | Complete |
+| DON-04 | Phase 15 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 22 total

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
 status: unknown
-last_updated: "2026-03-01T07:05:58.555Z"
+last_updated: "2026-03-01T07:26:55.568Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 14
+  completed_plans: 13
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 14 — Operations Tab
+**Current focus:** Phase 15 — Donation Performance Charts
 
 ## Current Position
 
-Phase: 14 of 15 (Operations Tab) — Complete
-Plan: 2 of 2 in current phase (complete)
-Status: Phase complete
-Last activity: 2026-03-01 — 14-02 complete: OperationsTab UI with activity feed, staff stats table, categorization cards, category charts
+Phase: 15 of 15 (Donation Performance Charts) — In Progress
+Plan: 1 of 2 in current phase (complete)
+Status: Plan 15-01 complete
+Last activity: 2026-03-01 — 15-01 complete: QB income trend data pipeline, getIncomeTrend/getIncomeAccounts queries, hooks, admin account designation UI
 
-Progress: [████████░░] 80% (v1.3) — 8/10 plans complete
+Progress: [█████████░] 90% (v1.3) — 9/10 plans complete
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [████████░░] 80% (v1.3) — 8/10 plans complete
 | 13    | 02   | 3min     | 2     | 2     |
 | 14    | 01   | 2min     | 2     | 2     |
 | 14    | 02   | 2min     | 2     | 2     |
+| 15    | 01   | 4min     | 2     | 4     |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ Carried from v1.2:
 - [Phase 14]: Show-more toggle uses useState(false), slices to 20 initially — reduces visual noise for large audit logs
 - [Phase 14]: Top-8 category cap on horizontal bar chart — prevents overflow on mobile screens
 - [Phase 14]: PlaceholderContent removed from analytics page — all three analytics tabs now render real components
+- [Phase 15]: extractMonthlyIncomeRows as module-level helper for recursive QB P&L row parsing
+- [Phase 15]: getIncomeTrend returns configured:false when no accounts designated — enables instructive empty state in chart
+- [Phase 15]: IncomeAccountConfig uses initialized flag pattern to prevent resetting user selections on re-renders
 
 ### Pending Todos
 
@@ -103,11 +107,10 @@ Carried from v1.2:
 
 ### Blockers/Concerns
 
-- QB monthly income JSON column shape needs validation before Phase 15 (DON charts)
 - npx convex dev --once must be run interactively — schema deploys cannot be automated in CI
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 14-02-PLAN.md — OperationsTab UI: activity feed, staff stats table, categorization metrics cards, category distribution charts
+Stopped at: Completed 15-01-PLAN.md — QB income trend data pipeline: fetchIncomeTrend action, getIncomeTrend/getIncomeAccounts queries, hooks, IncomeAccountConfig admin UI
 Resume file: None

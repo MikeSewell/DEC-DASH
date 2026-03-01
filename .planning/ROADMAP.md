@@ -152,4 +152,4 @@ Plans:
 | 12. Demographics Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 13. Client Activity Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 14. Operations Tab | 2/2 | Complete    | 2026-03-01 | - |
-| 15. Donation Performance Charts | v1.3 | 0/2 | Not started | - |
+| 15. Donation Performance Charts | 1/2 | In Progress|  | - |
