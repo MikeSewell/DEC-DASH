@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
 status: unknown
-last_updated: "2026-03-01T04:59:26.003Z"
+last_updated: "2026-03-01T05:33:07.483Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 12 — Demographics Tab
+**Current focus:** Phase 13 — Client Activity Tab
 
 ## Current Position
 
-Phase: 12 of 15 (Demographics Tab)
-Plan: 2 of 2 in current phase (complete)
+Phase: 13 of 15 (Client Activity Tab)
+Plan: 1 of 2 in current phase (complete)
 Status: In progress
-Last activity: 2026-03-01 — 12-02 complete: demographics tab extended with program outcomes doughnut and zip code coverage bar chart
+Last activity: 2026-03-01 — 13-01 complete: analytics data layer (getSessionTrends, getGoalStats, getIntakeVolume queries + hooks)
 
-Progress: [████░░░░░░] 40% (v1.3) — 4/10 plans complete
+Progress: [█████░░░░░] 50% (v1.3) — 5/10 plans complete
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [████░░░░░░] 40% (v1.3) — 4/10 plans complete
 | 11    | 02   | 2min     | 2     | 6     |
 | 12    | 01   | 3min     | 2     | 5     |
 | 12    | 02   | 3min     | 1     | 2     |
+| 13    | 01   | 2min     | 2     | 2     |
 
 ## Accumulated Context
 
@@ -76,6 +77,10 @@ Carried from v1.2:
 - Audit log analytics query needed; allocation stats query exists but needs historical acceptance-rate view
 - QB income account names unknown — admin designation UI is prerequisite for DON charts
 - Phase 10 (Donation) deferred from v1.2 → now Phase 15 in v1.3
+- [Phase 13]: getLast12Months() shared helper before first export — not exported, used by getSessionTrends and getIntakeVolume
+- [Phase 13]: getSessionTrends uses collect-all + in-memory filter; sessions table has no createdAt index (only by_clientId)
+- [Phase 13]: getIntakeVolume uses Promise.all() + by_createdAt index range queries for efficient per-month intake counts
+- [Phase 13]: getGoalStats returns completionRate: 0 when total=0 to avoid NaN division
 
 ### Pending Todos
 
@@ -91,5 +96,5 @@ Carried from v1.2:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 12-02-PLAN.md — demographics tab complete with 6 charts (gender, age, ethnicity, referral, outcomes, zip coverage)
+Stopped at: Completed 13-01-PLAN.md — analytics data layer: getSessionTrends, getGoalStats, getIntakeVolume queries + hooks
 Resume file: None

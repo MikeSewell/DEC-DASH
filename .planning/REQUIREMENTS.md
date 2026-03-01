@@ -29,9 +29,9 @@ Requirements for v1.3 Analytics milestone. Each maps to roadmap phases.
 
 ### Client Activity
 
-- [ ] **ACT-01**: User can view session volume trends over time (monthly chart) on the Client Activity tab
-- [ ] **ACT-02**: User can view client goal status breakdown and completion rate on the Client Activity tab
-- [ ] **ACT-03**: User can view intake volume trends (legal vs co-parent, monthly) on the Client Activity tab
+- [x] **ACT-01**: User can view session volume trends over time (monthly chart) on the Client Activity tab
+- [x] **ACT-02**: User can view client goal status breakdown and completion rate on the Client Activity tab
+- [x] **ACT-03**: User can view intake volume trends (legal vs co-parent, monthly) on the Client Activity tab
 
 ### Operations
 
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEMO-04 | Phase 12 | Complete |
 | DEMO-05 | Phase 12 | Complete |
 | DEMO-06 | Phase 12 | Complete |
-| ACT-01 | Phase 13 | Pending |
-| ACT-02 | Phase 13 | Pending |
-| ACT-03 | Phase 13 | Pending |
+| ACT-01 | Phase 13 | Complete |
+| ACT-02 | Phase 13 | Complete |
+| ACT-03 | Phase 13 | Complete |
 | OPS-01 | Phase 14 | Pending |
 | OPS-02 | Phase 14 | Pending |
 | OPS-03 | Phase 14 | Pending |
