@@ -149,7 +149,7 @@ Plans:
 | 8. KB KPI Extraction | v1.2 | 2/2 | Complete | 2026-03-01 |
 | 9. AI Summary Panel | v1.2 | 2/2 | Complete | 2026-03-01 |
 | 11. Analytics Foundation + Dashboard Cards | 2/2 | Complete    | 2026-03-01 | - |
-| 12. Demographics Tab | 2/2 | Complete   | 2026-03-01 | - |
+| 12. Demographics Tab | 2/2 | Complete    | 2026-03-01 | - |
 | 13. Client Activity Tab | v1.3 | 0/2 | Not started | - |
 | 14. Operations Tab | v1.3 | 0/2 | Not started | - |
 | 15. Donation Performance Charts | v1.3 | 0/2 | Not started | - |
