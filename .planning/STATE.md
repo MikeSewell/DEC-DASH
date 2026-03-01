@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Analytics
-status: defining_requirements
+status: ready_to_plan
 last_updated: "2026-03-01"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 10
   completed_plans: 0
 ---
 
@@ -18,14 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** v1.3 Analytics — Defining requirements
+**Current focus:** Phase 11 — Analytics Foundation + Dashboard Cards
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-01 — Milestone v1.3 started
+Phase: 11 of 15 (Analytics Foundation + Dashboard Cards)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-01 — v1.3 roadmap created, 5 phases mapped, ready to plan Phase 11
+
+Progress: [░░░░░░░░░░] 0% (v1.3)
 
 ## Performance Metrics
 
@@ -39,25 +41,25 @@ Last activity: 2026-03-01 — Milestone v1.3 started
 ### Decisions
 
 Carried from v1.2:
-- KB extraction must use Chat Completions with json_schema (NOT Assistants API file_search)
-- All KPI schema fields nullable — returns null when metric not found
-- AI summary uses manual Regenerate only — no auto-trigger on load
-- QB income designation admin UI required before donation chart
+- getProgramDemographics() already exists in convex/googleSheets.ts — Demographics tab is mostly frontend
+- Sessions table exists but needs aggregate queries; clientGoals needs getStats(); coparentIntake needs getStats()
+- Audit log analytics query needed; allocation stats query exists but needs historical acceptance-rate view
+- QB income account names unknown — admin designation UI is prerequisite for DON charts
+- Phase 10 (Donation) deferred from v1.2 → now Phase 15 in v1.3
 
 ### Pending Todos
 
-- Run npx convex dev --once to deploy kbSummaryCache schema changes (from v1.2)
-- Visual verification of AI summary panel in browser after Convex schema deployed
-- Deploy v1.2 to production after verification
+- Run npx convex dev --once to deploy any schema changes from v1.2 before starting v1.3
+- Deploy v1.2 to production if not yet done
+- Validate ROLE_NAV_MAP in constants.ts to confirm which roles get /analytics link (admin, manager, staff — not lawyer, psychologist, readonly)
 
 ### Blockers/Concerns
 
-- QB monthly P&L JSON column shape needs validation against DEC's QB config (for Donation Charts)
-- DEC's QB income account names are unknown — admin designation UI prerequisite
-- npx convex dev --once fails in non-interactive terminal — schema deploys must be run by user interactively
+- QB monthly income JSON column shape needs validation before Phase 15 (DON charts)
+- npx convex dev --once must be run interactively — schema deploys cannot be automated in CI
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: v1.3 milestone initialized, defining requirements
+Stopped at: v1.3 roadmap created — 5 phases (11-15), 22 requirements mapped, 100% coverage
 Resume file: None

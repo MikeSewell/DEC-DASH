@@ -78,34 +78,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| PAGE-01 | — | Pending |
-| PAGE-02 | — | Pending |
-| DEMO-01 | — | Pending |
-| DEMO-02 | — | Pending |
-| DEMO-03 | — | Pending |
-| DEMO-04 | — | Pending |
-| DEMO-05 | — | Pending |
-| DEMO-06 | — | Pending |
-| ACT-01 | — | Pending |
-| ACT-02 | — | Pending |
-| ACT-03 | — | Pending |
-| OPS-01 | — | Pending |
-| OPS-02 | — | Pending |
-| OPS-03 | — | Pending |
-| OPS-04 | — | Pending |
-| DON-01 | — | Pending |
-| DON-02 | — | Pending |
-| DON-03 | — | Pending |
-| DON-04 | — | Pending |
+| DASH-01 | Phase 11 | Pending |
+| DASH-02 | Phase 11 | Pending |
+| DASH-03 | Phase 11 | Pending |
+| PAGE-01 | Phase 11 | Pending |
+| PAGE-02 | Phase 11 | Pending |
+| DEMO-01 | Phase 12 | Pending |
+| DEMO-02 | Phase 12 | Pending |
+| DEMO-03 | Phase 12 | Pending |
+| DEMO-04 | Phase 12 | Pending |
+| DEMO-05 | Phase 12 | Pending |
+| DEMO-06 | Phase 12 | Pending |
+| ACT-01 | Phase 13 | Pending |
+| ACT-02 | Phase 13 | Pending |
+| ACT-03 | Phase 13 | Pending |
+| OPS-01 | Phase 14 | Pending |
+| OPS-02 | Phase 14 | Pending |
+| OPS-03 | Phase 14 | Pending |
+| OPS-04 | Phase 14 | Pending |
+| DON-01 | Phase 15 | Pending |
+| DON-02 | Phase 15 | Pending |
+| DON-03 | Phase 15 | Pending |
+| DON-04 | Phase 15 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 ⚠️
+- Mapped to phases: 22
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after initial definition*
+*Last updated: 2026-03-01 after roadmap creation — all 22 requirements mapped*
