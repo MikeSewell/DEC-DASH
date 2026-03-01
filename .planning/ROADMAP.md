@@ -85,11 +85,11 @@ Plans:
   4. Demographics tab renders a top referral sources list or chart showing which sources send the most clients
   5. Demographics tab renders a program outcome chart showing completed vs. in-progress vs. dropped counts
   6. Demographics tab renders a zip code coverage breakdown (table or bar chart) showing client geographic distribution
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: Demographics data wiring (getProgramDemographics query adapter + any missing field extraction) + DemographicsTab.tsx scaffold with chart layout
-- [ ] 12-02: Outcome rates + zip code charts (getClientOutcomes + getZipCodeDistribution queries if not covered by Sheets data) + DemographicsTab.tsx completion
+- [ ] 12-01: getAllDemographics query + DemographicsTab scaffold with gender, ethnicity, age, referral charts
+- [ ] 12-02: Outcome rates doughnut + zip code coverage bar chart completing DemographicsTab
 
 ### Phase 13: Client Activity Tab
 **Goal**: Users can see session volume trends, goal completion status, and intake volume patterns over time on the Client Activity tab
