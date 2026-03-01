@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -80,10 +80,13 @@ export default function ClientsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const clients = useQuery(api.clients.listWithPrograms, {
+  const clientsRaw = useQuery(api.clients.listWithPrograms, {
     programType: activeTab !== "all" ? activeTab : undefined,
     search: debouncedSearch.trim() || undefined,
   });
+  const prevClientsRef = useRef(clientsRaw);
+  if (clientsRaw !== undefined) prevClientsRef.current = clientsRaw;
+  const clients = clientsRaw ?? prevClientsRef.current;
 
   const createClient = useMutation(api.clients.create);
   const createProgram = useMutation(api.programs.create);
