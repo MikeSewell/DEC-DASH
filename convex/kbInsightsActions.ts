@@ -56,6 +56,20 @@ const KPI_SCHEMA = {
   additionalProperties: false as const,
 };
 
+// ─── Summary system prompt ───────────────────────────────────────────────────
+
+const SUMMARY_SYSTEM_PROMPT = `You are an executive briefing assistant for the Dads' Education Center (DEC), a nonprofit.
+
+Generate exactly 3-5 concise bullet points summarizing organizational highlights from the provided documents. Each bullet should be boardroom-ready — factual, specific, and useful for stakeholder conversations.
+
+RULES:
+1. Use only information explicitly stated in the documents. Do not invent or estimate.
+2. If KPI metrics are provided, reference them directly (e.g., "47 clients served in Q4") — do not contradict them.
+3. Include both wins and areas needing attention for a balanced picture.
+4. Each bullet: one to two sentences, start with a bold keyword or program name, no source citations.
+5. Return ONLY the bullet points, one per line, starting with "- ".
+6. Write 3-5 bullets — no more, no fewer.`;
+
 // ─── Metric definitions ──────────────────────────────────────────────────────
 
 export const METRIC_DEFINITIONS = [
@@ -170,6 +184,111 @@ export const extractMetrics = action({
     } catch (error) {
       // Always reset extracting flag on error so the frontend doesn't get stuck
       await ctx.runMutation(internal.kbInsights.setExtracting, { extracting: false });
+      throw error;
+    }
+  },
+});
+
+// ─── Generate AI Summary ─────────────────────────────────────────────────────
+
+/**
+ * Generates 3-5 boardroom-ready narrative bullets from KB documents.
+ * Uses Chat Completions (plain text, not json_schema) at temperature 0.3.
+ * Injects extracted KPI metrics as reference context to avoid contradicting stat cards.
+ * Persists via saveSummary (ctx.db.patch) — preserves existing metrics on the row.
+ * summaryGenerating flag is independent from extracting — they never interfere.
+ */
+export const generateSummary = action({
+  args: {},
+  handler: async (ctx) => {
+    // 1. Set generating flag (patch, not delete-insert — preserves existing data)
+    await ctx.runMutation(internal.kbInsights.setSummaryGenerating, { generating: true });
+
+    try {
+      const OpenAI = (await import("openai")).default;
+      const apiKey = await getOpenAIApiKey(ctx);
+      const openai = new OpenAI({ apiKey });
+
+      // 2. Load all KB files (same pattern as extractMetrics)
+      const files = await ctx.runQuery(api.knowledgeBase.listFiles);
+      if (files.length === 0) {
+        await ctx.runMutation(internal.kbInsights.setSummaryGenerating, { generating: false });
+        throw new Error(
+          "No KB documents uploaded. Upload documents in the Knowledge Base tab before generating a summary."
+        );
+      }
+
+      // 3. Download text content (reuse isBinaryContent check)
+      const documentBlocks: string[] = [];
+      for (const file of files) {
+        const url = await ctx.storage.getUrl(file.storageId);
+        if (!url) continue;
+        const response = await fetch(url);
+        const text = await response.text();
+        if (text.length > 0 && !isBinaryContent(text)) {
+          documentBlocks.push(`=== Document: ${file.fileName} ===\n${text}`);
+        }
+      }
+
+      if (documentBlocks.length === 0) {
+        await ctx.runMutation(internal.kbInsights.setSummaryGenerating, { generating: false });
+        throw new Error("No readable text documents found in KB.");
+      }
+
+      // 4. Inject extracted KPI metrics as reference context
+      // Avoids generating bullets that contradict the stat cards already on screen
+      const cache = await ctx.runQuery(api.kbInsights.getCache);
+      const kpiContext = cache?.metrics
+        ?.filter((m: { value: string | null }) => m.value !== null)
+        .map(
+          (m: { label: string; value: string | null; unit: string | null }) =>
+            `${m.label}: ${m.value} ${m.unit ?? ""}`.trim()
+        )
+        .join(", ") ?? "";
+
+      // 5. Chat Completions — plain text output (no json_schema needed for bullets)
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0.3,
+        messages: [
+          { role: "system", content: SUMMARY_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              kpiContext
+                ? `Known KPI metrics (use as reference, do not contradict): ${kpiContext}`
+                : "",
+              `Summarize these ${documentBlocks.length} documents:\n\n${documentBlocks.join("\n\n")}`,
+            ]
+              .filter(Boolean)
+              .join("\n\n"),
+          },
+        ],
+      });
+
+      const rawText = completion.choices[0].message.content ?? "";
+      // Parse bullets: split on newlines, strip leading bullet markers and Markdown bold
+      const bullets = rawText
+        .split("\n")
+        .map((l) =>
+          l
+            .replace(/^[-•*]\s*/, "")             // strip leading bullet marker
+            .replace(/\*\*(.*?)\*\*/g, "$1")      // strip Markdown bold (frontend handles styling)
+            .trim()
+        )
+        .filter((l) => l.length > 0)
+        .slice(0, 5); // hard cap at 5 bullets
+
+      // 6. Persist using patch — preserves row data, does not erase previous summary or metrics
+      await ctx.runMutation(internal.kbInsights.saveSummary, {
+        summaryBullets: bullets,
+        summaryGeneratedAt: Date.now(),
+      });
+
+      return { success: true, bulletCount: bullets.length };
+    } catch (error) {
+      // Always reset generating flag on error so the frontend doesn't get stuck
+      await ctx.runMutation(internal.kbInsights.setSummaryGenerating, { generating: false });
       throw error;
     }
   },

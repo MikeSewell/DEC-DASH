@@ -82,3 +82,67 @@ export const setExtracting = internalMutation({
     }
   },
 });
+
+/**
+ * Toggle the summaryGenerating flag on the singleton row.
+ * Independent from the extracting flag — does NOT touch extracting or metrics.
+ * If generating=true and no row exists, inserts a minimal placeholder so the
+ * frontend can show "Generating..." before any summary has been produced.
+ * Called internally from kbInsightsActions.generateSummary.
+ */
+export const setSummaryGenerating = internalMutation({
+  args: {
+    generating: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("kbSummaryCache").first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { summaryGenerating: args.generating });
+    } else if (args.generating) {
+      // Insert minimal placeholder so frontend can show "Generating..." state
+      await ctx.db.insert("kbSummaryCache", {
+        summaryGenerating: true,
+        extracting: false,
+        extractedAt: 0,
+        documentCount: 0,
+        metrics: [],
+      });
+    }
+  },
+});
+
+/**
+ * Persist generated summary bullets to the singleton row using ctx.db.patch().
+ * CRITICAL: Uses patch (NOT delete-then-insert) to preserve existing metric data
+ * so that regenerating a summary does not blank the KPI cards (SUM-04 requirement).
+ * Also clears the summaryGenerating flag.
+ * Called internally from kbInsightsActions.generateSummary on success.
+ */
+export const saveSummary = internalMutation({
+  args: {
+    summaryBullets: v.array(v.string()),
+    summaryGeneratedAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("kbSummaryCache").first();
+    if (existing) {
+      // Patch preserves extractedAt, documentCount, metrics, extracting — only updates summary fields
+      await ctx.db.patch(existing._id, {
+        summaryBullets: args.summaryBullets,
+        summaryGeneratedAt: args.summaryGeneratedAt,
+        summaryGenerating: false,
+      });
+    } else {
+      // Edge case: summary generated before any metric extraction
+      await ctx.db.insert("kbSummaryCache", {
+        extractedAt: 0,
+        documentCount: 0,
+        extracting: false,
+        metrics: [],
+        summaryBullets: args.summaryBullets,
+        summaryGeneratedAt: args.summaryGeneratedAt,
+        summaryGenerating: false,
+      });
+    }
+  },
+});
