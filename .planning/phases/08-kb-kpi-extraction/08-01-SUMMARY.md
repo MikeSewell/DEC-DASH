@@ -34,6 +34,7 @@ key-files:
     - convex/kbInsightsActions.ts
   modified:
     - convex/schema.ts
+    - convex/_generated/api.d.ts
 
 key-decisions:
   - "Use v.null() not v.null_() — this version of Convex uses v.null() for nullable validators"
@@ -48,7 +49,7 @@ patterns-established:
 requirements-completed: [KB-01, KB-03, KB-04]
 
 # Metrics
-duration: 3min
+duration: 20min
 completed: 2026-03-01
 ---
 
@@ -58,11 +59,11 @@ completed: 2026-03-01
 
 ## Performance
 
-- **Duration:** ~3 min
+- **Duration:** ~20 min (Tasks 1-2 automated; Task 3 user-executed schema deploy)
 - **Started:** 2026-03-01T02:02:42Z
-- **Completed:** 2026-03-01T02:05:10Z
-- **Tasks:** 2/3 complete (Task 3 awaiting user action: `npx convex dev --once`)
-- **Files modified:** 3 (schema.ts updated, kbInsights.ts created, kbInsightsActions.ts created)
+- **Completed:** 2026-03-01T02:11:11Z
+- **Tasks:** 3/3
+- **Files modified:** 4 (schema.ts updated, kbInsights.ts created, kbInsightsActions.ts created, _generated/api.d.ts regenerated)
 
 ## Accomplishments
 - Added `kbSummaryCache` singleton table to Convex schema with nullable `value`, `unit`, and `sourceDocument` fields using `v.union(v.string(), v.null())`
@@ -75,12 +76,13 @@ Each task was committed atomically:
 
 1. **Task 1: Add kbSummaryCache table + kbInsights queries/mutations** - `2e53c8c` (feat)
 2. **Task 2: Create kbInsightsActions.ts extraction action** - `291b0ee` (feat)
-3. **Task 3: Deploy Convex schema** - PENDING (requires user to run `npx convex dev --once`)
+3. **Task 3: Deploy Convex schema (user action + api.d.ts commit)** - `88eaadb` (chore)
 
 ## Files Created/Modified
 - `convex/schema.ts` - Added `kbSummaryCache` table definition (metrics array with nullable fields)
 - `convex/kbInsights.ts` - `getCache`, `getExtracting` queries + `saveCache`, `setExtracting` internalMutations
 - `convex/kbInsightsActions.ts` - `extractMetrics` action with OpenAI Chat Completions, binary detection, 8 DEC metric keys
+- `convex/_generated/api.d.ts` - Regenerated after schema deploy — includes `kbInsights` and `kbInsightsActions` module exports
 
 ## Decisions Made
 - **v.null() not v.null_()**: This version of Convex uses `v.null()` — the plan specified `v.null_()` which is a newer API. Auto-fixed during Task 1 verification.
@@ -108,17 +110,25 @@ Each task was committed atomically:
 - Convex uses `v.null()` not `v.null_()` — plan's API reference was for a newer version. Fixed immediately via TypeScript error detection.
 
 ## User Setup Required
-Task 3 requires manual execution: run `npx convex dev --once` in the project root to deploy the schema and regenerate `_generated/api.d.ts` with `kbInsights` and `kbInsightsActions` module exports.
-
-Verification:
-1. Terminal output mentions deploying `kbInsights` and `kbInsightsActions`
-2. `convex/_generated/api.d.ts` contains `kbInsights`
+None — schema deployment completed as Task 3 (user ran `npx convex dev --once`). `kbSummaryCache` table is live. No additional external service configuration required.
 
 ## Next Phase Readiness
-- After `npx convex dev --once` runs: `kbSummaryCache` table will be live in Convex
+- `kbSummaryCache` table live in Convex `aware-finch-86` deployment
 - Plan 08-02 can wire the frontend dashboard to `getCache` query and `extractMetrics` action
 - `METRIC_DEFINITIONS` exported from `kbInsightsActions.ts` for frontend label/unit display
+- Frontend should handle `getCache` returning null (no extraction yet) with a "Run Extraction" CTA
+- Frontend should poll `getExtracting` while extraction is in flight to show loading state
+
+## Self-Check: PASSED
+
+- [x] `convex/kbInsights.ts` — FOUND (84 lines)
+- [x] `convex/kbInsightsActions.ts` — FOUND (176 lines)
+- [x] `convex/schema.ts` — modified (411 lines, contains kbSummaryCache)
+- [x] `convex/_generated/api.d.ts` — FOUND (contains 4 kbInsights references)
+- [x] Commit `2e53c8c` — FOUND (feat: schema + kbInsights.ts)
+- [x] Commit `291b0ee` — FOUND (feat: kbInsightsActions.ts)
+- [x] Commit `88eaadb` — FOUND (chore: api.d.ts after deploy)
 
 ---
 *Phase: 08-kb-kpi-extraction*
-*Completed: 2026-03-01 (partial — Task 3 pending user action)*
+*Completed: 2026-03-01*

@@ -53,7 +53,7 @@ Full details: `milestones/v1.1-ROADMAP.md`
 **Plans**: TBD
 
 Plans:
-- [ ] 08-01: kbSummaryCache schema + kbInsights.ts backend (queries/mutations) + kbInsightsActions.ts (Chat Completions extraction)
+- [x] 08-01: kbSummaryCache schema + kbInsights.ts backend (queries/mutations) + kbInsightsActions.ts (Chat Completions extraction)
 - [ ] 08-02: KBInsights.tsx dashboard component (KPI stat cards + extraction trigger + staleness detection) + dashboard registration
 
 ### Phase 9: AI Summary Panel
