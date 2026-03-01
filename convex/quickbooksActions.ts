@@ -416,6 +416,40 @@ function extractLineItems(
   }
 }
 
+// Fetch P&L with monthly breakdown for income trend chart
+export const fetchIncomeTrend = internalAction({
+  handler: async (ctx) => {
+    const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
+    const baseUrl = getBaseUrl();
+
+    // Last 12 months: from the 1st of the month 11 months ago to today
+    const now = new Date();
+    const startMonth = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const startDate = startMonth.toISOString().split("T")[0];
+    const endDate = getToday();
+
+    const response = await fetch(
+      `${baseUrl}/v3/company/${realmId}/reports/ProfitAndLoss?start_date=${startDate}&end_date=${endDate}&summarize_column_by=Month&minorversion=65`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) throw new Error(`QB API error: ${response.status}`);
+    const data = await response.json();
+
+    await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
+      reportType: "income_trend",
+      data: JSON.stringify(data),
+      periodStart: startDate,
+      periodEnd: endDate,
+    });
+  },
+});
+
 // Fetch prior-year P&L for the same month as the current month (for trend comparison)
 export const fetchPriorYearPnl = internalAction({
   handler: async (ctx) => {
@@ -456,6 +490,7 @@ export const syncAllData = internalAction({
   handler: async (ctx) => {
     try {
       await ctx.runAction(internal.quickbooksActions.fetchProfitAndLoss, {});
+      await ctx.runAction(internal.quickbooksActions.fetchIncomeTrend, {});
       await ctx.runAction(internal.quickbooksActions.fetchPriorYearPnl, {});
       await ctx.runAction(internal.quickbooksActions.fetchExpenses, {});
       await ctx.runAction(internal.quickbooksActions.fetchVendors, {});
