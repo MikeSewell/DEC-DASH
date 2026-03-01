@@ -58,25 +58,46 @@ export const listWithPrograms = query({
 
     let clients = await ctx.db.query("clients").collect();
 
-    // Role-based filtering
+    // Fetch all active enrollments once — used for RBAC and programType filtering
+    const allActiveEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+
+    // Role-based filtering — enrollment-based (replaces legacy clients.programId check)
     if (user.role === "lawyer") {
       const legalProgramIds = new Set(
         programs.filter((p) => p.type === "legal").map((p) => p._id)
       );
-      clients = clients.filter((c) => c.programId && legalProgramIds.has(c.programId));
+      const eligibleClientIds = new Set(
+        allActiveEnrollments
+          .filter((e) => legalProgramIds.has(e.programId))
+          .map((e) => e.clientId)
+      );
+      clients = clients.filter((c) => eligibleClientIds.has(c._id));
     } else if (user.role === "psychologist") {
       const coparentProgramIds = new Set(
         programs.filter((p) => p.type === "coparent").map((p) => p._id)
       );
-      clients = clients.filter((c) => c.programId && coparentProgramIds.has(c.programId));
+      const eligibleClientIds = new Set(
+        allActiveEnrollments
+          .filter((e) => coparentProgramIds.has(e.programId))
+          .map((e) => e.clientId)
+      );
+      clients = clients.filter((c) => eligibleClientIds.has(c._id));
     }
 
-    // Program type filter
+    // Program type filter — enrollment-based for all roles
     if (args.programType && args.programType !== "all") {
       const typeIds = new Set(
         programs.filter((p) => p.type === args.programType).map((p) => p._id)
       );
-      clients = clients.filter((c) => c.programId && typeIds.has(c.programId));
+      const clientIdsWithType = new Set(
+        allActiveEnrollments
+          .filter((e) => typeIds.has(e.programId))
+          .map((e) => e.clientId)
+      );
+      clients = clients.filter((c) => clientIdsWithType.has(c._id));
     }
 
     // Status filter
@@ -119,17 +140,22 @@ export const getStats = query({
     const programs = await ctx.db.query("programs").collect();
     let clients = await ctx.db.query("clients").collect();
 
-    // Role-based filtering
-    if (user.role === "lawyer") {
-      const legalIds = new Set(
-        programs.filter((p) => p.type === "legal").map((p) => p._id)
+    // Role-based filtering — enrollment-based (replaces legacy clients.programId check)
+    if (user.role === "lawyer" || user.role === "psychologist") {
+      const requiredType = user.role === "lawyer" ? "legal" : "coparent";
+      const qualifyingProgramIds = new Set(
+        programs.filter((p) => p.type === requiredType).map((p) => p._id)
       );
-      clients = clients.filter((c) => c.programId && legalIds.has(c.programId));
-    } else if (user.role === "psychologist") {
-      const coparentIds = new Set(
-        programs.filter((p) => p.type === "coparent").map((p) => p._id)
+      const activeEnrollments = await ctx.db
+        .query("enrollments")
+        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .collect();
+      const eligibleClientIds = new Set(
+        activeEnrollments
+          .filter((e) => qualifyingProgramIds.has(e.programId))
+          .map((e) => e.clientId)
       );
-      clients = clients.filter((c) => c.programId && coparentIds.has(c.programId));
+      clients = clients.filter((c) => eligibleClientIds.has(c._id));
     }
 
     const total = clients.length;
@@ -155,28 +181,56 @@ export const getStatsByProgram = query({
     if (!user) throw new Error("User not found");
 
     const programs = await ctx.db.query("programs").collect();
-    const programMap = new Map(programs.map((p) => [p._id, p.type]));
+    const programTypeMap = new Map(programs.map((p) => [p._id, p.type]));
 
     let clients = await ctx.db.query("clients").collect();
 
-    // Role-based filtering (mirrors getStats)
-    if (user.role === "lawyer") {
-      const legalIds = new Set(
-        programs.filter((p) => p.type === "legal").map((p) => p._id)
+    // Fetch all active enrollments — used for both RBAC and program type assignment
+    const allActiveEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+
+    // Role-based filtering — enrollment-based (replaces legacy clients.programId check)
+    if (user.role === "lawyer" || user.role === "psychologist") {
+      const requiredType = user.role === "lawyer" ? "legal" : "coparent";
+      const qualifyingProgramIds = new Set(
+        programs.filter((p) => p.type === requiredType).map((p) => p._id)
       );
-      clients = clients.filter((c) => c.programId && legalIds.has(c.programId));
-    } else if (user.role === "psychologist") {
-      const coparentIds = new Set(
-        programs.filter((p) => p.type === "coparent").map((p) => p._id)
+      const eligibleClientIds = new Set(
+        allActiveEnrollments
+          .filter((e) => qualifyingProgramIds.has(e.programId))
+          .map((e) => e.clientId)
       );
-      clients = clients.filter((c) => c.programId && coparentIds.has(c.programId));
+      clients = clients.filter((c) => eligibleClientIds.has(c._id));
     }
 
+    // Build a map of clientId -> Set of program types from active enrollments
+    const clientEnrollmentTypes = new Map<string, Set<string>>();
+    for (const enrollment of allActiveEnrollments) {
+      const pType = programTypeMap.get(enrollment.programId) ?? "other";
+      const clientKey = enrollment.clientId as string;
+      if (!clientEnrollmentTypes.has(clientKey)) {
+        clientEnrollmentTypes.set(clientKey, new Set());
+      }
+      clientEnrollmentTypes.get(clientKey)!.add(pType);
+    }
+
+    // Count active clients by program type using enrollment data
     const activeClients = clients.filter((c) => c.status === "active");
     const byType: Record<string, number> = {};
     for (const client of activeClients) {
-      const type = client.programId ? (programMap.get(client.programId) ?? "other") : "other";
-      byType[type] = (byType[type] ?? 0) + 1;
+      const types = clientEnrollmentTypes.get(client._id as string);
+      if (types && types.size > 0) {
+        // Count client in each program type they're enrolled in
+        for (const type of types) {
+          byType[type] = (byType[type] ?? 0) + 1;
+        }
+      } else {
+        // Client has no active enrollments — fall back to legacy programId
+        const type = client.programId ? (programTypeMap.get(client.programId) ?? "other") : "other";
+        byType[type] = (byType[type] ?? 0) + 1;
+      }
     }
 
     return {
@@ -220,9 +274,28 @@ export const getByIdWithIntake = query({
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
       .first();
 
+    // Fetch enrollments and enrich with program info
+    const rawEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
+      .collect();
+
+    const allPrograms = await ctx.db.query("programs").collect();
+    const programMap = new Map(allPrograms.map((p) => [p._id, p]));
+
+    const enrollmentsWithProgram = rawEnrollments.map((e) => {
+      const prog = programMap.get(e.programId);
+      return {
+        ...e,
+        programName: prog?.name ?? "Unknown Program",
+        programType: prog?.type ?? "other",
+      };
+    });
+
     return {
       ...client,
-      program,
+      program,                             // Keep for backward compat (legacy, removed Phase 21)
+      enrollments: enrollmentsWithProgram, // NEW — enrollment-based source of truth
       legalIntake,
       coparentIntake,
     };
