@@ -23,6 +23,8 @@ export const list = query({
 
 /**
  * Create a new session.
+ * Accepts optional v2.0 fields (attendanceStatus, enrollmentId, duration) —
+ * backward-compatible with existing callers that omit them.
  */
 export const create = mutation({
   args: {
@@ -31,6 +33,15 @@ export const create = mutation({
     sessionDate: v.number(),
     sessionType: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // v2.0 fields (Phase 17)
+    attendanceStatus: v.optional(v.union(
+      v.literal("attended"),
+      v.literal("missed"),
+      v.literal("excused"),
+      v.literal("cancelled")
+    )),
+    enrollmentId: v.optional(v.id("enrollments")),
+    duration: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const currentUser = await requireRole(ctx, "admin", "manager", "staff");
@@ -42,6 +53,10 @@ export const create = mutation({
       sessionType: args.sessionType,
       notes: args.notes,
       createdBy: currentUser._id,
+      // v2.0 fields (Phase 17)
+      attendanceStatus: args.attendanceStatus,
+      enrollmentId: args.enrollmentId,
+      duration: args.duration,
     });
 
     await ctx.runMutation(internal.auditLog.log, {
@@ -49,7 +64,7 @@ export const create = mutation({
       action: "create_session",
       entityType: "sessions",
       entityId: sessionId,
-      details: `Created session for client ${args.clientId}`,
+      details: `Created session for client ${args.clientId}${args.enrollmentId ? ` (enrollment ${args.enrollmentId})` : ""}`,
     });
 
     return sessionId;
@@ -67,5 +82,18 @@ export const getActiveSessions = query({
     const allSessions = await ctx.db.query("sessions").collect();
 
     return allSessions.filter((s) => s.sessionDate >= thirtyDaysAgo);
+  },
+});
+
+/**
+ * List sessions for a specific enrollment.
+ */
+export const listByEnrollment = query({
+  args: { enrollmentId: v.id("enrollments") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("sessions")
+      .withIndex("by_enrollmentId", (q) => q.eq("enrollmentId", args.enrollmentId))
+      .collect();
   },
 });
