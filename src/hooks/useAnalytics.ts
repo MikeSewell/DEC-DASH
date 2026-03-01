@@ -34,3 +34,15 @@ export function useGoalStats() {
 export function useIntakeVolume() {
   return useQuery(api.analytics.getIntakeVolume);
 }
+
+export function useAuditFeed() {
+  return useQuery(api.analytics.getAuditFeed);
+}
+
+export function useStaffActionStats() {
+  return useQuery(api.analytics.getStaffActionStats);
+}
+
+export function useCategorizationStats() {
+  return useQuery(api.analytics.getCategorizationStats);
+}
