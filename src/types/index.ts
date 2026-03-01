@@ -48,6 +48,9 @@ export type DashboardSectionId =
   | "client-activity"
   | "calendar";
 
+// Analytics page tabs
+export type AnalyticsTab = "demographics" | "client-activity" | "operations";
+
 // Newsletter sections shape
 export interface NewsletterSections {
   // Welcome & Leadership
