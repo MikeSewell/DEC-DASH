@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T13:23:38.636Z"
+last_updated: "2026-03-01T13:48:00Z"
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 17 — Enrollment Sessions Backend (v2.0 Data Foundation)
+**Current focus:** Phase 18 — Data Migration (v2.0 Data Foundation)
 
 ## Current Position
 
-Phase: 17 of 22 (Enrollment Sessions Backend — complete)
-Plan: 1 of 1 in current phase (complete)
-Status: Phase 17 complete — ready for Phase 18
-Last activity: 2026-03-01 — 17-01 enrollments.ts + sessions.ts deployed to Convex (all 7+1 functions live)
+Phase: 18 of 22 (Data Migration — in progress, awaiting human-action checkpoint)
+Plan: 1 of 1 in current phase (Task 1 complete; Tasks 2-3 require human execution)
+Status: Phase 18-01 Task 1 complete — migrateAll internalMutation created; awaiting Convex deploy + dry-run review
+Last activity: 2026-03-01 — 18-01 migration.ts created with migrateAll internalMutation (dry-run/execute pattern)
 
-Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
+Progress: [██░░░░░░░░] 8% (v2.0 — 3/26 plans in progress)
 
 ## Accumulated Context
 
@@ -47,6 +47,10 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
 - [Phase 17-01]: importBatch uses internalMutation (not mutation) — not callable from frontend, required for Phase 18 CLI migration script
 - [Phase 17-01]: sessions v2.0 fields (attendanceStatus, enrollmentId, duration) added as v.optional — zero breaking changes to existing callers
 - [Phase 17-01]: enrollments.remove blocks deletion if linked sessions exist rather than cascading — preserves audit trail
+- [Phase 18-01]: Migration uses internalMutation (not mutation) — not callable from frontend, must run via npx convex run CLI
+- [Phase 18-01]: Admin user looked up dynamically by role query — migration fails fast if no admin exists
+- [Phase 18-01]: Demographics backfill priority: legalIntake ?? coparentIntake (legal preferred); phone only from coparentIntake
+- [Phase 18-01]: enrollmentDate fallback: client.enrollmentDate ?? client.createdAt for clients missing enrollment date
 
 ### Pending Todos
 
@@ -63,5 +67,5 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 17-01-PLAN.md — enrollments CRUD + sessions attendance extensions deployed to Convex (aware-finch-86)
+Stopped at: 18-01-PLAN.md Task 2 (checkpoint:human-action) — migrateAll created; user must run: npx convex dev --once && npx convex run migration:migrateAll '{"dryRun":true}'
 Resume file: None

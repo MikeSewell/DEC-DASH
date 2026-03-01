@@ -25,10 +25,10 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 
 ### Data Migration
 
-- [ ] **MIGR-01**: Import script reads cleaned spreadsheet and creates client + enrollment records in Convex
-- [ ] **MIGR-02**: Import deduplicates by normalized name to prevent duplicate client records
-- [ ] **MIGR-03**: Import supports dry-run mode reporting what would be created/updated/skipped
-- [ ] **MIGR-04**: Demographics data (gender, ethnicity, zip, referralSource) populated from spreadsheet
+- [x] **MIGR-01**: Import script reads cleaned spreadsheet and creates client + enrollment records in Convex
+- [x] **MIGR-02**: Import deduplicates by normalized name to prevent duplicate client records
+- [x] **MIGR-03**: Import supports dry-run mode reporting what would be created/updated/skipped
+- [x] **MIGR-04**: Demographics data (gender, ethnicity, zip, referralSource) populated from spreadsheet
 
 ### Analytics
 
@@ -95,10 +95,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLNT-03 | Phase 20 | Pending |
 | CLNT-04 | Phase 17 | Complete |
 | CLNT-05 | Phase 17 | Complete |
-| MIGR-01 | Phase 18 | Pending |
-| MIGR-02 | Phase 18 | Pending |
-| MIGR-03 | Phase 18 | Pending |
-| MIGR-04 | Phase 18 | Pending |
+| MIGR-01 | Phase 18 | Complete |
+| MIGR-02 | Phase 18 | Complete |
+| MIGR-03 | Phase 18 | Complete |
+| MIGR-04 | Phase 18 | Complete |
 | ANLY-01 | Phase 19 | Pending |
 | ANLY-02 | Phase 19 | Pending |
 | ANLY-03 | Phase 19 | Pending |
