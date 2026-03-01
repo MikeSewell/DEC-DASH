@@ -59,7 +59,7 @@ completed: 2026-03-02
 - **Duration:** ~10 min
 - **Started:** 2026-03-02T17:45:00Z
 - **Completed:** 2026-03-02T17:51:16Z
-- **Tasks:** 2 of 3 (Task 3 is human-verify checkpoint)
+- **Tasks:** 3 of 3 (all complete — Task 3 human-verify approved, migration succeeded)
 - **Files modified:** 6
 
 ## Accomplishments
@@ -76,7 +76,7 @@ Each task was committed atomically:
 
 1. **Task 1: Rewrite all backend callers** - `576d347` (feat)
 2. **Task 2: Remove legacy fields from frontend and schema** - `962f17d` (feat)
-3. **Task 3: Human verify checkpoint** - awaiting
+3. **Task 3: Human verify checkpoint** - APPROVED (migration completed by orchestrator: 350 client documents migrated, legacy fields stripped, schema deployed cleanly via npx convex dev --once)
 
 ## Files Created/Modified
 - `convex/clients.ts` - Removed programId/enrollmentDate/status from all 11 functions; getByProgram uses enrollments.by_programId
@@ -121,11 +121,19 @@ Each task was committed atomically:
 None — plan executed smoothly. Backend rewrites followed the plan's specified patterns exactly.
 
 ## Next Phase Readiness
-- Schema deployed once user runs `npx convex dev --once` (Task 3 checkpoint)
-- Phase 22 (Export) can proceed after human verification confirms client list loads, detail page shows enrollment-based data, program stats correct
+- Phase 21 fully complete (INFR-02 + INFR-03 satisfied — programDataCache removed in 21-01, clients legacy fields removed in 21-02)
+- clients table is authoritative for client identity; enrollments table is authoritative for program/status state
+- Schema deployed cleanly — all 350 client documents migrated, no legacy field values remain
+- Phase 22 (Export) can proceed immediately — will produce richer export output using the clean data model (clients + enrollments + sessions)
 
 ---
 *Phase: 21-schema-cleanup*
 *Completed: 2026-03-02*
 
-## Self-Check: PENDING (awaiting human-verify checkpoint)
+## Self-Check: PASSED
+- `convex/schema.ts` clients table confirmed clean: no programId, enrollmentDate, status fields, no by_programId index
+- `576d347` commit exists: feat(21-02): rewrite backend callers to use enrollments table
+- `962f17d` commit exists: feat(21-02): remove legacy fields from frontend forms and schema
+- `6e2d174` commit exists: docs(21-02): complete Tasks 1+2, checkpoint at Task 3 (human verify)
+- Migration verification: grep returned zero results for legacy fields in clients schema
+- Frontend verification: no `data.status` references in client detail page; no programId form fields in Add Client form

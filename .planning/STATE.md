@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
-status: unknown
-last_updated: "2026-03-01T17:52:30.678Z"
+status: in_progress
+last_updated: "2026-03-02T18:30:00Z"
 progress:
   total_phases: 8
   completed_phases: 8
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 20 — Frontend and Sheets Removal (v2.0 Data Foundation)
+**Current focus:** Phase 22 — Export (v2.0 Data Foundation)
 
 ## Current Position
 
-Phase: 21 of 22 (Schema Cleanup — in progress)
-Plan: 2 of 2 in current phase
-Status: 21-01 complete — programDataCache table removed from schema (deployed), dead code deleted, dashboard components rewired to clients table; ready for plan 21-02 (clients legacy field cleanup)
-Last activity: 2026-03-02 — 21-01 complete: clearProgramDataCache ran (deleted: 0), npx convex dev --once deployed schema without programDataCache, human verification approved
+Phase: 21 of 22 (Schema Cleanup — COMPLETE)
+Plan: 2 of 2 in current phase — COMPLETE
+Status: 21-02 complete — clients legacy fields (programId, enrollmentDate, status, by_programId index) removed from schema and all 350 documents; all callers rewritten to use enrollments table; schema deployed cleanly
+Last activity: 2026-03-02 — 21-02 complete: 350 client documents migrated, legacy fields stripped, npx convex dev --once deployed schema, human verification approved
 
 Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 
@@ -71,6 +71,8 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 21-schema-cleanup]: [21-01] clearProgramDataCache ran (deleted: 0) confirming table was already drained; schema deployed cleanly without programDataCache table
 - [Phase 21-schema-cleanup]: [21-02] clients table has no indexes — by_programId was the only one and it is removed
 - [Phase 21-schema-cleanup]: [21-02] importLegalBatch/importCoparentBatch programId arg removed — callers must create enrollments separately after client creation
+- [Phase 21-schema-cleanup]: [21-02] Migration approach: add legacy fields as v.optional temporarily, deploy, run migration to strip values, remove fields, deploy clean schema — 350/350 documents migrated
+- [Phase 21-schema-cleanup]: [21-02] INFR-03 complete — clients table accurately reflects new data model with no legacy fields
 
 ### Pending Todos
 
@@ -87,5 +89,5 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 21-01 — programDataCache removed and schema deployed, ready for plan 21-02
+Stopped at: Completed 21-02 — clients legacy fields removed, schema deployed, Phase 21 complete; ready for Phase 22 (Export)
 Resume file: None
