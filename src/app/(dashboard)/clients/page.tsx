@@ -15,6 +15,16 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import Table from "@/components/ui/Table";
+import DemographicsTab from "@/components/analytics/DemographicsTab";
+import ClientActivityTab from "@/components/analytics/ClientActivityTab";
+
+type PageView = "clients" | "demographics" | "client-activity";
+
+const PAGE_VIEWS: { id: PageView; label: string }[] = [
+  { id: "clients", label: "Clients" },
+  { id: "demographics", label: "Demographics" },
+  { id: "client-activity", label: "Client Activity" },
+];
 
 const statusVariant: Record<ClientStatus, "success" | "info" | "danger"> = {
   active: "success",
@@ -64,6 +74,7 @@ export default function ClientsPage() {
   const programs = useQuery(api.programs.list);
   const clientStats = useQuery(api.clients.getStats);
 
+  const [pageView, setPageView] = useState<PageView>("clients");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -261,29 +272,60 @@ export default function ClientsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">
-            Clients
+            Programs
           </h1>
           <p className="text-sm text-muted mt-1">
-            Manage program enrollment and client records
+            Manage clients, demographics, and program activity
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {isAdminOrManager && (
-            <Button variant="secondary" size="md" onClick={() => setShowAddProgramModal(true)}>
+        {pageView === "clients" && (
+          <div className="flex items-center gap-3">
+            {isAdminOrManager && (
+              <Button variant="secondary" size="md" onClick={() => setShowAddProgramModal(true)}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Add Program
+              </Button>
+            )}
+            <Button variant="primary" size="md" onClick={openAddClientModal}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Add Program
+              Add Client
             </Button>
-          )}
-          <Button variant="primary" size="md" onClick={openAddClientModal}>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Add Client
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Page view tabs */}
+      <div className="border-b border-border">
+        <nav className="flex gap-0 -mb-px">
+          {PAGE_VIEWS.map((view) => (
+            <button
+              key={view.id}
+              onClick={() => setPageView(view.id)}
+              className={cn(
+                "px-4 py-3 text-sm font-semibold border-b-2 rounded-t-lg transition-colors",
+                pageView === view.id
+                  ? "border-primary text-primary bg-primary/5"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-surface-hover/50"
+              )}
+            >
+              {view.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Demographics view */}
+      {pageView === "demographics" && <DemographicsTab />}
+
+      {/* Client Activity view */}
+      {pageView === "client-activity" && <ClientActivityTab />}
+
+      {/* Clients view */}
+      {pageView !== "clients" ? null : (<>
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -370,6 +412,8 @@ export default function ClientsPage() {
           emptyMessage="No clients found"
         />
       </Card>
+
+      </>)}
 
       {/* Add Client Modal */}
       <Modal
