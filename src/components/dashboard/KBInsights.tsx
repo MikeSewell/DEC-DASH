@@ -230,6 +230,97 @@ export default function KBInsights() {
           </p>
         </div>
       )}
+
+      {/* ─── AI Summary Panel ─────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-surface to-primary/[0.03] p-5 shadow-[var(--warm-shadow-sm)]">
+        {/* Panel header row */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            {/* AI Summary badge */}
+            <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              AI Summary
+            </div>
+            {/* Regenerating indicator — shown during generation */}
+            {isGenerating && (
+              <span className="text-xs text-muted flex items-center gap-1">
+                <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Regenerating...
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* "Generated X ago" timestamp */}
+            {cache?.summaryGeneratedAt != null && cache.summaryGeneratedAt > 0 && (
+              <span className="text-xs text-muted">
+                Generated {timeAgo(cache.summaryGeneratedAt)}
+              </span>
+            )}
+            {/* Regenerate button — role-gated to admin/manager */}
+            {canRegenerate && (
+              <button
+                onClick={handleGenerateSummary}
+                disabled={isGenerating}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5",
+                  "px-4 py-1.5 text-sm font-medium text-primary",
+                  "hover:bg-primary/10 transition-colors",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                {isGenerating ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Regenerating...
+                  </>
+                ) : (
+                  "Regenerate"
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Summary content area */}
+        {hasSummary ? (
+          /* Bullet list — reduced opacity during regeneration (SUM-04: stale content stays visible) */
+          <ul className={cn("space-y-2", isGenerating && "opacity-60 transition-opacity")}>
+            {cache!.summaryBullets!.map((bullet: string, i: number) => (
+              <li key={i} className="flex gap-2 text-sm text-foreground leading-relaxed">
+                <span className="text-primary mt-0.5 shrink-0">&#8226;</span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          /* Empty state — first-ever generation prompt */
+          <div className="flex flex-col items-center justify-center py-8 text-muted text-center">
+            <svg className="h-8 w-8 opacity-40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            <p className="text-sm font-medium">No summary generated yet</p>
+            <p className="text-xs mt-1 max-w-xs">
+              {canRegenerate
+                ? "Click Regenerate to create your first AI summary"
+                : "An admin or manager can generate a summary from KB documents"}
+            </p>
+          </div>
+        )}
+
+        {/* Inline error */}
+        {summaryError && (
+          <p className="text-xs text-danger mt-3">{summaryError}</p>
+        )}
+      </div>
     </div>
   );
 }
