@@ -46,9 +46,14 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
-- [ ] Unify Google OAuth — single credentials + token store shared by Calendar and Sheets (currently fragmented)
-- [ ] Fix program data pipeline — Programs sections gated behind Sheets sync; consider KB-as-data-source fallback
-- [ ] Multi-sheet support — current sheetsConfig is a singleton; allow multiple spreadsheets or auto-discover tabs
+- [ ] Data model refactor — Client → Enrollment → Session architecture with demographics on client records
+- [ ] Session tracking — individual visit records with date, attendance status, and notes
+- [ ] Unified client list — all clients in one list, not split by program type
+- [ ] One-time data migration — import cleaned spreadsheet data into new Convex data model
+- [ ] Unify Google OAuth — single credentials + token store for Calendar (Sheets dependency removed)
+- [ ] Remove Sheets sync for program data — app becomes source of truth
+- [ ] Data export — backup capability to export client/program data from the app
+- [ ] Analytics rewrite — Demographics and client activity queries use Convex data instead of Sheets
 
 ### Out of Scope
 
@@ -63,8 +68,22 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - Real-time push notifications (browser/mobile) — in-app alerts panel sufficient; push is v2+
 - Newsletter mobile-responsive template — low priority vs dashboard/alert/calendar polish
 - Interactive geographic map for zip codes — simple table/list sufficient
-- Exportable analytics reports (PDF/CSV) — defer to future; screen visualization is priority
 - Cross-tab linked filtering on analytics — each tab is self-contained
+- Multi-sheet support — removed; Sheets no longer used for program data
+- Google Sheets sync for program data — replaced by app-as-source-of-truth model
+
+## Current Milestone: v2.0 Data Foundation
+
+**Goal:** Refactor the data model to Client → Enrollment → Session, make the app the source of truth for client/program data, remove Google Sheets dependency, and unify Google OAuth.
+
+**Target features:**
+- Client → Enrollment → Session data model with demographics on client records
+- Individual session tracking (date, attendance, notes)
+- Unified client list (not split by program type)
+- One-time historical data migration from cleaned spreadsheet
+- Unified Google OAuth for Calendar
+- Data export for backup
+- Analytics rewritten to query Convex instead of Sheets
 
 ## Context
 
@@ -81,6 +100,7 @@ Known operational notes:
 - `npx convex dev --once` must be run interactively to deploy schema changes
 - Pre-existing TypeScript errors in 6 Convex files (allocationActions.ts, grants.ts, newsletterActions.ts, auth.ts, seedPrograms.ts, constantContactActions.ts) — `npm run build` still passes
 - `getSessionVolume` does a full-table scan on sessions (no by_sessionDate index) — works at current scale
+- Current client data model uses single `programId` on clients table — being replaced by enrollments table in v2.0
 
 ## Constraints
 
@@ -119,5 +139,8 @@ Known operational notes:
 | fetchIncomeTrend in QB sync cycle | Income data refreshes every 15 min with other QB data | ✓ Good — no separate cron needed |
 | Admin account designation for donations | appSettings key stores designated income accounts | ✓ Good — closed read/write loop, instructive empty state |
 
+| App as source of truth | Google Sheets sync was fragile; nonprofit needs reliable data they control | — Pending |
+| Client → Enrollment → Session model | Supports repeat participation tracking, new vs returning metrics, session-level notes | — Pending |
+
 ---
-*Last updated: 2026-03-01 after v1.3 milestone*
+*Last updated: 2026-03-01 after v2.0 milestone start*
