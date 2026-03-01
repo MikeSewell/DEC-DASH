@@ -407,5 +407,9 @@ export default defineSchema({
       conflictValue: v.optional(v.string()),
       conflictDocument: v.optional(v.string()),
     })),
+    // Phase 9 — AI Summary fields
+    summaryBullets: v.optional(v.array(v.string())),
+    summaryGeneratedAt: v.optional(v.number()),
+    summaryGenerating: v.optional(v.boolean()),
   }),
 });
