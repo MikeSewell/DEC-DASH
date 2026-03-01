@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T13:48:00Z"
+last_updated: "2026-03-01T14:03:00Z"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 18 of 22 (Data Migration — in progress, awaiting human-action checkpoint)
-Plan: 1 of 1 in current phase (Task 1 complete; Tasks 2-3 require human execution)
-Status: Phase 18-01 Task 1 complete — migrateAll internalMutation created; awaiting Convex deploy + dry-run review
-Last activity: 2026-03-01 — 18-01 migration.ts created with migrateAll internalMutation (dry-run/execute pattern)
+Phase: 18 of 22 (Data Migration — complete)
+Plan: 1 of 1 in current phase (complete)
+Status: Phase 18 complete — 350 enrollments created, 345 demographics backfilled, migration verified idempotent; ready for Phase 19
+Last activity: 2026-03-01 — 18-01 migration executed: 350 enrollment records created, 345 client records demographics-backfilled, idempotency confirmed
 
-Progress: [██░░░░░░░░] 8% (v2.0 — 3/26 plans in progress)
+Progress: [███░░░░░░░] 12% (v2.0 — 3/26 plans complete)
 
 ## Accumulated Context
 
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 3/26 plans in progress)
 - [Phase 18-01]: Admin user looked up dynamically by role query — migration fails fast if no admin exists
 - [Phase 18-01]: Demographics backfill priority: legalIntake ?? coparentIntake (legal preferred); phone only from coparentIntake
 - [Phase 18-01]: enrollmentDate fallback: client.enrollmentDate ?? client.createdAt for clients missing enrollment date
+- [Phase 18-01]: Migration results — 350/350 clients had programId (skipped=0), all received enrollment records; 345/350 had intake form demographics available for backfill
 
 ### Pending Todos
 
@@ -61,11 +62,11 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 3/26 plans in progress)
 
 - npx convex dev --once must be run interactively — schema deploys cannot be automated
 - Data migration depends on user cleaning/consolidating spreadsheets first
-- Phase 18 (Data Migration): dry-run output must be reviewed before write execution — highest-risk phase
+- Phase 18 (Data Migration): RESOLVED — migration executed successfully, 350 enrollments created, idempotency confirmed
 - Phase 20 (Sheets Removal): RBAC verification for lawyer/psychologist roles required before marking complete
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: 18-01-PLAN.md Task 2 (checkpoint:human-action) — migrateAll created; user must run: npx convex dev --once && npx convex run migration:migrateAll '{"dryRun":true}'
+Stopped at: Completed 18-01-PLAN.md — data migration executed (350 enrollments created, 345 demographics backfilled, idempotency verified)
 Resume file: None

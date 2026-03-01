@@ -48,6 +48,7 @@ import type * as kbInsightsActions from "../kbInsightsActions.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
 import type * as legalIntake from "../legalIntake.js";
+import type * as migration from "../migration.js";
 import type * as newsletterActions from "../newsletterActions.js";
 import type * as newsletterTemplate from "../newsletterTemplate.js";
 import type * as newsletters from "../newsletters.js";
@@ -109,6 +110,7 @@ declare const fullApi: ApiFromModules<{
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;
   legalIntake: typeof legalIntake;
+  migration: typeof migration;
   newsletterActions: typeof newsletterActions;
   newsletterTemplate: typeof newsletterTemplate;
   newsletters: typeof newsletters;
