@@ -11,6 +11,8 @@
 import type * as aiDirector from "../aiDirector.js";
 import type * as aiDirectorActions from "../aiDirectorActions.js";
 import type * as aiDirectorInternal from "../aiDirectorInternal.js";
+import type * as alertConfig from "../alertConfig.js";
+import type * as alertDismissals from "../alertDismissals.js";
 import type * as alerts from "../alerts.js";
 import type * as allocation from "../allocation.js";
 import type * as allocationActions from "../allocationActions.js";
@@ -39,6 +41,8 @@ import type * as googleSheetsSync from "../googleSheetsSync.js";
 import type * as grants from "../grants.js";
 import type * as grantsInternal from "../grantsInternal.js";
 import type * as http from "../http.js";
+import type * as kbInsights from "../kbInsights.js";
+import type * as kbInsightsActions from "../kbInsightsActions.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
 import type * as legalIntake from "../legalIntake.js";
@@ -66,6 +70,8 @@ declare const fullApi: ApiFromModules<{
   aiDirector: typeof aiDirector;
   aiDirectorActions: typeof aiDirectorActions;
   aiDirectorInternal: typeof aiDirectorInternal;
+  alertConfig: typeof alertConfig;
+  alertDismissals: typeof alertDismissals;
   alerts: typeof alerts;
   allocation: typeof allocation;
   allocationActions: typeof allocationActions;
@@ -94,6 +100,8 @@ declare const fullApi: ApiFromModules<{
   grants: typeof grants;
   grantsInternal: typeof grantsInternal;
   http: typeof http;
+  kbInsights: typeof kbInsights;
+  kbInsightsActions: typeof kbInsightsActions;
   knowledgeBase: typeof knowledgeBase;
   knowledgeBaseActions: typeof knowledgeBaseActions;
   legalIntake: typeof legalIntake;
