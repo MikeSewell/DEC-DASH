@@ -56,11 +56,11 @@ completed: 2026-03-01
 
 ## Performance
 
-- **Duration:** ~2 min (coding only; Convex deploy pending human action)
+- **Duration:** ~4 min (coding + Convex deploy)
 - **Started:** 2026-03-01T13:15:30Z
-- **Completed:** 2026-03-01T13:17:04Z (Tasks 1-2; Task 3 awaiting deploy)
-- **Tasks:** 2/3 complete (Task 3 is checkpoint:human-action for `npx convex dev --once`)
-- **Files modified:** 2
+- **Completed:** 2026-03-01T20:19:08Z
+- **Tasks:** 3/3 complete
+- **Files modified:** 3 (convex/enrollments.ts, convex/sessions.ts, convex/_generated/api.d.ts)
 
 ## Accomplishments
 
@@ -75,12 +75,13 @@ Each task was committed atomically:
 
 1. **Task 1: Create convex/enrollments.ts with CRUD + importBatch** - `5559d4c` (feat)
 2. **Task 2: Extend sessions.ts with attendance fields and listByEnrollment** - `bec6c28` (feat)
-3. **Task 3: Deploy to Convex** - PENDING (checkpoint:human-action — user runs `npx convex dev --once`)
+3. **Task 3: Deploy to Convex** - `b887cd2` (chore)
 
 ## Files Created/Modified
 
 - `convex/enrollments.ts` - New file: enrollment CRUD queries/mutations, importBatch internalMutation
 - `convex/sessions.ts` - Extended: v2.0 fields added to create, listByEnrollment query added
+- `convex/_generated/api.d.ts` - Updated by Convex deploy: enrollments namespace + sessions module registered
 
 ## Decisions Made
 
@@ -99,24 +100,13 @@ None.
 
 ## User Setup Required
 
-**Task 3 requires manual deployment.** Run the following command in the project directory:
-
-```bash
-npx convex dev --once
-```
-
-Expected output:
-- New functions registered: enrollments.listByClient, enrollments.listByProgram, enrollments.getById, enrollments.create, enrollments.update, enrollments.remove, enrollments.importBatch
-- Updated function: sessions.create (new args), sessions.listByEnrollment (new query)
-- No schema changes (schema was deployed in Phase 16)
-
-After deploy, commit the updated `convex/_generated/api.d.ts`.
+None - deploy completed successfully.
 
 ## Next Phase Readiness
 
-- **Phase 18 (Data Migration)**: `enrollments.importBatch` internalMutation is ready for the migration CLI script. Schema deployed in Phase 16. Migration script needs the cleaned master spreadsheet first (per STATE.md pending todo).
+- **Phase 18 (Data Migration)**: `enrollments.importBatch` internalMutation is live and callable from CLI scripts. Schema deployed in Phase 16. Migration script needs the cleaned master spreadsheet first (per STATE.md pending todo).
 - **Phase 20 (Frontend)**: enrollment queries and mutations available for client detail views and enrollment management UI.
-- **Blocker**: `npx convex dev --once` must be run by user to register new functions in Convex deployment before Phase 18 or 20 can use them.
+- No blockers — all functions deployed and callable.
 
 ---
 *Phase: 17-enrollment-sessions-backend*

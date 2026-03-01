@@ -22,10 +22,10 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 17 of 22 (Enrollment Sessions Backend)
-Plan: 1 of 1 in current phase (Tasks 1-2 complete; Task 3 awaiting npx convex dev --once)
-Status: Checkpoint — 17-01 Tasks 1-2 committed, awaiting Convex deploy by user
-Last activity: 2026-03-01 — 17-01 enrollments.ts created, sessions.ts extended with attendance fields
+Phase: 17 of 22 (Enrollment Sessions Backend — complete)
+Plan: 1 of 1 in current phase (complete)
+Status: Phase 17 complete — ready for Phase 18
+Last activity: 2026-03-01 — 17-01 enrollments.ts + sessions.ts deployed to Convex (all 7+1 functions live)
 
 Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
 
@@ -52,7 +52,6 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
 
 - Deploy v1.3 to production (carried forward)
 - Inspect cleaned master spreadsheet before writing Phase 18 import script (column names, row count, name format)
-- Run `npx convex dev --once` to deploy Phase 17 enrollments.ts and sessions.ts changes, then commit updated convex/_generated/api.d.ts
 
 ### Blockers/Concerns
 
@@ -64,5 +63,5 @@ Progress: [██░░░░░░░░] 8% (v2.0 — 2/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: 17-01 Tasks 1-2 complete (enrollments.ts created, sessions.ts extended). Paused at Task 3 checkpoint:human-action — user must run `npx convex dev --once` to deploy.
+Stopped at: Completed 17-01-PLAN.md — enrollments CRUD + sessions attendance extensions deployed to Convex (aware-finch-86)
 Resume file: None
