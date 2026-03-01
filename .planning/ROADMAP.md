@@ -108,7 +108,9 @@ Plans:
   2. After migration executes, every existing client record has at least one enrollment record linking them to a program
   3. No duplicate client records are created — clients already in Convex from prior imports are matched by normalized name and updated rather than duplicated
   4. Gender, referralSource, and other demographics fields are populated on client records from intake form data where available
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 18-01-PLAN.md — Write and execute migrateAll internalMutation: create enrollment records for all clients with programId, backfill demographics from intake forms, dry-run/execute pattern
 
 ### Phase 19: Analytics Backend Rewrite
 **Goal**: The Demographics tab and session analytics queries read from Convex tables directly — verified returning correct data before the Sheets programDataCache is touched
@@ -176,7 +178,7 @@ Plans:
 | 15. Donation Performance Charts | v1.3 | 2/2 | Complete | 2026-03-01 |
 | 16. Schema Foundation | 1/1 | Complete    | 2026-03-01 | - |
 | 17. Enrollment and Sessions Backend | 1/1 | Complete    | 2026-03-01 | - |
-| 18. Data Migration | v2.0 | 0/TBD | Not started | - |
+| 18. Data Migration | v2.0 | 0/1 | Not started | - |
 | 19. Analytics Backend Rewrite | v2.0 | 0/TBD | Not started | - |
 | 20. Frontend and Sheets Removal | v2.0 | 0/TBD | Not started | - |
 | 21. Schema Cleanup | v2.0 | 0/TBD | Not started | - |
