@@ -9,11 +9,11 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 
 ### Data Model
 
-- [ ] **DMOD-01**: Enrollments table exists with clientId, programId, status, enrollmentDate, exitDate, notes, createdBy
-- [ ] **DMOD-02**: Client records include gender, referralSource, dateOfBirth, phone, and email fields
-- [ ] **DMOD-03**: Sessions include attendanceStatus field (attended/missed/excused/cancelled)
-- [ ] **DMOD-04**: Sessions link to enrollments via enrollmentId
-- [ ] **DMOD-05**: Enrollments indexed by clientId, programId, and status
+- [x] **DMOD-01**: Enrollments table exists with clientId, programId, status, enrollmentDate, exitDate, notes, createdBy
+- [x] **DMOD-02**: Client records include gender, referralSource, dateOfBirth, phone, and email fields
+- [x] **DMOD-03**: Sessions include attendanceStatus field (attended/missed/excused/cancelled)
+- [x] **DMOD-04**: Sessions link to enrollments via enrollmentId
+- [x] **DMOD-05**: Enrollments indexed by clientId, programId, and status
 
 ### Client Management
 
@@ -85,11 +85,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DMOD-01 | Phase 16 | Pending |
-| DMOD-02 | Phase 16 | Pending |
-| DMOD-03 | Phase 16 | Pending |
-| DMOD-04 | Phase 16 | Pending |
-| DMOD-05 | Phase 16 | Pending |
+| DMOD-01 | Phase 16 | Complete |
+| DMOD-02 | Phase 16 | Complete |
+| DMOD-03 | Phase 16 | Complete |
+| DMOD-04 | Phase 16 | Complete |
+| DMOD-05 | Phase 16 | Complete |
 | CLNT-01 | Phase 20 | Pending |
 | CLNT-02 | Phase 20 | Pending |
 | CLNT-03 | Phase 20 | Pending |

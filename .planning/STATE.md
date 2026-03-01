@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
-status: ready_to_plan
+status: in_progress
 last_updated: "2026-03-01"
 progress:
   total_phases: 7
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 16 of 22 (Schema Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-01 — v2.0 roadmap created (7 phases, 26 requirements mapped)
+Plan: 1 of 1 in current phase (complete)
+Status: In progress — Phase 16 plan 01 complete, ready for Phase 17
+Last activity: 2026-03-01 — 16-01 schema foundation deployed (enrollments table, client demographics, session attendance)
 
-Progress: [░░░░░░░░░░] 0% (v2.0)
+Progress: [█░░░░░░░░░] 4% (v2.0 — 1/26 plans complete)
 
 ## Accumulated Context
 
@@ -40,6 +40,10 @@ Progress: [░░░░░░░░░░] 0% (v2.0)
 - Export ships last (Phase 22) — produces richer output with complete data model
 - programOutcome maps to enrollments.completionStatus string field (design decision pending Phase 16)
 - importLegalBatch and importCoparentBatch should become internalMutation after migration (Phase 18/21)
+- [16-01] enrollments.createdBy is required v.id("users") — enrollments always created by authenticated user; migration uses internalMutation with admin user ID
+- [16-01] gender and referralSource use v.optional(v.string()) not union — intake data is free-form; analytics normalize at query time
+- [16-01] sessions.enrollmentId is v.optional() — preserves support for standalone ad-hoc sessions not tied to enrollment
+- [16-01] dateOfBirth stored as ISO string "YYYY-MM-DD" — consistent with intake forms, simplifies Phase 18 migration
 
 ### Pending Todos
 
@@ -56,5 +60,5 @@ Progress: [░░░░░░░░░░] 0% (v2.0)
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Roadmap created — ready to plan Phase 16
+Stopped at: Completed 16-01-PLAN.md — enrollments schema deployed to Convex
 Resume file: None
