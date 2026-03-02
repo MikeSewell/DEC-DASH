@@ -626,3 +626,98 @@ export const getZipCodeStats = query({
     }));
   },
 });
+
+/**
+ * Export all clients with enrollment and session data. Admin only.
+ * Returns one row per enrollment; clients with no enrollments get one row with empty enrollment columns.
+ */
+export const exportAll = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, "admin");
+
+    const clients = await ctx.db.query("clients").collect();
+    const programs = await ctx.db.query("programs").collect();
+    const programMap = new Map(programs.map((p) => [p._id, p]));
+
+    const allEnrollments = await ctx.db.query("enrollments").collect();
+    const allSessions = await ctx.db.query("sessions").collect();
+
+    // Count sessions per enrollmentId
+    const sessionCountByEnrollment = new Map<string, number>();
+    for (const s of allSessions) {
+      if (s.enrollmentId) {
+        const key = s.enrollmentId as string;
+        sessionCountByEnrollment.set(key, (sessionCountByEnrollment.get(key) ?? 0) + 1);
+      }
+    }
+
+    // Group enrollments by clientId
+    const enrollmentsByClient = new Map<string, typeof allEnrollments>();
+    for (const e of allEnrollments) {
+      const key = e.clientId as string;
+      if (!enrollmentsByClient.has(key)) enrollmentsByClient.set(key, []);
+      enrollmentsByClient.get(key)!.push(e);
+    }
+
+    type ExportRow = {
+      "Client ID": string;
+      "First Name": string;
+      "Last Name": string;
+      "Date of Birth": string;
+      "Phone": string;
+      "Email": string;
+      "Zip Code": string;
+      "Age Group": string;
+      "Ethnicity": string;
+      "Gender": string;
+      "Referral Source": string;
+      "Program Name": string;
+      "Enrollment Status": string;
+      "Enrollment Date": string;
+      "Exit Date": string;
+      "Total Sessions": number;
+    };
+
+    function buildRow(
+      client: typeof clients[number],
+      enrollment: typeof allEnrollments[number] | null,
+      program: typeof programs[number] | null,
+      sessionCount: number
+    ): ExportRow {
+      return {
+        "Client ID": client._id as string,
+        "First Name": client.firstName,
+        "Last Name": client.lastName,
+        "Date of Birth": client.dateOfBirth ?? "",
+        "Phone": client.phone ?? "",
+        "Email": client.email ?? "",
+        "Zip Code": client.zipCode ?? "",
+        "Age Group": client.ageGroup ?? "",
+        "Ethnicity": client.ethnicity ?? "",
+        "Gender": client.gender ?? "",
+        "Referral Source": client.referralSource ?? "",
+        "Program Name": program?.name ?? "",
+        "Enrollment Status": enrollment?.status ?? "",
+        "Enrollment Date": enrollment ? new Date(enrollment.enrollmentDate).toISOString().split("T")[0] : "",
+        "Exit Date": enrollment?.exitDate ? new Date(enrollment.exitDate).toISOString().split("T")[0] : "",
+        "Total Sessions": sessionCount,
+      };
+    }
+
+    const rows: ExportRow[] = [];
+    for (const client of clients) {
+      const clientEnrollments = enrollmentsByClient.get(client._id as string) ?? [];
+      if (clientEnrollments.length === 0) {
+        rows.push(buildRow(client, null, null, 0));
+      } else {
+        for (const enrollment of clientEnrollments) {
+          const program = programMap.get(enrollment.programId) ?? null;
+          const sessionCount = sessionCountByEnrollment.get(enrollment._id as string) ?? 0;
+          rows.push(buildRow(client, enrollment, program, sessionCount));
+        }
+      }
+    }
+    return rows;
+  },
+});
