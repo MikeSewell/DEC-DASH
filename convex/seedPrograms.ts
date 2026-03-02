@@ -16,7 +16,6 @@ export default internalMutation({
       name: "Legal Aid Program",
       type: "legal",
       description: "Free legal consultation for fathers",
-      isActive: true,
     });
     console.log("Legal program:", legalId);
 
@@ -25,7 +24,6 @@ export default internalMutation({
       name: "Co-Parent Counseling",
       type: "coparent",
       description: "Co-parenting skills and communication",
-      isActive: true,
     });
     console.log("Co-Parent program:", coparentId);
 

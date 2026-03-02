@@ -121,7 +121,6 @@ export default defineSchema({
       v.literal("other")
     ),
     description: v.optional(v.string()),
-    isActive: v.boolean(),
     createdAt: v.number(),
   }),
 

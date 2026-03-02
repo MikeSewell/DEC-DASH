@@ -38,7 +38,6 @@ export const create = mutation({
       v.literal("other")
     ),
     description: v.optional(v.string()),
-    isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
     const currentUser = await requireRole(ctx, "admin", "manager");
@@ -47,7 +46,6 @@ export const create = mutation({
       name: args.name,
       type: args.type,
       description: args.description,
-      isActive: args.isActive,
       createdAt: Date.now(),
     });
 
@@ -79,7 +77,6 @@ export const update = mutation({
       )
     ),
     description: v.optional(v.string()),
-    isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const currentUser = await requireRole(ctx, "admin", "manager");
@@ -91,7 +88,6 @@ export const update = mutation({
     if (args.name !== undefined) updates.name = args.name;
     if (args.type !== undefined) updates.type = args.type;
     if (args.description !== undefined) updates.description = args.description;
-    if (args.isActive !== undefined) updates.isActive = args.isActive;
 
     await ctx.db.patch(args.programId, updates);
 
@@ -169,7 +165,6 @@ export const getStats = query({
           _id: program._id,
           name: program.name,
           type: program.type,
-          isActive: program.isActive,
           activeClients,
           totalSessions: programSessions.length,
         };
@@ -204,7 +199,6 @@ export const ensureSeeded = mutation({
           name: def.name,
           type: def.type,
           description: def.description,
-          isActive: true,
           createdAt: Date.now(),
         });
         result[def.type] = id;
@@ -228,7 +222,6 @@ export const seed = internalMutation({
       v.literal("other")
     ),
     description: v.optional(v.string()),
-    isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
     // Skip if a program with this type already exists
@@ -242,7 +235,6 @@ export const seed = internalMutation({
       name: args.name,
       type: args.type,
       description: args.description,
-      isActive: args.isActive,
       createdAt: Date.now(),
     });
   },
