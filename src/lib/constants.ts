@@ -15,6 +15,11 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Key metrics at a glance",
   },
   {
+    id: "funding-thermometer",
+    title: "Funding Goal",
+    description: "Progress toward annual funding target",
+  },
+  {
     id: "kb-insights",
     title: "Organizational Metrics",
     description: "AI-extracted metrics from KB documents",

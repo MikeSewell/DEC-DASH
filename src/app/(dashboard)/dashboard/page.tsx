@@ -8,6 +8,7 @@ import type { DashboardSectionId } from "@/types";
 
 import DashboardSection from "@/components/dashboard/DashboardSection";
 import ExecutiveSnapshot from "@/components/dashboard/ExecutiveSnapshot";
+import FundingThermometer from "@/components/dashboard/FundingThermometer";
 import KBInsights from "@/components/dashboard/KBInsights";
 import GrantBudget from "@/components/dashboard/GrantBudget";
 import GrantTracking from "@/components/dashboard/GrantTracking";
@@ -24,6 +25,7 @@ import Spinner from "@/components/ui/Spinner";
 // Map section IDs to their component and metadata
 const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
   "executive-snapshot": ExecutiveSnapshot,
+  "funding-thermometer": FundingThermometer,
   "kb-insights": KBInsights,
   "grant-budget": GrantBudget,
   "grant-tracking": GrantTracking,
