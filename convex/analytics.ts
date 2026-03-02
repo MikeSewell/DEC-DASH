@@ -235,6 +235,81 @@ export const getAllDemographics = query({
 });
 
 /**
+ * Returns executive-level program overview stats.
+ * Designed for the Programs tab — high-level metrics an ED cares about.
+ */
+export const getProgramOverview = query({
+  args: { programId: v.id("programs") },
+  handler: async (ctx, { programId }) => {
+    // All enrollments for this program
+    const enrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_programId", (q) => q.eq("programId", programId))
+      .collect();
+
+    const enrolledClientIds = new Set(enrollments.map((e) => e.clientId));
+    const totalParticipants = enrolledClientIds.size;
+    const completedCount = new Set(
+      enrollments.filter((e) => e.status === "completed").map((e) => e.clientId)
+    ).size;
+
+    // All sessions for enrolled clients
+    const allSessions = await ctx.db.query("sessions").collect();
+    const programSessions = allSessions.filter(
+      (s) => s.programId === programId || enrolledClientIds.has(s.clientId)
+    );
+
+    const totalSessions = programSessions.length;
+
+    // Sessions per client — how many people came back more than once
+    const sessionsPerClient: Record<string, number> = {};
+    for (const s of programSessions) {
+      const key = s.clientId as string;
+      sessionsPerClient[key] = (sessionsPerClient[key] ?? 0) + 1;
+    }
+    const clientsWithSessions = Object.keys(sessionsPerClient).length;
+    const multiSessionClients = Object.values(sessionsPerClient).filter((c) => c > 1).length;
+    const avgSessionsPerClient = clientsWithSessions > 0
+      ? Math.round((totalSessions / clientsWithSessions) * 10) / 10
+      : 0;
+
+    // Retention: completed / total (program completion rate)
+    const completionRate = totalParticipants > 0
+      ? Math.round((completedCount / totalParticipants) * 100)
+      : 0;
+
+    // Sessions in last 30 days
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const recentSessions = programSessions.filter((s) => s.sessionDate >= thirtyDaysAgo).length;
+
+    // Attendance breakdown
+    const attended = programSessions.filter((s) => s.attendanceStatus === "attended").length;
+    const missed = programSessions.filter((s) => s.attendanceStatus === "missed").length;
+    const attendanceRate = (attended + missed) > 0
+      ? Math.round((attended / (attended + missed)) * 100)
+      : null;
+
+    // Zip code reach
+    const clients = await Promise.all(
+      Array.from(enrolledClientIds).map((id) => ctx.db.get(id))
+    );
+    const uniqueZips = new Set(clients.filter(Boolean).map((c) => c!.zipCode).filter(Boolean));
+
+    return {
+      totalParticipants,
+      completedCount,
+      totalSessions,
+      recentSessions,
+      multiSessionClients,
+      avgSessionsPerClient,
+      completionRate,
+      attendanceRate,
+      zipCodeReach: uniqueZips.size,
+    };
+  },
+});
+
+/**
  * Returns session counts grouped by the last 12 calendar months.
  * Uses Promise.all + per-bucket by_sessionDate index range scans,
  * mirroring the proven getIntakeVolume pattern (no full table scan).

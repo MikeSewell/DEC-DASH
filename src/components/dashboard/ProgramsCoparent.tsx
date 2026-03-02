@@ -17,11 +17,11 @@ import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const PALETTE = [
-  "#1B4332",
   "#2D6A4F",
   "#52B788",
   "#6BBF59",
   "#8CC63F",
+  "#1B4332",
   "#74C69D",
   "#40916C",
   "#95D5B2",
@@ -74,8 +74,12 @@ export default function ProgramsCoparent() {
     api.analytics.getAllDemographics,
     coparentProgram ? { programId: coparentProgram._id } : "skip"
   );
+  const overview = useQuery(
+    api.analytics.getProgramOverview,
+    coparentProgram ? { programId: coparentProgram._id } : "skip"
+  );
 
-  if (demographics === undefined || programs === undefined) {
+  if (demographics === undefined || programs === undefined || overview === undefined) {
     return <ChartSkeleton height={200} />;
   }
 
@@ -90,7 +94,7 @@ export default function ProgramsCoparent() {
     );
   }
 
-  const { total, active, completed, genderDistribution, ethnicityDistribution, ageDistribution, referralSource, zipDistribution } = demographics;
+  const { total, genderDistribution, ethnicityDistribution, ageDistribution, referralSource, zipDistribution } = demographics;
 
   const makePieData = (dist: { name: string; count: number }[]) => ({
     labels: dist.map((d) => d.name),
@@ -124,29 +128,50 @@ export default function ProgramsCoparent() {
 
   return (
     <div className="space-y-6">
-      {/* Stat row */}
+      {/* Executive overview stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-foreground">{total}</p>
           <p className="text-xs text-muted">Total Participants</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-primary">{active}</p>
-          <p className="text-xs text-muted">Enrolled</p>
+          <p className="text-xl font-bold text-primary">{overview?.multiSessionClients ?? 0}</p>
+          <p className="text-xs text-muted">Returning (2+ Sessions)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-success">{completed}</p>
-          <p className="text-xs text-muted">Completed</p>
+          <p className="text-xl font-bold text-accent">{overview?.totalSessions ?? 0}</p>
+          <p className="text-xs text-muted">Total Sessions</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">{zipDistribution.length}</p>
-          <p className="text-xs text-muted">Zip Codes</p>
+          <p className="text-xl font-bold text-success">{overview?.completedCount ?? 0}</p>
+          <p className="text-xs text-muted">Completed Program</p>
         </div>
       </div>
 
-      {/* Charts grid */}
+      {/* Second row — engagement metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+          <p className="text-xl font-bold text-foreground">{overview?.recentSessions ?? 0}</p>
+          <p className="text-xs text-muted">Sessions (Last 30 Days)</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+          <p className="text-xl font-bold text-primary">{overview?.avgSessionsPerClient ?? 0}</p>
+          <p className="text-xs text-muted">Avg Sessions / Person</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+          <p className="text-xl font-bold text-accent">
+            {overview?.attendanceRate !== null ? `${overview?.attendanceRate}%` : "—"}
+          </p>
+          <p className="text-xs text-muted">Attendance Rate</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+          <p className="text-xl font-bold text-success">{overview?.zipCodeReach ?? 0}</p>
+          <p className="text-xs text-muted">Zip Codes Reached</p>
+        </div>
+      </div>
+
+      {/* Demographics charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Gender */}
         {genderDistribution.length > 0 && (
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-3">Gender</h4>
@@ -156,7 +181,6 @@ export default function ProgramsCoparent() {
           </div>
         )}
 
-        {/* Age Groups */}
         {ageDistribution.length > 0 && (
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-3">Age Distribution</h4>
@@ -166,7 +190,6 @@ export default function ProgramsCoparent() {
           </div>
         )}
 
-        {/* Ethnicity (horizontal bar) */}
         {ethnicityDistribution.length > 0 && (
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-3">Ethnicity</h4>
@@ -176,7 +199,6 @@ export default function ProgramsCoparent() {
           </div>
         )}
 
-        {/* Zip Code Distribution */}
         {zipDistribution.length > 0 && (
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-3">Zip Code Distribution</h4>
@@ -187,7 +209,6 @@ export default function ProgramsCoparent() {
         )}
       </div>
 
-      {/* Referral source */}
       {referralSource.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
