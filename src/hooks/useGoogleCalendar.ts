@@ -15,3 +15,8 @@ export function useCalendarSync() {
   const triggerSync = useAction(api.googleCalendarActions.triggerSync);
   return { triggerSync };
 }
+
+export function useListCalendars() {
+  const listCalendars = useAction(api.googleCalendarActions.listAvailableCalendars);
+  return { listCalendars };
+}
