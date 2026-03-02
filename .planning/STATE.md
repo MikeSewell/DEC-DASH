@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Polish & Deploy
 status: unknown
-last_updated: "2026-03-02T06:00:26.619Z"
+last_updated: "2026-03-02T07:10:24Z"
 progress:
   total_phases: 3
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 23 — UI & Data Cleanup
+**Current focus:** Phase 24 — Calendar Multi-Select
 
 ## Current Position
 
-Phase: 23 of 25 (UI & Data Cleanup)
-Plan: 2 of 2 in current phase
-Status: Phase 23 complete — both plans done
-Last activity: 2026-03-02 — Completed 23-02 (Master spreadsheet import — 428 clients)
+Phase: 24 of 25 (Calendar Multi-Select)
+Plan: 1 of N in current phase (24-01 complete)
+Status: Phase 24 in progress — 24-01 done
+Last activity: 2026-03-02 — Completed 24-01 (listAvailableCalendars action + useListCalendars hook)
 
-Progress: [██░░░░░░░░] 40% (2/5 plans)
+Progress: [███░░░░░░░] 40% (7/N plans total)
 
 ## Accumulated Context
 
@@ -47,9 +47,15 @@ Phase 23-02 decisions:
 - importEnrollmentBatch uses ctx.db.query("users").first() as system placeholder for createdBy
 - Schema migration pattern for isActive: optional→deploy→patch→remove→redeploy
 
+Phase 24-01 decisions:
+- listAvailableCalendars returns [] on error instead of throwing — admin UI handles empty state gracefully
+- Return type { id, summary } uses item.summary ?? item.id fallback for unnamed calendars
+- useListCalendars hook mirrors useCalendarSync pattern for consistency in useGoogleCalendar.ts
+
 ### Pending Todos
 
-- None for Phase 23 — both plans complete. Phase 24 is next.
+- Phase 24 admin UI for calendar selection (24-02 next)
+- Phase 24 cron sync update to use selected calendars from config (24-03)
 
 ### Blockers/Concerns
 
@@ -59,5 +65,5 @@ Phase 23-02 decisions:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 23-02-PLAN.md (Master spreadsheet import — 428 clients in Convex)
+Stopped at: Completed 24-01-PLAN.md (listAvailableCalendars action + useListCalendars hook)
 Resume file: None

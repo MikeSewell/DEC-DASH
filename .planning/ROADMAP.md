@@ -152,5 +152,5 @@ Plans:
 | 21. Schema Cleanup | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 22. Data Export | v2.0 | 1/1 | Complete | 2026-03-02 |
 | 23. UI & Data Cleanup | 2/2 | Complete    | 2026-03-02 | - |
-| 24. Calendar Multi-Select | v2.1 | 0/2 | Not started | - |
+| 24. Calendar Multi-Select | 1/2 | In Progress|  | - |
 | 25. Production Deploy | v2.1 | 0/1 | Not started | - |

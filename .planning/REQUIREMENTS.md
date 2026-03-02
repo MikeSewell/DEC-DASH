@@ -14,9 +14,9 @@ Requirements for the Polish & Deploy milestone. Each maps to roadmap phases.
 
 ### Calendar UX
 
-- [ ] **CAL-01**: Admin can see a dropdown of all available Google calendars from the connected service account
+- [x] **CAL-01**: Admin can see a dropdown of all available Google calendars from the connected service account
 - [ ] **CAL-02**: Admin can select/deselect multiple calendars to sync from the dropdown
-- [ ] **CAL-03**: Selected calendars are saved and synced automatically
+- [x] **CAL-03**: Selected calendars are saved and synced automatically
 
 ### Data Import
 
@@ -52,9 +52,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-01 | Phase 23 | Complete |
 | UI-02 | Phase 23 | Complete |
 | DATA-01 | Phase 23 | Complete |
-| CAL-01 | Phase 24 | Pending |
+| CAL-01 | Phase 24 | Complete |
 | CAL-02 | Phase 24 | Pending |
-| CAL-03 | Phase 24 | Pending |
+| CAL-03 | Phase 24 | Complete |
 | DEPLOY-01 | Phase 25 | Pending |
 | DEPLOY-02 | Phase 25 | Pending |
 
