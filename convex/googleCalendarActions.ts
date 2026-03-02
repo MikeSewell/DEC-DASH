@@ -77,3 +77,38 @@ export const triggerSync = action({
     await ctx.runAction(internal.googleCalendarActions.syncCalendars, {});
   },
 });
+
+// Public action — discovers all calendars accessible to the service account
+export const listAvailableCalendars = action({
+  handler: async (): Promise<Array<{ id: string; summary: string }>> => {
+    try {
+      const { google } = await import("googleapis");
+
+      const auth = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        },
+        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      });
+
+      const calendar = google.calendar({ version: "v3", auth });
+      const response = await calendar.calendarList.list();
+
+      const items = response.data.items ?? [];
+
+      const calendars = items
+        .filter((item) => Boolean(item.id))
+        .map((item) => ({
+          id: item.id!,
+          summary: item.summary ?? item.id!,
+        }))
+        .sort((a, b) => a.summary.localeCompare(b.summary));
+
+      return calendars;
+    } catch (err) {
+      console.error("Failed to list available calendars:", err);
+      return [];
+    }
+  },
+});
