@@ -67,6 +67,12 @@ export const syncCalendars = internalAction({
       }
     }
 
+    // Clean up stale events from de-selected calendars
+    const selectedCalendarIds = new Set(config.calendars.map((c: { calendarId: string }) => c.calendarId));
+    await ctx.runMutation(internal.googleCalendarInternal.cleanupDeselectedCalendars, {
+      selectedCalendarIds: [...selectedCalendarIds],
+    });
+
     await ctx.runMutation(internal.googleCalendarInternal.updateLastSync, { configId: config._id });
   },
 });

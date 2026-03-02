@@ -54,3 +54,22 @@ export const updateLastSync = internalMutation({
     await ctx.db.patch(args.configId, { lastSyncAt: Date.now() });
   },
 });
+
+export const cleanupDeselectedCalendars = internalMutation({
+  args: { selectedCalendarIds: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const selectedSet = new Set(args.selectedCalendarIds);
+    // Fetch all cached events and remove those whose calendarId is not in the selected set
+    const allEvents = await ctx.db.query("googleCalendarCache").collect();
+    let removed = 0;
+    for (const event of allEvents) {
+      if (!selectedSet.has(event.calendarId)) {
+        await ctx.db.delete(event._id);
+        removed++;
+      }
+    }
+    if (removed > 0) {
+      console.log(`Cleaned up ${removed} stale events from de-selected calendars`);
+    }
+  },
+});
