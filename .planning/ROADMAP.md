@@ -78,7 +78,7 @@ Full details: `milestones/v2.0-ROADMAP.md`
 
 **Milestone Goal:** Polish the app with UI fixes and the calendar multi-select dropdown, import real client data from the master spreadsheet, and ship the full v2.0+v2.1 build to production.
 
-- [ ] **Phase 23: UI & Data Cleanup** — Fix Programs sidebar icon, remove isActive field from programs, import master spreadsheet
+- [x] **Phase 23: UI & Data Cleanup** — Fix Programs sidebar icon, remove isActive field from programs, import master spreadsheet (completed 2026-03-02)
 - [ ] **Phase 24: Calendar Multi-Select** — Replace manual calendar ID field with a dropdown of available Google Calendars
 - [ ] **Phase 25: Production Deploy** — Build and deploy v2.1 to VPS, verify Convex schema in production
 
@@ -151,6 +151,6 @@ Plans:
 | 20. Frontend and Sheets Removal | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 21. Schema Cleanup | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 22. Data Export | v2.0 | 1/1 | Complete | 2026-03-02 |
-| 23. UI & Data Cleanup | 1/2 | In Progress|  | - |
+| 23. UI & Data Cleanup | 2/2 | Complete   | 2026-03-02 | - |
 | 24. Calendar Multi-Select | v2.1 | 0/2 | Not started | - |
 | 25. Production Deploy | v2.1 | 0/1 | Not started | - |

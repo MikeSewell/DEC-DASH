@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 23 of 25 (UI & Data Cleanup)
-Plan: 1 of 2 in current phase
-Status: In progress — 23-01 complete, 23-02 pending
-Last activity: 2026-03-02 — Completed 23-01 (Programs icon + isActive removal)
+Plan: 2 of 2 in current phase
+Status: Phase 23 complete — both plans done
+Last activity: 2026-03-02 — Completed 23-02 (Master spreadsheet import — 428 clients)
 
-Progress: [█░░░░░░░░░] 20% (1/5 plans)
+Progress: [██░░░░░░░░] 40% (2/5 plans)
 
 ## Accumulated Context
 
@@ -41,9 +41,15 @@ Phase 23-01 decisions:
 - Programs sidebar icon: Grid (2x2 blocks) instead of Users (people) — better semantic match for programs-as-categories
 - isActive removed from programs: programs just exist or get deleted, no active/inactive concept needed
 
+Phase 23-02 decisions:
+- Program routing by column value: "Father Intake" → legal, "Co-parenting Session" → coparent
+- Two-pass enrollment: import clients first, then batch-create enrollments by name lookup
+- importEnrollmentBatch uses ctx.db.query("users").first() as system placeholder for createdBy
+- Schema migration pattern for isActive: optional→deploy→patch→remove→redeploy
+
 ### Pending Todos
 
-- Import cleaned master spreadsheet (user has file ready — DATA-01)
+- None for Phase 23 — both plans complete. Phase 24 is next.
 
 ### Blockers/Concerns
 
@@ -53,5 +59,5 @@ Phase 23-01 decisions:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 23-01-PLAN.md (Programs icon + isActive removal)
+Stopped at: Completed 23-02-PLAN.md (Master spreadsheet import — 428 clients in Convex)
 Resume file: None

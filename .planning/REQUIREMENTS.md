@@ -20,7 +20,7 @@ Requirements for the Polish & Deploy milestone. Each maps to roadmap phases.
 
 ### Data Import
 
-- [ ] **DATA-01**: Master spreadsheet imported into the app with client/enrollment data populated
+- [x] **DATA-01**: Master spreadsheet imported into the app with client/enrollment data populated
 
 ### Deployment
 
@@ -51,7 +51,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | UI-01 | Phase 23 | Complete |
 | UI-02 | Phase 23 | Complete |
-| DATA-01 | Phase 23 | Pending |
+| DATA-01 | Phase 23 | Complete |
 | CAL-01 | Phase 24 | Pending |
 | CAL-02 | Phase 24 | Pending |
 | CAL-03 | Phase 24 | Pending |
