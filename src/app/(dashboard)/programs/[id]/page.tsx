@@ -312,7 +312,7 @@ export default function ClientDetailPage() {
     setDeleting(true);
     try {
       await removeClient({ clientId: clientId as Id<"clients"> });
-      router.push("/clients");
+      router.push("/programs");
     } catch (err) {
       console.error("Failed to delete client:", err);
     } finally {
@@ -536,7 +536,7 @@ export default function ClientDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" size="md" onClick={() => router.push("/clients")}>
+          <Button variant="secondary" size="md" onClick={() => router.push("/programs")}>
             Back
           </Button>
           {isAdmin && (

@@ -73,15 +73,15 @@ export const NAV_ITEMS = [
   { label: "Expenses", href: "/expenses", icon: "Receipt" },
   { label: "Newsletter", href: "/newsletter", icon: "Mail" },
   { label: "AI Director", href: "/ai-director", icon: "MessageSquare" },
-  { label: "Programs", href: "/clients", icon: "Grid" },
+  { label: "Programs", href: "/programs", icon: "Grid" },
   { label: "Admin", href: "/admin", icon: "Settings" },
   { label: "Settings", href: "/settings", icon: "Lock" },
 ] as const;
 
 // Role-based nav filtering — roles not listed here see all nav items
 export const ROLE_NAV_MAP: Record<string, string[]> = {
-  lawyer: ["/clients", "/settings"],
-  psychologist: ["/clients", "/settings"],
+  lawyer: ["/programs", "/settings"],
+  psychologist: ["/programs", "/settings"],
 };
 
 // Role-based program type filtering

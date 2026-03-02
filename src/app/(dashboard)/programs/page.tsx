@@ -404,7 +404,7 @@ export default function ClientsPage() {
           columns={columns}
           data={clients as unknown as Record<string, unknown>[]}
           onRowClick={(item) =>
-            router.push(`/clients/${(item as Record<string, unknown>)._id}`)
+            router.push(`/programs/${(item as Record<string, unknown>)._id}`)
           }
           emptyMessage="No clients found"
         />

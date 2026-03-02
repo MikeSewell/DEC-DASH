@@ -105,7 +105,7 @@ export default function ClientActivity() {
       {/* View all clients link */}
       <div className="flex justify-end">
         <a
-          href="/clients"
+          href="/programs"
           className="text-xs text-primary hover:underline flex items-center gap-1 transition-colors"
         >
           View all clients <span aria-hidden="true">→</span>
