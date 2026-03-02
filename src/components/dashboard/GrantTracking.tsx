@@ -21,11 +21,25 @@ function daysUntil(dateStr: string): number {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function getUrgencyClasses(days: number): string {
+  if (days <= 7) {
+    // Overdue or imminent — red
+    return "border-l-4 border-l-red-500 bg-red-500/5 dark:bg-red-500/10";
+  }
+  if (days <= 30) {
+    // Approaching — amber
+    return "border-l-4 border-l-amber-500 bg-amber-500/5 dark:bg-amber-500/10";
+  }
+  // Comfortable — green
+  return "border-l-4 border-l-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10";
+}
+
 function DeadlineCountdown({ dateStr }: { dateStr: string }) {
   const days = daysUntil(dateStr);
-  let color = "text-muted";
+  let color: string;
   if (days <= 7) color = "text-danger font-semibold";
   else if (days <= 30) color = "text-warning font-medium";
+  else color = "text-emerald-600 dark:text-emerald-400";
 
   return (
     <span className={color}>
@@ -101,7 +115,7 @@ export default function GrantTracking() {
             {upcomingDeadlines.map((dl, idx) => (
               <div
                 key={`${dl.grantId}-${dl.deadlineDate}-${idx}`}
-                className="flex items-center justify-between rounded-xl border border-border/50 px-4 py-3 bg-surface shadow-[var(--warm-shadow-sm)] hover-lift"
+                className={`flex items-center justify-between rounded-xl px-4 py-3 shadow-[var(--warm-shadow-sm)] hover-lift ${getUrgencyClasses(daysUntil(dl.deadlineDate))}`}
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">{dl.fundingSource} — {dl.reportLabel}</p>
