@@ -16,7 +16,7 @@ import { useIncomeTrend, useQuickBooksConfig } from "@/hooks/useQuickBooks";
 import { useTheme } from "@/hooks/useTheme";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
-import { FALLBACK_INCOME_TREND } from "@/lib/dashboardFallbacks";
+import { FALLBACK_INCOME_TREND, FALLBACK_DONATION_SOURCES } from "@/lib/dashboardFallbacks";
 
 ChartJS.register(
   CategoryScale,
@@ -33,6 +33,83 @@ const PALETTE = [
   "#1B5E6B", "#2B9E9E", "#5BBFB5", "#6BBF59",
   "#8CC63F", "#7DD4C8", "#1A7A7A", "#2D6A4F",
 ];
+
+// ─── Icon helpers ────────────────────────────────────────────────────────────────
+
+function getAccountIcon(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("individual") || lower.includes("donation")) return "heart";
+  if (lower.includes("grant") || lower.includes("foundation")) return "building";
+  if (lower.includes("event")) return "calendar";
+  return "banknotes";
+}
+
+function SourceIcon({ icon }: { icon: string }) {
+  if (icon === "heart") {
+    return (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+      </svg>
+    );
+  }
+  if (icon === "building") {
+    return (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+      </svg>
+    );
+  }
+  if (icon === "calendar") {
+    return (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      </svg>
+    );
+  }
+  // Default: banknotes
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+    </svg>
+  );
+}
+
+// ─── Donation source cards sub-component ────────────────────────────────────────
+
+interface DonationSource {
+  name: string;
+  amount: number;
+  icon: string;
+}
+
+function DonationSourceCards({ sources, total }: { sources: DonationSource[]; total: number }) {
+  if (sources.length === 0) return null;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {sources.map((source) => {
+        const pct = total > 0 ? Math.round((source.amount / total) * 100) : 0;
+        return (
+          <div
+            key={source.name}
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface p-4 border-l-4 border-l-primary shadow-[var(--warm-shadow-sm)] hover-lift"
+          >
+            {/* Icon */}
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <SourceIcon icon={source.icon} />
+            </div>
+            {/* Details */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{source.name}</p>
+              <p className="text-lg font-bold text-primary">{formatCurrency(source.amount)}</p>
+            </div>
+            {/* Percentage */}
+            <span className="text-sm text-muted font-medium shrink-0">{pct}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── DonationChart inner component ─────────────────────────────────────────────
 
@@ -52,6 +129,15 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
 
   // Grand total across all months
   const grandTotal = months.reduce((sum, m) => sum + m.total, 0);
+
+  // Compute sources for the source cards
+  const sources: DonationSource[] = isFallback
+    ? FALLBACK_DONATION_SOURCES.map((s) => ({ ...s }))
+    : accounts.map((accountName) => {
+        const amount = months.reduce((sum, m) => sum + (m.breakdown[accountName] ?? 0), 0);
+        return { name: accountName, amount, icon: getAccountIcon(accountName) };
+      });
+  const sourcesTotal = sources.reduce((sum, s) => sum + s.amount, 0);
 
   // Average monthly income
   const avgMonthly = months.length > 0 ? grandTotal / months.length : 0;
@@ -197,6 +283,9 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
           <p className="text-xs text-muted mt-1">vs Previous Month</p>
         </div>
       </div>
+
+      {/* Donation source cards */}
+      <DonationSourceCards sources={sources} total={sourcesTotal} />
 
       {/* Line chart */}
       {months.length > 0 ? (

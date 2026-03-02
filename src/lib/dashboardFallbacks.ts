@@ -159,6 +159,14 @@ export const FALLBACK_FUNDING_GOAL = {
   label: "FY 2024 Funding Goal",
 } as const;
 
+// ─── Donation Performance: Source Breakdown ────────────────────────────────────
+
+export const FALLBACK_DONATION_SOURCES = [
+  { name: "Individual Donations", amount: 156970, icon: "heart" },
+  { name: "Grants & Foundations", amount: 99890, icon: "building" },
+  { name: "Events & Other", amount: 28540, icon: "calendar" },
+] as const;
+
 // ─── Donation Performance (Income Trend) ──────────────────────────────────────
 
 /** Fallback income trend — 12 months of sample data */
