@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { DEFAULT_DASHBOARD_SECTIONS } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { DashboardSectionId } from "@/types";
 
 import DashboardSection from "@/components/dashboard/DashboardSection";
@@ -22,19 +23,54 @@ import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import WhatNeedsAttention from "@/components/dashboard/WhatNeedsAttention";
 import Spinner from "@/components/ui/Spinner";
 
+function ProgramsConsolidated() {
+  const [activeTab, setActiveTab] = useState<"legal" | "coparent">("legal");
+
+  return (
+    <div>
+      {/* Tab bar */}
+      <div className="flex gap-1 mb-4 border-b border-border">
+        <button
+          onClick={() => setActiveTab("legal")}
+          className={cn(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+            activeTab === "legal"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted hover:text-foreground"
+          )}
+        >
+          Legal
+        </button>
+        <button
+          onClick={() => setActiveTab("coparent")}
+          className={cn(
+            "px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+            activeTab === "coparent"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted hover:text-foreground"
+          )}
+        >
+          Co-Parent
+        </button>
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "legal" ? <ProgramsLegal /> : <ProgramsCoparent />}
+    </div>
+  );
+}
+
 // Map section IDs to their component and metadata
 const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
-  "executive-snapshot": ExecutiveSnapshot,
   "funding-thermometer": FundingThermometer,
   "kb-insights": KBInsights,
   "grant-budget": GrantBudget,
   "grant-tracking": GrantTracking,
   "donation-performance": DonationPerformance,
   "profit-loss": ProfitLoss,
+  "programs": ProgramsConsolidated,
   "client-activity": ClientActivity,
   "analytics-cards": AnalyticsCards,
-  "programs-coparent": ProgramsCoparent,
-  "programs-legal": ProgramsLegal,
   "calendar": CalendarWidget,
 };
 
@@ -210,6 +246,9 @@ export default function DashboardPage() {
 
       {/* What Needs Attention — always visible */}
       <WhatNeedsAttention />
+
+      {/* Executive Snapshot — dense top row, no section wrapper */}
+      <ExecutiveSnapshot />
 
       {/* Dashboard Sections */}
       <div className="space-y-4 stagger-children">

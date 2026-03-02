@@ -10,11 +10,6 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
   description: string;
 }[] = [
   {
-    id: "executive-snapshot",
-    title: "Executive Snapshot",
-    description: "Key metrics at a glance",
-  },
-  {
     id: "funding-thermometer",
     title: "Funding Goal",
     description: "Progress toward annual funding target",
@@ -60,14 +55,9 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
     description: "Upcoming events and schedule",
   },
   {
-    id: "programs-coparent",
-    title: "Programs — Co-Parent",
-    description: "Co-parent program enrollment and outcomes",
-  },
-  {
-    id: "programs-legal",
-    title: "Programs — Legal",
-    description: "Legal program enrollment and outcomes",
+    id: "programs",
+    title: "Programs",
+    description: "Program enrollment, demographics, and outcomes",
   },
 ];
 
