@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An executive command center for the Dads' Education Center (DEC) nonprofit. A single-pane-of-glass dashboard connecting financial data (QuickBooks), client/program management with enrollment-based tracking, grant tracking, AI-powered tools, newsletter creation (Constant Contact), organizational scheduling (Google Calendar), and data analytics — with proactive alerts, trend indicators, and a dedicated analytics page surfacing demographics, client activity, and donation trends. The app is the authoritative source for client and program data.
+An executive command center for the Dads' Education Center (DEC) nonprofit. A data-dense, theme-switchable dashboard connecting financial data (QuickBooks), client/program management with enrollment-based tracking, grant tracking, AI-powered tools, newsletter creation (Constant Contact), organizational scheduling (Google Calendar), and data analytics — with proactive alerts, trend indicators, rich visualizations (funding thermometer, expense progress bars, urgency calendar), and a dedicated analytics page surfacing demographics, client activity, and donation trends. Includes dark/light theme toggle and hardcoded dummy data fallbacks for all dashboard sections. The app is the authoritative source for client and program data.
 
 ## Core Value
 
@@ -57,29 +57,22 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ Calendar config UX — multi-select dropdown of available Google calendars with stale detection — v2.1
 - ✓ Production deploy — v2.1 build deployed to VPS with Convex schema, PM2 online — v2.1
 - ✓ Route rename — `/clients` → `/programs` for nav label consistency — v2.1
-
-## Current Milestone: v3.0 Dashboard Redesign
-
-**Goal:** Overhaul the dashboard with dummy data, dark/light theme toggle, and ported visual elements from the old desktop app for a polished, data-dense command center.
-
-**Target features:**
-- Hardcoded dummy data for all empty dashboard sections (QB financials, calendar, KB metrics, donations)
-- Dark/light theme toggle (warm cream light mode + polished dark mode)
-- Port visual elements from old app (funding thermometer, expense progress bars, donation source cards, deadline calendar urgency)
-- Overall dashboard polish — tighter layout, more visual density, better at-a-glance impact
-- Calendar cron fix (use selected calendars from googleCalendarConfig)
+- ✓ Dummy data fallbacks — all dashboard sections render realistic hardcoded data when integrations are absent — v3.0
+- ✓ $NaN bug fix — P&L section shows valid numbers with || 0 guards on all formatCurrency calls — v3.0
+- ✓ Dark/light theme toggle — polished dark palette (#0F0F0F bg, teal accents) with flash-free localStorage persistence — v3.0
+- ✓ Theme-aware charts — all Chart.js components adapt colors to dark/light mode via useChartConfig hooks — v3.0
+- ✓ Funding thermometer — vertical fill bar with percentage label and animated CSS transition — v3.0
+- ✓ Expense progress bars — horizontal bars proportional to category share of total spend — v3.0
+- ✓ Donation source cards — icon, source name, and dollar amount in compact grid — v3.0
+- ✓ Urgency color coding — calendar events and grant deadlines color-coded red/yellow/green by proximity — v3.0
+- ✓ Dense metric cards — large prominent values with hover lift animation — v3.0
+- ✓ Dashboard layout polish — tighter spacing, gradient hover accents, executive snapshot row — v3.0
+- ✓ Consolidated programs view — single section instead of duplicated per program type — v3.0
+- ✓ Calendar cron fix — sync respects admin-selected calendars and cleans up stale events from de-selected ones — v3.0
 
 ### Active
 
-- [ ] Dummy data for all empty dashboard sections
-- [ ] Dark/light theme toggle with persistence
-- [ ] Funding thermometer visualization
-- [ ] Expense progress bars
-- [ ] Donation source cards with icons
-- [ ] Deadline calendar with urgency levels
-- [ ] Dense metric cards (large values, trend indicators)
-- [ ] Dashboard layout tightened and polished
-- [ ] Calendar cron uses selected calendars from config
+(No active milestone — v3.0 complete, next milestone TBD)
 
 ### Out of Scope
 
@@ -101,22 +94,24 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - Automatic silent deduplication — healthcare-adjacent data requires admin review of conflicts
 - Multi-level program hierarchy (programs > cohorts > sessions) — enrollment IS the cohort equivalent
 - Bulk session import from Excel — historical session data lacks structure for the new model
+- Convex seed data for dummy content — hardcoded fallbacks are simpler and sufficient for v3.0
+- Dark mode for non-dashboard pages — dashboard-focused redesign; other pages later
+- Mobile responsive redesign — web-first desktop dashboard, mobile deferred
 
 ## Context
 
-Shipped v2.1 Polish & Deploy — production VPS running full v2.0+v2.1 build. 428 real clients imported from master spreadsheet, calendar admin uses multi-select dropdown, Programs route properly named, all schema changes live.
-
-Starting v3.0 Dashboard Redesign — visual overhaul bringing back polished elements from the old desktop app (Electron/Vite/Supabase at Desktop_template), adding dark/light theme toggle, and filling all empty sections with hardcoded dummy data to nail the design before connecting real integrations.
+Shipped v3.0 Dashboard Redesign — the dashboard is now a data-dense command center with dummy data fallbacks for all sections, dark/light theme toggle with old-app-inspired dark palette, rich visual elements (funding thermometer, progress bars, urgency calendar, donation source cards), tighter layout, and executive snapshot. Calendar cron correctly syncs only admin-selected calendars. Production VPS still running v2.1 build — v3.0 has not been deployed yet.
 
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API (grants only), Google Calendar API, OpenAI Assistants API.
 26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
-Codebase: ~25,000 LOC TypeScript across 155+ files.
+Codebase: ~26,500 LOC TypeScript across 155+ files.
 
 Known operational notes:
 - Google Calendar service account must be manually shared with each calendar for events to sync
 - `npx convex dev --once` must be run interactively to deploy schema changes
 - Pre-existing TypeScript errors in several Convex files — `npm run build` still passes
-- Production VPS (187.77.19.63) running v2.1 build, PM2 process `dec-dash` online
+- Production VPS (187.77.19.63) running v2.1 build, PM2 process `dec-dash` online — v3.0 not yet deployed
+- Dashboard uses hardcoded dummy data for all sections — real integration reconnection deferred to future milestone
 
 ## Constraints
 
@@ -125,7 +120,7 @@ Known operational notes:
 - **Deployment**: Standalone Next.js build on Hostinger VPS via rsync + PM2
 - **Convex**: Single deployment (`aware-finch-86`) used for both dev and production
 - **Auth**: @convex-dev/auth with Password provider — no changes needed
-- **Theme**: Warm palette with DEC brand colors (#1B5E6B teal, #6BBF59 green), Nunito/Fraunces fonts
+- **Theme**: Dual-mode — warm cream light palette + dark palette (#0F0F0F bg, #1E1E1E surface, teal accents), DEC brand colors (#1B5E6B teal, #6BBF59 green), Nunito/Fraunces fonts
 
 ## Key Decisions
 
@@ -166,6 +161,15 @@ Known operational notes:
 | isActive removal | Programs just exist or get deleted — no active/inactive concept needed for DEC's use case | ✓ Good — simplified schema, removed unused UI |
 | Intent-driven calendar fetch | No auto-fetch on mount — admin clicks "Fetch Calendars" to avoid unnecessary API calls | ✓ Good — reduces API usage, explicit UX |
 | Route rename /clients → /programs | Nav label said "Programs" but route was /clients — inconsistent mental model | ✓ Good — caught during production verification |
+| Hardcoded fallbacks over Convex seed data | Simpler, no schema changes, no seed scripts — just inline constants | ✓ Good — zero backend work, easy to replace with real data later |
+| `\|\| 0` guards over `?? 0` | Covers both undefined AND NaN from failed parseFloat — NaN is not nullish | ✓ Good — fixed $NaN bug across all formatCurrency calls |
+| Flash-prevention IIFE in `<head>` | Synchronous theme class application before body parse prevents white flash | ✓ Good — no flash on any load, SSR-safe |
+| useTheme hook from localStorage initializer | useState reads localStorage in initializer — eliminates state/class mismatch on mount | ✓ Good — single source of truth for theme |
+| useChartConfig hook pattern for charts | Module-level chart constants converted to hook so resolvedTheme is captured at render time | ✓ Good — all charts dark-mode compatible with one pattern |
+| FundingThermometer CSS variable passthrough | Uses CSS custom properties for gradient instead of explicit useTheme() | ✓ Good — functionally correct, minor inconsistency with chart hook pattern |
+| ExecutiveSnapshot outside DashboardSection | Always visible — cannot be hidden/reordered/collapsed by users | ✓ Good — financial overview is non-negotiable |
+| ProgramsConsolidated inline in page.tsx | Tab state is local, only active tab loads data — avoids over-abstraction | ✓ Good — simple, no unnecessary component extraction |
+| Calendar cleanup after sync loop | cleanupDeselectedCalendars runs after per-calendar sync completes — prevents premature cleanup on partial failure | ✓ Good — safe ordering, full scan acceptable for <500 rows |
 
 ---
-*Last updated: 2026-03-02 after v3.0 milestone start*
+*Last updated: 2026-03-02 after v3.0 milestone completion*

@@ -231,6 +231,54 @@
 
 ---
 
+## Milestone: v3.0 — Dashboard Redesign
+
+**Shipped:** 2026-03-02
+**Phases:** 4 | **Plans:** 8 | **Commits:** 40
+
+### What Was Built
+- Dummy data fallbacks for all dashboard sections (QB financials, calendar, KB metrics, donations) with $NaN bug fix in P&L
+- Dark/light theme toggle with old-app-inspired dark palette (#0F0F0F bg, #1E1E1E surface, #26A69A teal) and flash-free localStorage persistence
+- Theme-aware Chart.js components — all charts dynamically adapt to dark/light mode via useChartConfig hook pattern
+- Funding thermometer with animated CSS fill, expense category progress bars, enlarged stat card values
+- Donation source cards with icons and amounts, urgency color coding on calendar events and grant deadlines
+- Tighter dashboard spacing, gradient hover accents on cards, executive snapshot row, consolidated programs view
+- Calendar cron sync fix — respects admin-selected calendars and cleans up stale events from de-selected ones
+
+### What Worked
+- **Hardcoded fallbacks over seed data** — no backend/schema changes needed, fallback constants are simple to maintain and easy to replace with real data later
+- **Flash-prevention IIFE pattern** — synchronous `<head>` script sets theme class before body parse, eliminating any white flash on dark mode
+- **useChartConfig hook pattern** — converting module-level chart constants to a hook that reads resolvedTheme at render time was clean and repeatable across all chart components
+- **Phase ordering** — dummy data (26) → theme (27) → visuals (28) → polish (29) ensured each phase built on stable ground
+- **CSS variable passthrough for gradients** — FundingThermometer uses inline `var(--primary)` since Tailwind can't resolve CSS variables in gradient utilities
+
+### What Was Inefficient
+- **SUMMARY.md one-liner extraction still broken** — 6th consecutive milestone where CLI returns null; frontmatter `one_liner` key simply not used in summaries
+- **SUMMARY.md formats inconsistent** — v3.0 summaries use `# Dependency graph` as first heading instead of plan title, making automated parsing harder
+- **Task counts not recorded in summaries** — `task_count` fields empty across all 8 summaries; milestone stats show 0 tasks despite significant work
+- **Dark mode scoped to dashboard only** — sidebar and non-dashboard pages remain light-only; creates visual inconsistency when navigating
+
+### Patterns Established
+- **Hardcoded fallback pattern**: `const FALLBACK_* = {...}` module-level constants imported by dashboard components, gated by `data ?? FALLBACK_*`
+- **Flash-free theme persistence**: IIFE in `<head>` reads localStorage, sets `.dark` class on `<html>`, useTheme hook initializes from localStorage in useState initializer
+- **useChartConfig hook**: Module-level chart config constants → hook that branches on `resolvedTheme` → returns dark/light-appropriate colors at render time
+- **CSS variable gradient workaround**: Use `style={{ background: 'linear-gradient(var(--primary), ...)' }}` when Tailwind can't resolve CSS vars in gradient utilities
+- **Inline function component**: ProgramsConsolidated defined inline in page.tsx with local tab state — no unnecessary file extraction
+
+### Key Lessons
+1. **`|| 0` is safer than `?? 0` for NaN protection** — NaN is not nullish, so nullish coalescing passes it through while `||` catches it
+2. **Flash prevention requires synchronous script** — useEffect-based theme application always produces a visible flash; only a blocking `<head>` IIFE eliminates it
+3. **Chart colors must react to theme** — static module-level chart configs don't update when theme changes; converting to a hook that captures resolvedTheme is the correct pattern
+4. **Tailwind purges dynamic class names** — `w-${pct}%` won't work; must use inline `style={{ width: ... }}` for computed values
+5. **Cleanup runs after sync, not during** — stale event cleanup must wait for the full sync loop to complete to avoid premature deletion on partial failures
+
+### Cost Observations
+- Model mix: ~60% opus, ~30% sonnet, ~10% haiku (estimated)
+- Sessions: ~3 across planning, execution, audit, completion
+- Notable: 4 phases (8 plans) completed in a single day — each phase was well-scoped with clear boundaries
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -242,6 +290,7 @@
 | v1.3 | ~3 | 5 | Largest milestone by phase count — formulaic tab pattern enabled rapid execution |
 | v2.0 | ~5 | 7 | Data model refactor — strict dependency chain, schema evolution pattern |
 | v2.1 | ~2 | 3 | Smallest milestone — focused polish + deploy, same-day ship |
+| v3.0 | ~3 | 4 | Visual redesign — theme toggle, fallback data, rich dashboard elements |
 
 ### Cumulative Quality
 
@@ -252,6 +301,7 @@
 | v1.3 | 22/22 | 100% satisfied | 5 INFO items (skeleton mismatch, full-table scan, frontmatter bookkeeping, type gap) |
 | v2.0 | No audit | 26/26 checked (MIGR-01 partial) | Spreadsheet import pending, programs "active" removal, production deploy behind |
 | v2.1 | No audit | 8/8 satisfied | Cron sync calendar filter deferred, one-liner extraction still broken |
+| v3.0 | 19/19 passed | 19/19 complete | Dark mode dashboard-only, one-liner extraction still broken, task counts not recorded |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -263,3 +313,5 @@
 6. SUMMARY frontmatter fields must be populated during execution — 4 milestones of broken one-liner extraction confirms the CLI depends on it
 7. Verify user-dependent prerequisites before marking requirements complete — checked-off requirements may have external dependencies
 8. Schema evolution via v.optional → migrate → tighten is reliable for zero-downtime data model changes in Convex
+9. Flash-free theme toggle requires a synchronous `<head>` IIFE — useEffect is too late and always causes a visible flash
+10. Chart.js chart colors must be captured in a hook, not at module level — theme changes don't trigger re-evaluation of module-level constants

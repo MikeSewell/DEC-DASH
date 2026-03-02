@@ -1,5 +1,32 @@
 # Milestones
 
+## v3.0 Dashboard Redesign (Shipped: 2026-03-02)
+
+**Phases:** 4 | **Plans:** 8 | **Commits:** 40 | **Files:** 42 | **LOC:** ~26,500 TS
+**Timeline:** 1 day (Mar 2, 2026)
+**Git range:** `feat(26-01)..docs(v3.0)` | **Tag:** `v3.0`
+
+**Delivered:** Overhauled the dashboard with dummy data fallbacks for all sections, dark/light theme toggle with old-app-inspired palette, rich visual elements (funding thermometer, progress bars, urgency calendar), tighter layout polish, and calendar cron fix — resulting in a data-dense command center that looks great even without live integrations.
+
+**Key accomplishments:**
+- Dummy data fallbacks for all dashboard sections (QB financials, calendar, KB metrics, donations) with $NaN bug fix
+- Dark/light theme toggle with flash-free persistence — polished dark palette (#0F0F0F bg, #1E1E1E surface, teal accents) inspired by old desktop app
+- Theme-aware Chart.js components via useChartConfig hooks — all charts dynamically adapt to dark/light mode
+- Funding thermometer, expense category progress bars, donation source cards with icons and amounts
+- Urgency color coding on calendar events (red/yellow/green) and grant tracking deadline items
+- Dashboard layout polish — tighter spacing, gradient hover accents, executive snapshot row, consolidated programs view
+- Calendar cron sync respects admin-selected calendars and cleans up stale events from de-selected ones
+
+**Phases:**
+1. Dummy Data Fallbacks (2 plans) — dashboardFallbacks.ts module, QB/P&L/Calendar/KB/Donation fallback wiring, $NaN fix
+2. Theme Toggle (2 plans) — Dark palette CSS variables, useTheme hook, flash-prevention IIFE, theme-aware chart colors
+3. Visual Elements (2 plans) — FundingThermometer, expense progress bars, enlarged stat values, donation source cards, urgency color coding
+4. Dashboard Polish + Infrastructure (2 plans) — Tighter spacing, hover accents, executive snapshot, programs consolidation, calendar cron fix
+
+**Archives:** `milestones/v3.0-ROADMAP.md` | `milestones/v3.0-REQUIREMENTS.md` | `milestones/v3.0-MILESTONE-AUDIT.md`
+
+---
+
 ## v2.1 Polish & Deploy (Shipped: 2026-03-02)
 
 **Phases:** 3 | **Plans:** 5 | **Files:** 42 | **LOC:** ~25,000 TS
