@@ -121,10 +121,10 @@ Plans:
   1. Visiting the production URL loads the dashboard with live data — no build errors, no missing routes
   2. Convex schema changes from v2.0 and v2.1 are deployed and the backend responds correctly in production
   3. PM2 reports the dec-dash process as online with zero restarts after the deploy
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 25-01: Deploy Convex schema and Next.js build to production VPS
+- [ ] 25-01-PLAN.md — Deploy Convex schema and Next.js build to production VPS, verify with human checkpoint
 
 ## Progress
 
