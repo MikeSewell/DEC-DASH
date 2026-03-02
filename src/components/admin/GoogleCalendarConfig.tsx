@@ -3,59 +3,102 @@
 import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useCalendarConfig, useCalendarSync } from "@/hooks/useGoogleCalendar";
+import {
+  useCalendarConfig,
+  useCalendarSync,
+  useListCalendars,
+} from "@/hooks/useGoogleCalendar";
 import { timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 
-interface CalendarEntry {
-  calendarId: string;
-  displayName: string;
+interface AvailableCalendar {
+  id: string;
+  summary: string;
 }
 
 export default function GoogleCalendarConfig() {
   const config = useCalendarConfig();
   const { triggerSync } = useCalendarSync();
+  const { listCalendars } = useListCalendars();
   const saveConfig = useMutation(api.googleCalendar.saveConfig);
 
-  const [calendars, setCalendars] = useState<CalendarEntry[]>([]);
-  const [newCalendarId, setNewCalendarId] = useState("");
-  const [newDisplayName, setNewDisplayName] = useState("");
+  const [availableCalendars, setAvailableCalendars] = useState<AvailableCalendar[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [fetching, setFetching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState("");
+  const [hasFetched, setHasFetched] = useState(false);
 
-  // Initialize from config on mount
+  // Initialize selectedIds from saved config on mount
   useEffect(() => {
     if (config) {
-      setCalendars(config.calendars ?? []);
+      const ids = new Set((config.calendars ?? []).map((c) => c.calendarId));
+      setSelectedIds(ids);
     }
   }, [config]);
 
-  function handleAddCalendar() {
-    const id = newCalendarId.trim();
-    const name = newDisplayName.trim();
-    if (!id || !name) return;
-    setCalendars((prev) => [...prev, { calendarId: id, displayName: name }]);
-    setNewCalendarId("");
-    setNewDisplayName("");
+  async function handleFetchCalendars() {
+    setFetching(true);
+    setMessage("");
+    try {
+      const results = await listCalendars();
+      setAvailableCalendars(results);
+      setHasFetched(true);
+      if (results.length === 0) {
+        setMessage(
+          "No calendars found. Make sure calendars are shared with the service account."
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to fetch calendars";
+      setMessage(`Error: ${msg}`);
+      setHasFetched(true);
+    } finally {
+      setFetching(false);
+    }
   }
 
-  function handleRemoveCalendar(index: number) {
-    setCalendars((prev) => prev.filter((_, i) => i !== index));
+  function toggleCalendar(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
-  async function handleSaveAndTest() {
-    if (calendars.length === 0) return;
+  async function handleSaveSelection() {
     setSaving(true);
     setMessage("");
     try {
+      // Build the calendars array from selectedIds
+      const calendars = Array.from(selectedIds).map((id) => {
+        // Look up displayName from fetched list first
+        const found = availableCalendars.find((c) => c.id === id);
+        if (found) {
+          return { calendarId: id, displayName: found.summary };
+        }
+        // Fallback: use existing displayName from saved config (stale/removed calendar)
+        const existing = (config?.calendars ?? []).find((c) => c.calendarId === id);
+        return { calendarId: id, displayName: existing?.displayName ?? id };
+      });
+
       await saveConfig({ calendars });
-      await triggerSync();
-      setMessage("Configuration saved and sync triggered successfully.");
-      setTimeout(() => setMessage(""), 4000);
+      // Trigger sync after saving if there are selected calendars
+      if (calendars.length > 0) {
+        await triggerSync();
+        setMessage("Calendar selection saved and sync triggered.");
+      } else {
+        setMessage("Calendar selection saved (no calendars selected — sync disabled).");
+      }
+      setTimeout(() => setMessage(""), 5000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save configuration";
       setMessage(`Error: ${msg}`);
@@ -91,6 +134,12 @@ export default function GoogleCalendarConfig() {
 
   const isConfigured = config !== null && (config.calendars?.length ?? 0) > 0;
 
+  // Determine which previously-configured calendars are not in the fetched list
+  const fetchedIds = new Set(availableCalendars.map((c) => c.id));
+  const staleCalendars = hasFetched
+    ? (config?.calendars ?? []).filter((c) => !fetchedIds.has(c.calendarId))
+    : [];
+
   return (
     <Card title="Google Calendar Integration">
       <div className="space-y-6">
@@ -121,62 +170,89 @@ export default function GoogleCalendarConfig() {
 
         {/* Info text */}
         <p className="text-sm text-muted">
-          Configure Google Calendar IDs to sync. Each calendar must be shared with the service account
-          email before events will appear.
+          Fetch available calendars from your Google service account, then select which ones to sync.
         </p>
 
-        {/* Calendar list */}
-        {calendars.length > 0 && (
-          <div className="rounded-lg border border-border divide-y divide-border">
-            {calendars.map((cal, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 px-4 py-3"
+        {/* Fetch Calendars button */}
+        <div>
+          <Button
+            variant="primary"
+            size="sm"
+            loading={fetching}
+            onClick={handleFetchCalendars}
+            disabled={fetching}
+          >
+            {!fetching && (
+              <svg
+                className="w-4 h-4 mr-1.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            )}
+            Fetch Calendars
+          </Button>
+        </div>
+
+        {/* Calendar checkbox list (shown after fetch) */}
+        {hasFetched && availableCalendars.length > 0 && (
+          <div className="rounded-lg border border-border divide-y divide-border">
+            {availableCalendars.map((cal) => (
+              <label
+                key={cal.id}
+                className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/10 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(cal.id)}
+                  onChange={() => toggleCalendar(cal.id)}
+                  className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary accent-[#1B5E6B]"
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{cal.displayName}</p>
-                  <p className="text-xs text-muted font-mono truncate">{cal.calendarId}</p>
+                  <p className="text-sm font-medium text-foreground">{cal.summary}</p>
+                  <p className="text-xs text-muted font-mono truncate">{cal.id}</p>
                 </div>
-                <button
-                  onClick={() => handleRemoveCalendar(index)}
-                  className="flex-shrink-0 px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
+              </label>
             ))}
           </div>
         )}
 
-        {/* Add calendar row */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">Add Calendar</p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={newCalendarId}
-              onChange={(e) => setNewCalendarId(e.target.value)}
-              placeholder="e.g. abc123@group.calendar.google.com"
-              className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="text"
-              value={newDisplayName}
-              onChange={(e) => setNewDisplayName(e.target.value)}
-              placeholder="e.g. DEC Board"
-              className="flex-1 sm:max-w-[180px] px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <button
-              onClick={handleAddCalendar}
-              disabled={!newCalendarId.trim() || !newDisplayName.trim()}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Add
-            </button>
+        {/* Stale/previously-configured calendars not in fetched list */}
+        {hasFetched && staleCalendars.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-warning">
+              Previously configured (not found in service account):
+            </p>
+            <div className="rounded-lg border border-warning/40 divide-y divide-warning/20 bg-warning/5">
+              {staleCalendars.map((cal) => (
+                <label
+                  key={cal.calendarId}
+                  className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-warning/10 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(cal.calendarId)}
+                    onChange={() => toggleCalendar(cal.calendarId)}
+                    className="mt-0.5 w-4 h-4 rounded border-warning text-warning focus:ring-warning accent-[#1B5E6B]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{cal.displayName}</p>
+                    <p className="text-xs text-muted font-mono truncate">{cal.calendarId}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Save message */}
+        {/* Message area */}
         {message && (
           <div
             className={cn(
@@ -196,10 +272,10 @@ export default function GoogleCalendarConfig() {
             variant="primary"
             size="sm"
             loading={saving}
-            onClick={handleSaveAndTest}
-            disabled={calendars.length === 0 || saving}
+            onClick={handleSaveSelection}
+            disabled={saving || !hasFetched}
           >
-            Save &amp; Test
+            Save Selection
           </Button>
           {isConfigured && (
             <Button
@@ -209,8 +285,18 @@ export default function GoogleCalendarConfig() {
               onClick={handleSyncNow}
               disabled={syncing}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                />
               </svg>
               Sync Now
             </Button>
