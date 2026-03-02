@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 28 of 29 (v3.0) — Visual Elements
-Plan: 1 of 2 in current phase (28-01 complete)
-Status: Phase 28 in progress
-Last activity: 2026-03-02 — Completed 28-01: FundingThermometer, expense progress bars, enlarged stat card values
+Plan: 2 of 2 in current phase (28-02 complete — Phase 28 DONE)
+Status: Phase 28 complete, Phase 29 pending
+Last activity: 2026-03-02 — Completed 28-02: Donation source cards, urgency color coding on GrantTracking and CalendarWidget
 
 Progress: [████░░░░░░] 15% (v3.0)
 
@@ -50,6 +50,9 @@ Progress: [████░░░░░░] 15% (v3.0)
 - [28-01]: Thermometer gradient uses inline CSS custom properties (var(--primary-dark) via var(--primary) to #2B9E9E) since Tailwind can't resolve CSS variables in gradient utilities at build time
 - [28-01]: Progress bar widths use inline style={{ width: `${pct}%` }} — Tailwind purges dynamically-composed width classes
 - [28-01]: DonationPerformance stat cards also updated to text-3xl (5 total components, not 4)
+- [28-02]: CalendarWidget urgency thresholds (1/3 days) differ from GrantTracking (7/30 days) — calendar events are near-term by nature
+- [28-02]: getEventUrgencyClasses returns "" for past events (diffDays < 0) to avoid tinting already-past items
+- [28-02]: DeadlineCountdown comfortable state uses text-emerald-600 dark:text-emerald-400 (not text-muted) for green visual consistency
 
 ### Pending Todos
 
@@ -63,5 +66,5 @@ Progress: [████░░░░░░] 15% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 28-01-PLAN.md — FundingThermometer widget, expense progress bars (dads-category-bar), and enlarged text-3xl stat card values across all dashboard components
+Stopped at: Completed 28-02-PLAN.md — Donation source cards in DonationPerformance, urgency color coding (red/amber/green) on GrantTracking deadlines and CalendarWidget event rows
 Resume file: None

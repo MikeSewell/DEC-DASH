@@ -100,7 +100,7 @@ Full details: `milestones/v2.1-ROADMAP.md`
 
 #### Phase 28: Visual Elements
 
-- [ ] **Phase 28: Visual Elements** — Funding thermometer, expense progress bars, donation source cards, urgency calendar, and dense metric cards
+- [x] **Phase 28: Visual Elements** — Funding thermometer, expense progress bars, donation source cards, urgency calendar, and dense metric cards (completed 2026-03-02)
 
 #### Phase 29: Dashboard Polish + Infrastructure
 
@@ -187,5 +187,5 @@ Full details: `milestones/v2.1-ROADMAP.md`
 | 25. Production Deploy | v2.1 | 1/1 | Complete | 2026-03-02 |
 | 26. Dummy Data Fallbacks | 2/2 | Complete    | 2026-03-02 | - |
 | 27. Theme Toggle | 2/2 | Complete    | 2026-03-02 | - |
-| 28. Visual Elements | 1/2 | In Progress|  | - |
+| 28. Visual Elements | 2/2 | Complete   | 2026-03-02 | - |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 0/TBD | Not started | - |

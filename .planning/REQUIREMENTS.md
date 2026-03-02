@@ -26,8 +26,8 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 
 - [x] **VIZ-01**: Funding goal thermometer visualization on dashboard
 - [x] **VIZ-02**: Expense category progress bars with percentage fills
-- [ ] **VIZ-03**: Donation source cards with icons and amounts
-- [ ] **VIZ-04**: Deadline calendar items with urgency color coding (red/yellow/green)
+- [x] **VIZ-03**: Donation source cards with icons and amounts
+- [x] **VIZ-04**: Deadline calendar items with urgency color coding (red/yellow/green)
 - [x] **VIZ-05**: Dense metric cards with large values and hover lift effects
 
 ### Dashboard Polish
@@ -73,8 +73,8 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 | THEME-04 | Phase 27 | Complete |
 | VIZ-01 | Phase 28 | Complete |
 | VIZ-02 | Phase 28 | Complete |
-| VIZ-03 | Phase 28 | Pending |
-| VIZ-04 | Phase 28 | Pending |
+| VIZ-03 | Phase 28 | Complete |
+| VIZ-04 | Phase 28 | Complete |
 | VIZ-05 | Phase 28 | Complete |
 | POLISH-01 | Phase 29 | Pending |
 | POLISH-02 | Phase 29 | Pending |
