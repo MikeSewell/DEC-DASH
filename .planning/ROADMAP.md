@@ -188,4 +188,4 @@ Plans:
 | 19. Analytics Backend Rewrite | 1/1 | Complete    | 2026-03-01 | - |
 | 20. Frontend and Sheets Removal | 2/2 | Complete    | 2026-03-01 | - |
 | 21. Schema Cleanup | 2/2 | Complete    | 2026-03-01 | - |
-| 22. Data Export | 1/1 | Complete   | 2026-03-02 | - |
+| 22. Data Export | 1/1 | Complete    | 2026-03-02 | - |
