@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Polish & Deploy
 status: unknown
-last_updated: "2026-03-02T07:10:24Z"
+last_updated: "2026-03-02T07:25:00Z"
 progress:
   total_phases: 3
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 9
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 24 of 25 (Calendar Multi-Select)
-Plan: 1 of N in current phase (24-01 complete)
-Status: Phase 24 in progress — 24-01 done
-Last activity: 2026-03-02 — Completed 24-01 (listAvailableCalendars action + useListCalendars hook)
+Plan: 2 of N in current phase (24-01, 24-02 complete)
+Status: Phase 24 in progress — 24-01 and 24-02 done
+Last activity: 2026-03-02 — Completed 24-02 (GoogleCalendarConfig multi-select admin UI)
 
-Progress: [███░░░░░░░] 40% (7/N plans total)
+Progress: [████░░░░░░] 50% (9/N plans total)
 
 ## Accumulated Context
 
@@ -52,9 +52,14 @@ Phase 24-01 decisions:
 - Return type { id, summary } uses item.summary ?? item.id fallback for unnamed calendars
 - useListCalendars hook mirrors useCalendarSync pattern for consistency in useGoogleCalendar.ts
 
+Phase 24-02 decisions:
+- Save button disabled until Fetch Calendars clicked (hasFetched guard) — prevents saves before admin sees options
+- Stale calendars shown in warning-styled section after fetch — admin can uncheck/re-save to clean up
+- Save triggers auto-sync when any calendars selected — reduces save-then-sync two-step friction
+- No auto-fetch on mount — intent-driven fetch avoids unnecessary API calls on every admin page load
+
 ### Pending Todos
 
-- Phase 24 admin UI for calendar selection (24-02 next)
 - Phase 24 cron sync update to use selected calendars from config (24-03)
 
 ### Blockers/Concerns
@@ -65,5 +70,5 @@ Phase 24-01 decisions:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 24-01-PLAN.md (listAvailableCalendars action + useListCalendars hook)
+Stopped at: Completed 24-02-PLAN.md (GoogleCalendarConfig multi-select admin UI)
 Resume file: None
