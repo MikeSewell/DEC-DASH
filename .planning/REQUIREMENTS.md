@@ -49,20 +49,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| CAL-01 | — | Pending |
-| CAL-02 | — | Pending |
-| CAL-03 | — | Pending |
-| DATA-01 | — | Pending |
-| DEPLOY-01 | — | Pending |
-| DEPLOY-02 | — | Pending |
+| UI-01 | Phase 23 | Pending |
+| UI-02 | Phase 23 | Pending |
+| DATA-01 | Phase 23 | Pending |
+| CAL-01 | Phase 24 | Pending |
+| CAL-02 | Phase 24 | Pending |
+| CAL-03 | Phase 24 | Pending |
+| DEPLOY-01 | Phase 25 | Pending |
+| DEPLOY-02 | Phase 25 | Pending |
 
 **Coverage:**
 - v2.1 requirements: 8 total
-- Mapped to phases: 0
-- Unmapped: 8 ⚠️
+- Mapped to phases: 8
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 — traceability filled after roadmap creation*
