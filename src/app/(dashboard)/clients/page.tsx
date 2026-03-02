@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { downloadCsv, downloadXlsx } from "@/lib/exportUtils";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import type { ProgramType } from "@/types";
@@ -74,6 +75,8 @@ export default function ClientsPage() {
   const [savingClient, setSavingClient] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
   const [deletingProgram, setDeletingProgram] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState<"csv" | "xlsx" | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -87,6 +90,25 @@ export default function ClientsPage() {
   const prevClientsRef = useRef(clientsRaw);
   if (clientsRaw !== undefined) prevClientsRef.current = clientsRaw;
   const clients = clientsRaw ?? prevClientsRef.current;
+
+  // Export query — only fires when exportFormat is set (skip pattern)
+  const exportData = useQuery(
+    api.clients.exportAll,
+    exportFormat ? {} : "skip"
+  );
+
+  // Trigger download once export data arrives
+  useEffect(() => {
+    if (exportData && exportFormat) {
+      const dateStr = new Date().toISOString().split("T")[0];
+      if (exportFormat === "csv") {
+        downloadCsv(exportData, `dec-clients-${dateStr}.csv`);
+      } else {
+        downloadXlsx(exportData, `dec-clients-${dateStr}.xlsx`);
+      }
+      setExportFormat(null);
+    }
+  }, [exportData, exportFormat]);
 
   const createClient = useMutation(api.clients.create);
   const createProgram = useMutation(api.programs.create);
@@ -232,6 +254,47 @@ export default function ClientsPage() {
         </div>
         {pageView === "clients" && (
           <div className="flex items-center gap-3">
+            {userRole === "admin" && (
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setShowExportMenu((prev) => !prev)}
+                  disabled={exportFormat !== null}
+                  loading={exportFormat !== null}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Export
+                </Button>
+                {showExportMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 mt-2 w-44 rounded-xl border border-border bg-surface shadow-[var(--warm-shadow-md)] z-50">
+                      <button
+                        className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface-hover rounded-t-xl transition-colors"
+                        onClick={() => {
+                          setExportFormat("csv");
+                          setShowExportMenu(false);
+                        }}
+                      >
+                        Download CSV
+                      </button>
+                      <button
+                        className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-surface-hover rounded-b-xl transition-colors"
+                        onClick={() => {
+                          setExportFormat("xlsx");
+                          setShowExportMenu(false);
+                        }}
+                      >
+                        Download Excel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {isAdminOrManager && (
               <Button variant="secondary" size="md" onClick={() => setShowAddProgramModal(true)}>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
