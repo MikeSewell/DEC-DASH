@@ -33,7 +33,7 @@ export default function DashboardSection({
       title={undefined}
     >
       {/* Section Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border bg-gradient-to-r from-surface to-surface-hover/30">
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-border bg-gradient-to-r from-surface to-surface-hover/30">
         <button
           onClick={() => setCollapsed((prev) => !prev)}
           className="flex items-center gap-2 text-left group"
@@ -114,7 +114,7 @@ export default function DashboardSection({
           collapsed ? "max-h-0 opacity-0" : "max-h-[2000px] opacity-100"
         )}
       >
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-3">{children}</div>
       </div>
     </Card>
   );

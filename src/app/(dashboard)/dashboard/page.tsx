@@ -152,7 +152,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
       <WhatNeedsAttention />
 
       {/* Dashboard Sections */}
-      <div className="space-y-6 stagger-children">
+      <div className="space-y-4 stagger-children">
         {visibleSections.map((sectionId, index) => {
           const SectionComponent = SECTION_COMPONENTS[sectionId];
           if (!SectionComponent) return null;
