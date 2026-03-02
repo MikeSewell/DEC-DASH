@@ -187,5 +187,5 @@ Full details: `milestones/v2.1-ROADMAP.md`
 | 25. Production Deploy | v2.1 | 1/1 | Complete | 2026-03-02 |
 | 26. Dummy Data Fallbacks | 2/2 | Complete    | 2026-03-02 | - |
 | 27. Theme Toggle | 2/2 | Complete    | 2026-03-02 | - |
-| 28. Visual Elements | 2/2 | Complete   | 2026-03-02 | - |
+| 28. Visual Elements | 2/2 | Complete    | 2026-03-02 | - |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 0/TBD | Not started | - |
