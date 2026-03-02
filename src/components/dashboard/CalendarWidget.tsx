@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCalendarEvents } from "@/hooks/useGoogleCalendar";
 import { useToast } from "@/components/ui/Toast";
 import { EVENT_TYPE_CONFIG, type EventTypeConfig } from "@/lib/constants";
+import { getFallbackCalendarEvents } from "@/lib/dashboardFallbacks";
 
 // --- Types ---
 
@@ -236,9 +237,58 @@ export default function CalendarWidget() {
     return <CalendarWidgetSkeleton />;
   }
 
-  // Not configured state
+  // Not configured — show fallback events instead of empty state
   if (result === null) {
-    return <NotConfiguredState />;
+    const fallbackEvents = getFallbackCalendarEvents();
+    const today = new Date();
+    const dayMap = new Map<string, typeof fallbackEvents>();
+    for (const event of fallbackEvents) {
+      const key = getDayKey(event.startAt);
+      if (!dayMap.has(key)) dayMap.set(key, []);
+      dayMap.get(key)!.push(event);
+    }
+    const sortedDayKeys = Array.from(dayMap.keys()).sort();
+    const allSortedFallbackEvents: Array<{ event: (typeof fallbackEvents)[0]; dayKey: string }> = [];
+    for (const dayKey of sortedDayKeys) {
+      const dayEvents = dayMap.get(dayKey)!;
+      const sorted = [...dayEvents].sort((a, b) => {
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        return a.startAt - b.startAt;
+      });
+      for (const event of sorted) {
+        allSortedFallbackEvents.push({ event, dayKey });
+      }
+    }
+    const renderedFallbackDayKeys = new Set<string>();
+    return (
+      <div className="space-y-1">
+        {allSortedFallbackEvents.map(({ event, dayKey }, index) => {
+          const isFirstOfDay = !renderedFallbackDayKeys.has(dayKey);
+          if (isFirstOfDay) renderedFallbackDayKeys.add(dayKey);
+          const eventDate = new Date(event.startAt);
+          const dayLabel = getDayLabel(eventDate, today);
+          const dayEventCount = dayMap.get(dayKey)!.length;
+          const eventType = classifyEventType(event as CalendarEvent);
+          return (
+            <div key={`${event._id}-${index}`}>
+              {isFirstOfDay && (
+                <div className={`flex items-center gap-2 ${index === 0 ? "mt-0" : "mt-4"} mb-2`}>
+                  <span className="text-sm font-semibold text-foreground">{dayLabel}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    {dayEventCount}
+                  </span>
+                </div>
+              )}
+              <EventRow event={event as CalendarEvent} eventType={eventType} now={Date.now()} />
+            </div>
+          );
+        })}
+        <p className="text-xs text-muted/50 mt-3">
+          Sample events — <a href="/admin?tab=google-calendar" className="hover:underline">connect Google Calendar</a> for live schedule
+        </p>
+      </div>
+    );
   }
 
   const events = result.events as CalendarEvent[];
