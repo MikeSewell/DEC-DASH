@@ -153,4 +153,4 @@ Plans:
 | 22. Data Export | v2.0 | 1/1 | Complete | 2026-03-02 |
 | 23. UI & Data Cleanup | 2/2 | Complete    | 2026-03-02 | - |
 | 24. Calendar Multi-Select | 2/2 | Complete    | 2026-03-02 | - |
-| 25. Production Deploy | 1/1 | Complete   | 2026-03-02 | - |
+| 25. Production Deploy | 1/1 | Complete    | 2026-03-02 | - |
