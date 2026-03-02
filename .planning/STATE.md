@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 27 — Theme Toggle (COMPLETE)
+**Current focus:** Phase 28 — Visual Elements (In Progress)
 
 ## Current Position
 
-Phase: 27 of 29 (v3.0) — Theme Toggle
-Plan: 2 of 2 in current phase (27-01 and 27-02 complete)
-Status: Phase 27 complete
-Last activity: 2026-03-02 — Completed 27-02: All four dashboard chart components made theme-aware
+Phase: 28 of 29 (v3.0) — Visual Elements
+Plan: 1 of 2 in current phase (28-01 complete)
+Status: Phase 28 in progress
+Last activity: 2026-03-02 — Completed 28-01: FundingThermometer, expense progress bars, enlarged stat card values
 
-Progress: [███░░░░░░░] 12% (v3.0)
+Progress: [████░░░░░░] 15% (v3.0)
 
 ## Accumulated Context
 
@@ -46,6 +46,10 @@ Progress: [███░░░░░░░] 12% (v3.0)
 - [27-01]: useTheme hook initialized from localStorage via useState initializer to eliminate state/class mismatch on mount
 - [27-02]: useChartConfig() hook pattern used in Programs components — module-level chart constants converted to hook so resolvedTheme is captured at render time
 - [27-02]: Light mode color branches preserve original hardcoded values exactly — no visual regression in light mode
+- [28-01]: FundingThermometer fill animation uses 50ms setTimeout mounted state — triggers CSS transition-[height] duration-1000 after first render
+- [28-01]: Thermometer gradient uses inline CSS custom properties (var(--primary-dark) via var(--primary) to #2B9E9E) since Tailwind can't resolve CSS variables in gradient utilities at build time
+- [28-01]: Progress bar widths use inline style={{ width: `${pct}%` }} — Tailwind purges dynamically-composed width classes
+- [28-01]: DonationPerformance stat cards also updated to text-3xl (5 total components, not 4)
 
 ### Pending Todos
 
@@ -59,5 +63,5 @@ Progress: [███░░░░░░░] 12% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 27-02-PLAN.md — All four dashboard chart components (ProfitLoss, DonationPerformance, ProgramsCoparent, ProgramsLegal) made theme-aware with resolvedTheme
+Stopped at: Completed 28-01-PLAN.md — FundingThermometer widget, expense progress bars (dads-category-bar), and enlarged text-3xl stat card values across all dashboard components
 Resume file: None
