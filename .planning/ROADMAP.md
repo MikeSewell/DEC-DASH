@@ -104,7 +104,7 @@ Full details: `milestones/v2.1-ROADMAP.md`
 
 #### Phase 29: Dashboard Polish + Infrastructure
 
-- [ ] **Phase 29: Dashboard Polish + Infrastructure** — Tighter layout, hover accents, executive snapshot, consolidated programs view, and calendar cron fix
+- [x] **Phase 29: Dashboard Polish + Infrastructure** — Tighter layout, hover accents, executive snapshot, consolidated programs view, and calendar cron fix (completed 2026-03-02)
 
 ## Phase Details
 
@@ -188,4 +188,4 @@ Full details: `milestones/v2.1-ROADMAP.md`
 | 26. Dummy Data Fallbacks | 2/2 | Complete    | 2026-03-02 | - |
 | 27. Theme Toggle | 2/2 | Complete    | 2026-03-02 | - |
 | 28. Visual Elements | 2/2 | Complete    | 2026-03-02 | - |
-| 29. Dashboard Polish + Infrastructure | 1/2 | In Progress|  | - |
+| 29. Dashboard Polish + Infrastructure | 2/2 | Complete   | 2026-03-02 | - |

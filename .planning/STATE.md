@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Dashboard Redesign
 status: unknown
-last_updated: "2026-03-02T12:18:18.454Z"
+last_updated: "2026-03-02T14:19:08Z"
 progress:
   total_phases: 8
   completed_phases: 8
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 16
+  completed_plans: 16
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 29 — Dashboard Polish + Infrastructure (In Progress)
+**Current focus:** Phase 29 — Dashboard Polish + Infrastructure (Complete)
 
 ## Current Position
 
 Phase: 29 of 29 (v3.0) — Dashboard Polish + Infrastructure
-Plan: 1 of 2 in current phase (29-01 complete)
-Status: Phase 29 in progress, plan 29-01 done
-Last activity: 2026-03-02 — Completed 29-01: Dashboard layout tightening, gradient hover accent, ExecutiveSnapshot unwrap, Programs consolidation
+Plan: 2 of 2 in current phase (29-01 and 29-02 complete)
+Status: Phase 29 COMPLETE — all plans done
+Last activity: 2026-03-02 — Completed 29-02: Google Calendar stale cleanup for de-selected calendars + cron defensive logging
 
-Progress: [████░░░░░░] 15% (v3.0)
+Progress: [████████████] 100% (v3.0)
 
 ## Accumulated Context
 
@@ -56,10 +56,12 @@ Progress: [████░░░░░░] 15% (v3.0)
 - [29-01]: ExecutiveSnapshot rendered directly without DashboardSection wrapper — always visible, cannot be hidden/reordered/collapsed by users
 - [29-01]: ProgramsConsolidated is an inline function component in page.tsx — tab state is local, only active tab's component data loads
 - [29-01]: Removed executive-snapshot/programs-coparent/programs-legal from DashboardSectionId — stale user prefs silently ignored by existing if (!SectionComponent) return null guard
+- [29-02]: cleanupDeselectedCalendars iterates all cached events (full scan) — acceptable given dataset size < 500 rows with typical 2-5 calendars
+- [29-02]: Cleanup runs AFTER per-calendar sync loop completes — ensures partial sync failures don't trigger premature cleanup
 
 ### Pending Todos
 
-- Cron sync update to use selected calendars from googleCalendarConfig (included in Phase 29 as INFRA-01)
+(none — INFRA-01 resolved: cron sync respects admin-selected calendars and cleans up stale events from de-selected ones)
 
 ### Blockers/Concerns
 
@@ -69,5 +71,5 @@ Progress: [████░░░░░░] 15% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 29-01-PLAN.md — Dashboard layout tightening (space-y-4, py-3/py-2.5), gradient top-border hover accent (.hover-lift ::before), ExecutiveSnapshot unwrapped as always-visible row, Programs consolidated into tabbed section
+Stopped at: Completed 29-02-PLAN.md — Google Calendar stale cleanup for de-selected calendars (cleanupDeselectedCalendars mutation) + defensive cron logging by calendar name
 Resume file: None

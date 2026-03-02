@@ -39,7 +39,7 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Calendar cron sync uses selected calendars from googleCalendarConfig
+- [x] **INFRA-01**: Calendar cron sync uses selected calendars from googleCalendarConfig
 
 ## Future Requirements
 
@@ -80,7 +80,7 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 | POLISH-02 | Phase 29 | Complete |
 | POLISH-03 | Phase 29 | Complete |
 | POLISH-04 | Phase 29 | Complete |
-| INFRA-01 | Phase 29 | Pending |
+| INFRA-01 | Phase 29 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 19 total
