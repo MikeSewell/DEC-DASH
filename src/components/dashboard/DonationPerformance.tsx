@@ -15,6 +15,7 @@ import {
 import { useIncomeTrend, useQuickBooksConfig } from "@/hooks/useQuickBooks";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
+import { FALLBACK_INCOME_TREND } from "@/lib/dashboardFallbacks";
 
 ChartJS.register(
   CategoryScale,
@@ -32,50 +33,19 @@ const PALETTE = [
   "#8CC63F", "#7DD4C8", "#1A7A7A", "#2D6A4F",
 ];
 
-export default function DonationPerformance() {
-  const config = useQuickBooksConfig();
-  const incomeTrend = useIncomeTrend();
+// ─── DonationChart inner component ─────────────────────────────────────────────
 
-  // Loading state
-  if (config === undefined || incomeTrend === undefined) {
-    return <ChartSkeleton />;
-  }
+interface DonationChartProps {
+  data: {
+    months: Array<{ label: string; total: number; breakdown: Record<string, number> }>;
+    accounts: string[];
+    fetchedAt: number | null;
+  };
+  isFallback?: boolean;
+}
 
-  // QB not connected state
-  if (config === null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-        </svg>
-        <p className="text-sm">No donation data available yet.</p>
-        <p className="text-xs mt-1">Connect QuickBooks to import income information.</p>
-        <a href="/admin?tab=quickbooks" className="text-primary hover:underline text-xs mt-2 inline-block">
-          Connect QuickBooks &rarr;
-        </a>
-      </div>
-    );
-  }
-
-  // Not configured state (DON-04)
-  if (incomeTrend === null || !incomeTrend.configured) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <p className="text-sm font-medium">Configure donation accounts in Admin</p>
-        <p className="text-xs mt-1">Select which QB income accounts to display in this chart.</p>
-        <a href="/admin?tab=quickbooks" className="text-primary hover:underline text-xs mt-2 inline-block">
-          Open Admin Settings &rarr;
-        </a>
-      </div>
-    );
-  }
-
-  // Data present — compute summary stats
-  const { months, accounts, fetchedAt } = incomeTrend;
+function DonationChart({ data, isFallback }: DonationChartProps) {
+  const { months, accounts, fetchedAt } = data;
 
   // Grand total across all months
   const grandTotal = months.reduce((sum, m) => sum + m.total, 0);
@@ -145,7 +115,8 @@ export default function DonationPerformance() {
     borderWidth: accounts.length > 1 ? 3 : 2,
   });
 
-  const chartData = { labels, datasets };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartData = { labels, datasets } as any;
 
   const chartOptions = {
     responsive: true,
@@ -228,12 +199,44 @@ export default function DonationPerformance() {
         </p>
       )}
 
-      {/* Sync timestamp */}
+      {/* Sync timestamp — only for live data */}
       {fetchedAt && (
         <p className="text-xs text-muted text-right">
           Last synced: {timeAgo(fetchedAt)}
         </p>
       )}
+
+      {/* Sample data notice — only in fallback mode */}
+      {isFallback && (
+        <p className="text-xs text-muted/50 text-right">
+          Sample data — connect QuickBooks and configure income accounts for live figures
+        </p>
+      )}
     </div>
   );
+}
+
+// ─── Main export ────────────────────────────────────────────────────────────────
+
+export default function DonationPerformance() {
+  const config = useQuickBooksConfig();
+  const incomeTrend = useIncomeTrend();
+
+  // Loading state
+  if (config === undefined || incomeTrend === undefined) {
+    return <ChartSkeleton />;
+  }
+
+  // QB not connected — show fallback chart
+  if (config === null) {
+    return <DonationChart data={FALLBACK_INCOME_TREND} isFallback={true} />;
+  }
+
+  // Not configured (no income accounts selected) — show fallback chart
+  if (incomeTrend === null || !incomeTrend.configured) {
+    return <DonationChart data={FALLBACK_INCOME_TREND} isFallback={true} />;
+  }
+
+  // Live data
+  return <DonationChart data={incomeTrend} isFallback={false} />;
 }
