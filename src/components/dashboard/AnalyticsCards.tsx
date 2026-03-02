@@ -1,6 +1,8 @@
 "use client";
 
-import { useActiveClientCount, useSessionVolume, useIntakeTrend } from "@/hooks/useAnalytics";
+import { useSessionVolume, useIntakeTrend } from "@/hooks/useAnalytics";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { StatCardGridSkeleton } from "@/components/dashboard/skeletons/StatCardSkeleton";
 
 function UsersIcon() {
@@ -83,12 +85,12 @@ function StatCard({ icon, value, label, accentColor = "text-primary", trend }: S
 }
 
 export default function AnalyticsCards() {
-  const clientCount = useActiveClientCount();
+  const clientStats = useQuery(api.clients.getStats);
   const sessionVolume = useSessionVolume();
   const intakeTrend = useIntakeTrend();
 
   const isLoading =
-    clientCount === undefined ||
+    clientStats === undefined ||
     sessionVolume === undefined ||
     intakeTrend === undefined;
 
@@ -102,11 +104,11 @@ export default function AnalyticsCards() {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Active Clients */}
+        {/* Total Clients */}
         <StatCard
           icon={<UsersIcon />}
-          value={clientCount.count}
-          label="Active Clients"
+          value={clientStats.total}
+          label="Total Clients"
           accentColor="text-primary"
         />
 

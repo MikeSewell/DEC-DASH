@@ -132,7 +132,7 @@ export default function ProgramsLegal() {
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-primary">{active}</p>
-          <p className="text-xs text-muted">Active</p>
+          <p className="text-xs text-muted">Enrolled</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xl font-bold text-success">{completed}</p>

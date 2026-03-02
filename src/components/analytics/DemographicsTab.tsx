@@ -181,7 +181,7 @@ export default function DemographicsTab() {
         </div>
         <div className="flex items-center gap-4 text-sm text-muted">
           <span><strong className="text-foreground">{total}</strong> total</span>
-          <span className="text-primary"><strong>{active}</strong> active</span>
+          <span className="text-primary"><strong>{active}</strong> enrolled</span>
           <span className="text-accent"><strong>{completed}</strong> completed</span>
         </div>
       </div>

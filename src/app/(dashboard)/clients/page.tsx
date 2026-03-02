@@ -365,7 +365,7 @@ export default function ClientsPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-muted">Active</p>
+              <p className="text-sm text-muted">Enrolled</p>
               <p className="text-2xl font-bold text-foreground">{clientStats?.active ?? 0}</p>
             </div>
           </div>

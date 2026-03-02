@@ -66,11 +66,11 @@ export default function ClientActivity() {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Active Clients */}
+        {/* Total Clients */}
         <StatCard
           icon={<UsersIcon />}
-          value={clientStats.active}
-          label="Active Clients"
+          value={clientStats.total}
+          label="Total Clients"
           accentColor="text-primary"
         >
           {programStats && (
