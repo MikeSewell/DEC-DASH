@@ -80,7 +80,7 @@ Full details: `milestones/v2.0-ROADMAP.md`
 
 - [x] **Phase 23: UI & Data Cleanup** — Fix Programs sidebar icon, remove isActive field from programs, import master spreadsheet (completed 2026-03-02)
 - [x] **Phase 24: Calendar Multi-Select** — Replace manual calendar ID field with a dropdown of available Google Calendars (completed 2026-03-02)
-- [ ] **Phase 25: Production Deploy** — Build and deploy v2.1 to VPS, verify Convex schema in production
+- [x] **Phase 25: Production Deploy** — Build and deploy v2.1 to VPS, verify Convex schema in production (completed 2026-03-02)
 
 ## Phase Details
 
@@ -153,4 +153,4 @@ Plans:
 | 22. Data Export | v2.0 | 1/1 | Complete | 2026-03-02 |
 | 23. UI & Data Cleanup | 2/2 | Complete    | 2026-03-02 | - |
 | 24. Calendar Multi-Select | 2/2 | Complete    | 2026-03-02 | - |
-| 25. Production Deploy | v2.1 | 0/1 | Not started | - |
+| 25. Production Deploy | 1/1 | Complete   | 2026-03-02 | - |
