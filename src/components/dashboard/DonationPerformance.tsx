@@ -183,15 +183,15 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-foreground">{formatCurrency(grandTotal)}</p>
+          <p className="text-3xl font-extrabold text-foreground">{formatCurrency(grandTotal)}</p>
           <p className="text-xs text-muted mt-1">Total Income (12 mo)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-foreground">{formatCurrency(avgMonthly)}</p>
+          <p className="text-3xl font-extrabold text-foreground">{formatCurrency(avgMonthly)}</p>
           <p className="text-xs text-muted mt-1">Avg Monthly</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className={`text-2xl font-bold ${trendPositive ? "text-success" : "text-danger"}`}>
+          <p className={`text-3xl font-extrabold ${trendPositive ? "text-success" : "text-danger"}`}>
             {trendPositive ? "+" : ""}{trendPct}%
           </p>
           <p className="text-xs text-muted mt-1">vs Previous Month</p>

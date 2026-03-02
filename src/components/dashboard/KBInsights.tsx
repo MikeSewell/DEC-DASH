@@ -37,7 +37,7 @@ function MetricCard({ metric }: { metric: MetricEntry }) {
       </div>
 
       {/* Metric value */}
-      <div className="text-2xl font-bold text-foreground pr-12">
+      <div className="text-3xl font-extrabold text-foreground pr-12">
         {metric.value}
         {metric.unit && (
           <span className="text-sm font-normal text-muted ml-1">{metric.unit}</span>

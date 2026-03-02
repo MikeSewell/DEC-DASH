@@ -121,17 +121,17 @@ function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentPro
     <div className="space-y-6">
       {/* Three stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Revenue</p>
-          <p className="text-2xl font-bold text-success">{formatCurrency(totalRevenue || 0)}</p>
+          <p className="text-3xl font-extrabold text-success">{formatCurrency(totalRevenue || 0)}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Expenses</p>
-          <p className="text-2xl font-bold text-danger">{formatCurrency(totalExpenses || 0)}</p>
+          <p className="text-3xl font-extrabold text-danger">{formatCurrency(totalExpenses || 0)}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Net Income</p>
-          <p className={cn("text-2xl font-bold", isPositive ? "text-success" : "text-danger")}>
+          <p className={cn("text-3xl font-extrabold", isPositive ? "text-success" : "text-danger")}>
             {formatCurrency(netIncome || 0)}
           </p>
         </div>

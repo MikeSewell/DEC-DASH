@@ -22,7 +22,7 @@ function StatCard({ icon, value, label, trend, accentColor = "text-primary", too
       </div>
       <div className="min-w-0 flex-1">
         <div
-          className={cn("text-2xl font-bold text-foreground", tooltip && "cursor-help")}
+          className={cn("text-3xl font-extrabold text-foreground", tooltip && "cursor-help")}
           title={tooltip}
         >
           {value}

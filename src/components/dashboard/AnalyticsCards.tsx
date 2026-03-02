@@ -76,7 +76,7 @@ function StatCard({ icon, value, label, accentColor = "text-primary", trend }: S
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-2xl font-bold text-foreground tabular-nums">{value}</div>
+        <div className="text-3xl font-extrabold text-foreground tabular-nums">{value}</div>
         <p className="text-sm text-muted mt-0.5">{label}</p>
         {trend}
       </div>
