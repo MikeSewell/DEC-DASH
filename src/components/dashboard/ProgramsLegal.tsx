@@ -12,6 +12,7 @@ import {
 } from "chart.js";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useTheme } from "@/hooks/useTheme";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -27,47 +28,72 @@ const PALETTE = [
   "#95D5B2",
 ];
 
-const CHART_TOOLTIP = {
-  backgroundColor: "rgba(27,67,50,0.9)",
-  cornerRadius: 12,
-  padding: 12,
-  titleFont: { family: "'Nunito', sans-serif" as const },
-  bodyFont: { family: "'Nunito', sans-serif" as const },
-};
+function useChartConfig() {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
-const PIE_LEGEND = {
-  position: "right" as const,
-  labels: {
-    usePointStyle: true,
-    pointStyle: "circle" as const,
+  const CHART_TOOLTIP = {
+    backgroundColor: isDark ? "rgba(30,30,30,0.95)" : "rgba(27,67,50,0.9)",
+    titleColor: "#FFFFFF",
+    bodyColor: isDark ? "#CCCCCC" : "#FFFFFF",
+    borderColor: isDark ? "#404040" : "transparent",
+    borderWidth: isDark ? 1 : 0,
+    cornerRadius: 12,
     padding: 12,
-    font: { size: 11, family: "'Nunito', sans-serif" },
-  },
-};
+    titleFont: { family: "'Nunito', sans-serif" as const },
+    bodyFont: { family: "'Nunito', sans-serif" as const },
+  };
 
-function makeHorizontalBarOptions(label: string) {
-  return {
-    indexAxis: "y" as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: CHART_TOOLTIP,
-    },
-    scales: {
-      x: {
-        grid: { color: "rgba(45,106,79,0.06)" },
-        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
-      },
-      y: {
-        grid: { display: false },
-        ticks: { font: { family: "'Nunito', sans-serif", size: 11 } },
-      },
+  const PIE_LEGEND = {
+    position: "right" as const,
+    labels: {
+      usePointStyle: true,
+      pointStyle: "circle" as const,
+      padding: 12,
+      font: { size: 11, family: "'Nunito', sans-serif" },
+      color: isDark ? "#CCCCCC" : undefined,
     },
   };
+
+  function makeHorizontalBarOptions(_label: string) {
+    return {
+      indexAxis: "y" as const,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: CHART_TOOLTIP,
+      },
+      scales: {
+        x: {
+          grid: { color: isDark ? "rgba(255,255,255,0.06)" : "rgba(45,106,79,0.06)" },
+          ticks: {
+            font: { family: "'Nunito', sans-serif", size: 11 },
+            color: isDark ? "#999999" : undefined,
+          },
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            font: { family: "'Nunito', sans-serif", size: 11 },
+            color: isDark ? "#999999" : undefined,
+          },
+        },
+      },
+    };
+  }
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: PIE_LEGEND, tooltip: CHART_TOOLTIP },
+  };
+
+  return { CHART_TOOLTIP, PIE_LEGEND, makeHorizontalBarOptions, pieOptions, isDark };
 }
 
 export default function ProgramsLegal() {
+  const { makeHorizontalBarOptions, pieOptions, isDark } = useChartConfig();
   const programs = useQuery(api.programs.list);
   const legalProgram = programs?.find((p) => p.type === "legal");
   const demographics = useQuery(
@@ -103,16 +129,10 @@ export default function ProgramsLegal() {
         data: dist.map((d) => d.count),
         backgroundColor: dist.map((_, i) => PALETTE[i % PALETTE.length]),
         borderWidth: 2,
-        borderColor: "rgba(255,254,249,0.9)",
+        borderColor: isDark ? "#1E1E1E" : "#FFFEF9",
       },
     ],
   });
-
-  const pieOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: PIE_LEGEND, tooltip: CHART_TOOLTIP },
-  };
 
   const makeBarData = (dist: { name: string; count: number }[], color: string) => ({
     labels: dist.map((d) => d.name),
