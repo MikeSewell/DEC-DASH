@@ -92,10 +92,11 @@ Full details: `milestones/v2.0-ROADMAP.md`
   1. Programs link in the sidebar renders its icon cleanly without any visual glitch or broken render
   2. Programs no longer have an "active" toggle — the field is absent from the schema, admin forms, and program cards
   3. Client and enrollment data from the cleaned master spreadsheet is populated in the app and visible in the /clients page
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 23-01: Fix Programs sidebar icon and remove isActive from programs schema and UI
+- [ ] 23-01-PLAN.md — Fix Programs sidebar icon (grid icon) and remove isActive from programs schema and UI
+- [ ] 23-02-PLAN.md — Import master spreadsheet client data (requires user to provide file)
 
 ### Phase 24: Calendar Multi-Select
 **Goal**: Admin can discover and select which Google Calendars to sync without manually entering calendar IDs
@@ -150,6 +151,6 @@ Plans:
 | 20. Frontend and Sheets Removal | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 21. Schema Cleanup | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 22. Data Export | v2.0 | 1/1 | Complete | 2026-03-02 |
-| 23. UI & Data Cleanup | v2.1 | 0/1 | Not started | - |
+| 23. UI & Data Cleanup | v2.1 | 0/2 | Not started | - |
 | 24. Calendar Multi-Select | v2.1 | 0/2 | Not started | - |
 | 25. Production Deploy | v2.1 | 0/1 | Not started | - |
