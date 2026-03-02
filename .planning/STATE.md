@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Data Foundation
 status: unknown
-last_updated: "2026-03-01T18:02:55.595Z"
+last_updated: "2026-03-02T03:19:35.248Z"
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 12
-  completed_plans: 12
+  total_phases: 9
+  completed_phases: 9
+  total_plans: 13
+  completed_plans: 13
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 21 of 22 (Schema Cleanup — COMPLETE)
-Plan: 2 of 2 in current phase — COMPLETE
-Status: 21-02 complete — clients legacy fields (programId, enrollmentDate, status, by_programId index) removed from schema and all 350 documents; all callers rewritten to use enrollments table; schema deployed cleanly
-Last activity: 2026-03-02 — 21-02 complete: 350 client documents migrated, legacy fields stripped, npx convex dev --once deployed schema, human verification approved
+Phase: 22 of 22 (Data Export — COMPLETE)
+Plan: 1 of 1 in current phase — COMPLETE
+Status: 22-01 complete — exportAll query added (admin-only, joins clients+enrollments+sessions), exportUtils.ts created, Export dropdown button added to clients page (admin only, skip pattern, date-stamped filenames)
+Last activity: 2026-03-02 — 22-01 complete: client CSV/Excel export shipped; all XPRT requirements met; npm run build passes
 
-Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
+Progress: [████████████] 100% (v2.0 — all plans complete)
 
 ## Accumulated Context
 
@@ -73,6 +73,8 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 - [Phase 21-schema-cleanup]: [21-02] importLegalBatch/importCoparentBatch programId arg removed — callers must create enrollments separately after client creation
 - [Phase 21-schema-cleanup]: [21-02] Migration approach: add legacy fields as v.optional temporarily, deploy, run migration to strip values, remove fields, deploy clean schema — 350/350 documents migrated
 - [Phase 21-schema-cleanup]: [21-02] INFR-03 complete — clients table accurately reflects new data model with no legacy fields
+- [Phase 22]: XLSX.write uses type buffer (not array) — type array returns undefined in xlsx 0.18.5 CE
+- [Phase 22]: Export query uses Convex skip pattern — never fires on page load, only when exportFormat state is non-null
 
 ### Pending Todos
 
@@ -89,5 +91,5 @@ Progress: [███░░░░░░░] 15% (v2.0 — 4/26 plans complete)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 21-02 — clients legacy fields removed, schema deployed, Phase 21 complete; ready for Phase 22 (Export)
+Stopped at: Completed 22-01 — client data export (CSV + Excel) shipped; exportAll query + exportUtils + Export button; Phase 22 complete; v2.0 Data Foundation milestone DONE
 Resume file: None

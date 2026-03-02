@@ -47,9 +47,9 @@ Requirements for Data Foundation milestone. Each maps to roadmap phases.
 
 ### Export
 
-- [ ] **XPRT-01**: Admin can export client list with enrollment and session data as CSV
-- [ ] **XPRT-02**: Admin can export client list with enrollment and session data as Excel (.xlsx)
-- [ ] **XPRT-03**: Export includes demographics, enrollment history, and session counts per client
+- [x] **XPRT-01**: Admin can export client list with enrollment and session data as CSV
+- [x] **XPRT-02**: Admin can export client list with enrollment and session data as Excel (.xlsx)
+- [x] **XPRT-03**: Export includes demographics, enrollment history, and session counts per client
 
 ## Future Requirements
 
@@ -108,9 +108,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-04 | Phase 20 | Complete |
 | INFR-05 | Phase 20 | Complete |
 | INFR-06 | Phase 20 | Complete |
-| XPRT-01 | Phase 22 | Pending |
-| XPRT-02 | Phase 22 | Pending |
-| XPRT-03 | Phase 22 | Pending |
+| XPRT-01 | Phase 22 | Complete |
+| XPRT-02 | Phase 22 | Complete |
+| XPRT-03 | Phase 22 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 26 total
