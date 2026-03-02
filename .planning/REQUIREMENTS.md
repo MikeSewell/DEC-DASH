@@ -17,10 +17,10 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 
 ### Theme
 
-- [ ] **THEME-01**: User can toggle between dark and light theme via UI control
-- [ ] **THEME-02**: Dark theme uses polished dark palette (inspired by old app: #0F0F0F bg, #1E1E1E surface, teal accents)
-- [ ] **THEME-03**: Light theme retains current warm cream palette
-- [ ] **THEME-04**: Theme preference persists across sessions
+- [x] **THEME-01**: User can toggle between dark and light theme via UI control
+- [x] **THEME-02**: Dark theme uses polished dark palette (inspired by old app: #0F0F0F bg, #1E1E1E surface, teal accents)
+- [x] **THEME-03**: Light theme retains current warm cream palette
+- [x] **THEME-04**: Theme preference persists across sessions
 
 ### Visual Elements
 
@@ -67,10 +67,10 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 | DATA-03 | Phase 26 | Complete |
 | DATA-04 | Phase 26 | Complete |
 | DATA-05 | Phase 26 | Complete |
-| THEME-01 | Phase 27 | Pending |
-| THEME-02 | Phase 27 | Pending |
-| THEME-03 | Phase 27 | Pending |
-| THEME-04 | Phase 27 | Pending |
+| THEME-01 | Phase 27 | Complete |
+| THEME-02 | Phase 27 | Complete |
+| THEME-03 | Phase 27 | Complete |
+| THEME-04 | Phase 27 | Complete |
 | VIZ-01 | Phase 28 | Pending |
 | VIZ-02 | Phase 28 | Pending |
 | VIZ-03 | Phase 28 | Pending |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Dashboard Redesign
 status: unknown
-last_updated: "2026-03-02T11:07:38.680Z"
+last_updated: "2026-03-02T11:21:10Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 11
-  completed_plans: 11
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 12
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 26 — Dummy Data Fallbacks (COMPLETE)
+**Current focus:** Phase 27 — Theme Toggle (COMPLETE)
 
 ## Current Position
 
-Phase: 26 of 29 (v3.0) — Dummy Data Fallbacks
-Plan: 2 of 2 in current phase (26-01 complete, 26-02 complete)
-Status: Phase 26 complete
-Last activity: 2026-03-02 — Completed 26-02: Calendar, KB, and Donation fallbacks wired
+Phase: 27 of 29 (v3.0) — Theme Toggle
+Plan: 1 of 1 in current phase (27-01 complete)
+Status: Phase 27 complete
+Last activity: 2026-03-02 — Completed 27-01: Dark palette updated, flash-prevention script added, useTheme refined
 
-Progress: [██░░░░░░░░] 10% (v3.0)
+Progress: [███░░░░░░░] 12% (v3.0)
 
 ## Accumulated Context
 
@@ -41,6 +41,9 @@ Progress: [██░░░░░░░░] 10% (v3.0)
 - [26-01]: Extracted ProfitLossContent inner component to share render logic between live and fallback paths
 - [26-02]: Used 'as any' cast on chartData in DonationChart — pre-existing Chart.js type incompatibility (backgroundColor: string | boolean)
 - [26-02]: Extracted DonationChart inner component to share chart rendering between live and fallback code paths
+- [27-01]: Dark palette uses #0F0F0F bg, #1E1E1E surface, #26A69A teal primary, #404040 border, #FFFFFF foreground — matching old desktop app
+- [27-01]: Flash-prevention uses IIFE in <head> with dangerouslySetInnerHTML — runs synchronously before body parse
+- [27-01]: useTheme hook initialized from localStorage via useState initializer to eliminate state/class mismatch on mount
 
 ### Pending Todos
 
@@ -54,5 +57,5 @@ Progress: [██░░░░░░░░] 10% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 26-02-PLAN.md — Calendar/KB/Donation fallbacks implemented, Phase 26 complete
+Stopped at: Completed 27-01-PLAN.md — Dark palette updated to old-app values, flash-prevention script added, useTheme hook refined, Phase 27 complete
 Resume file: None
