@@ -48,14 +48,12 @@ interface ProgramFormData {
   name: string;
   type: ProgramType;
   description: string;
-  isActive: boolean;
 }
 
 const emptyProgramForm: ProgramFormData = {
   name: "",
   type: "other",
   description: "",
-  isActive: true,
 };
 
 export default function ClientsPage() {
@@ -180,7 +178,6 @@ export default function ClientsPage() {
         name: programForm.name.trim(),
         type: programForm.type,
         description: programForm.description || undefined,
-        isActive: programForm.isActive,
       });
       setProgramForm(emptyProgramForm);
       setShowAddProgramModal(false);
@@ -581,7 +578,7 @@ export default function ClientsPage() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{p.name}</p>
                       <p className="text-xs text-muted">
-                        {capitalize(p.type)} {!p.isActive && " (Inactive)"}
+                        {capitalize(p.type)}
                       </p>
                     </div>
                     <Button
@@ -649,18 +646,6 @@ export default function ClientsPage() {
                   className="w-full px-3 py-2 rounded-lg text-sm resize-y bg-surface border border-border text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 />
               </div>
-
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={programForm.isActive}
-                  onChange={(e) =>
-                    setProgramForm((prev) => ({ ...prev, isActive: e.target.checked }))
-                  }
-                  className="rounded border-border"
-                />
-                Active
-              </label>
 
               <div className="flex justify-end gap-3 pt-2">
                 <Button
