@@ -13,6 +13,7 @@ import {
   Filler,
 } from "chart.js";
 import { useIncomeTrend, useQuickBooksConfig } from "@/hooks/useQuickBooks";
+import { useTheme } from "@/hooks/useTheme";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
 import { FALLBACK_INCOME_TREND } from "@/lib/dashboardFallbacks";
@@ -45,6 +46,8 @@ interface DonationChartProps {
 }
 
 function DonationChart({ data, isFallback }: DonationChartProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const { months, accounts, fetchedAt } = data;
 
   // Grand total across all months
@@ -92,7 +95,7 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
         pointRadius: 3,
         pointHoverRadius: 5,
         pointBackgroundColor: color,
-        pointBorderColor: "rgba(255,254,249,0.9)",
+        pointBorderColor: isDark ? "#1E1E1E" : "rgba(255,254,249,0.9)",
         pointBorderWidth: 1.5,
         borderWidth: 2,
       });
@@ -103,14 +106,14 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
   datasets.push({
     label: accounts.length > 1 ? "Total Income" : (accounts[0] ?? "Income"),
     data: months.map((m) => m.total),
-    borderColor: "#2D6A4F",
-    backgroundColor: accounts.length > 1 ? "transparent" : "rgba(45, 106, 79, 0.1)",
+    borderColor: isDark ? "#26A69A" : "#2D6A4F",
+    backgroundColor: accounts.length > 1 ? "transparent" : (isDark ? "rgba(38,166,154,0.1)" : "rgba(45, 106, 79, 0.1)"),
     fill: accounts.length <= 1,
     tension: 0.3,
     pointRadius: 4,
     pointHoverRadius: 6,
-    pointBackgroundColor: "#1B4332",
-    pointBorderColor: "#FFFEF9",
+    pointBackgroundColor: isDark ? "#26A69A" : "#1B4332",
+    pointBorderColor: isDark ? "#1E1E1E" : "#FFFEF9",
     pointBorderWidth: 2,
     borderWidth: accounts.length > 1 ? 3 : 2,
   });
@@ -134,10 +137,15 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
           pointStyle: "circle" as const,
           padding: 16,
           font: { size: 11, family: "'Nunito', sans-serif" },
+          color: isDark ? "#CCCCCC" : undefined,
         },
       },
       tooltip: {
-        backgroundColor: "rgba(27,67,50,0.9)",
+        backgroundColor: isDark ? "rgba(30,30,30,0.95)" : "rgba(27,67,50,0.9)",
+        titleColor: "#FFFFFF",
+        bodyColor: isDark ? "#CCCCCC" : "#FFFFFF",
+        borderColor: isDark ? "#404040" : "transparent",
+        borderWidth: isDark ? 1 : 0,
         cornerRadius: 12,
         padding: 12,
         titleFont: { family: "'Nunito', sans-serif" },
@@ -154,15 +162,17 @@ function DonationChart({ data, isFallback }: DonationChartProps) {
         ticks: {
           callback: (value: string | number) => formatCurrency(Number(value)),
           font: { family: "'Nunito', sans-serif", size: 11 },
+          color: isDark ? "#999999" : undefined,
         },
         grid: {
-          color: "rgba(45,106,79,0.06)",
+          color: isDark ? "rgba(255,255,255,0.06)" : "rgba(45,106,79,0.06)",
         },
       },
       x: {
-        grid: { display: false },
+        grid: { color: isDark ? "rgba(255,255,255,0.04)" : "rgba(45,106,79,0.04)" },
         ticks: {
           font: { family: "'Nunito', sans-serif", size: 11 },
+          color: isDark ? "#999999" : undefined,
         },
       },
     },

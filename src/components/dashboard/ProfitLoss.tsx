@@ -8,6 +8,7 @@ import {
   Legend,
 } from "chart.js";
 import { useProfitAndLoss } from "@/hooks/useQuickBooks";
+import { useTheme } from "@/hooks/useTheme";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,8 @@ interface ProfitLossContentProps {
 }
 
 function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const { totalRevenue, totalExpenses, netIncome, expensesByCategory } = data;
   const isPositive = (netIncome || 0) >= 0;
 
@@ -57,7 +60,7 @@ function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentPro
         data: categories.map(([, val]) => val),
         backgroundColor: categories.map((_, i) => EXPENSE_COLORS[i % EXPENSE_COLORS.length]),
         borderWidth: 2,
-        borderColor: "rgba(255,254,249,0.9)",
+        borderColor: isDark ? "rgba(30,30,30,0.9)" : "rgba(255,254,249,0.9)",
         hoverOffset: 6,
       },
     ],
@@ -75,6 +78,7 @@ function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentPro
           pointStyle: "circle" as const,
           padding: 12,
           font: { size: 11, family: "'Nunito', sans-serif" },
+          color: isDark ? "#CCCCCC" : "#2C3E2D",
           generateLabels: (chart: ChartJS) => {
             const dataset = chart.data.datasets[0];
             const labels = chart.data.labels as string[];
@@ -92,7 +96,11 @@ function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentPro
         },
       },
       tooltip: {
-        backgroundColor: "rgba(27,67,50,0.9)",
+        backgroundColor: isDark ? "rgba(30,30,30,0.95)" : "rgba(27,67,50,0.9)",
+        titleColor: "#FFFFFF",
+        bodyColor: isDark ? "#CCCCCC" : "#FFFFFF",
+        borderColor: isDark ? "#404040" : "transparent",
+        borderWidth: isDark ? 1 : 0,
         cornerRadius: 12,
         padding: 12,
         titleFont: { family: "'Nunito', sans-serif" },
