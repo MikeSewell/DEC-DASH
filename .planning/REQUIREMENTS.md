@@ -62,31 +62,31 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DATA-04 | — | Pending |
-| DATA-05 | — | Pending |
-| THEME-01 | — | Pending |
-| THEME-02 | — | Pending |
-| THEME-03 | — | Pending |
-| THEME-04 | — | Pending |
-| VIZ-01 | — | Pending |
-| VIZ-02 | — | Pending |
-| VIZ-03 | — | Pending |
-| VIZ-04 | — | Pending |
-| VIZ-05 | — | Pending |
-| POLISH-01 | — | Pending |
-| POLISH-02 | — | Pending |
-| POLISH-03 | — | Pending |
-| POLISH-04 | — | Pending |
-| INFRA-01 | — | Pending |
+| DATA-01 | Phase 26 | Pending |
+| DATA-02 | Phase 26 | Pending |
+| DATA-03 | Phase 26 | Pending |
+| DATA-04 | Phase 26 | Pending |
+| DATA-05 | Phase 26 | Pending |
+| THEME-01 | Phase 27 | Pending |
+| THEME-02 | Phase 27 | Pending |
+| THEME-03 | Phase 27 | Pending |
+| THEME-04 | Phase 27 | Pending |
+| VIZ-01 | Phase 28 | Pending |
+| VIZ-02 | Phase 28 | Pending |
+| VIZ-03 | Phase 28 | Pending |
+| VIZ-04 | Phase 28 | Pending |
+| VIZ-05 | Phase 28 | Pending |
+| POLISH-01 | Phase 29 | Pending |
+| POLISH-02 | Phase 29 | Pending |
+| POLISH-03 | Phase 29 | Pending |
+| POLISH-04 | Phase 29 | Pending |
+| INFRA-01 | Phase 29 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 after roadmap creation (phases 26-29)*
