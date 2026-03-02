@@ -163,6 +163,73 @@ export const remove = mutation({
 });
 
 /**
+ * Public batch enrollment import for CLI import scripts.
+ * No auth — intended for data migration scripts only.
+ * Deduplicates by clientId + programId: skips if an enrollment already exists for that pair.
+ * Uses a zero-valued system user ID placeholder for createdBy (no real user during CLI import).
+ * Returns { created, skipped }.
+ */
+export const importEnrollmentBatch = mutation({
+  args: {
+    rows: v.array(
+      v.object({
+        clientId: v.id("clients"),
+        programId: v.id("programs"),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    let created = 0;
+    let skipped = 0;
+
+    // Fetch all existing enrollments once for deduplication
+    const allEnrollments = await ctx.db.query("enrollments").collect();
+    const enrolledPairs = new Set(
+      allEnrollments.map((e) => `${e.clientId as string}|${e.programId as string}`)
+    );
+
+    for (const row of args.rows) {
+      const pairKey = `${row.clientId as string}|${row.programId as string}`;
+      if (enrolledPairs.has(pairKey)) {
+        skipped++;
+        continue;
+      }
+
+      // Verify client and program exist
+      const clientExists = await ctx.db.get(row.clientId);
+      const programExists = await ctx.db.get(row.programId);
+      if (!clientExists || !programExists) {
+        skipped++;
+        continue;
+      }
+
+      // Find any user to use as createdBy (system import — use first user found)
+      const anyUser = await ctx.db.query("users").first();
+      if (!anyUser) {
+        // Skip if no users exist — import cannot proceed without a user record
+        skipped++;
+        continue;
+      }
+
+      await ctx.db.insert("enrollments", {
+        clientId: row.clientId,
+        programId: row.programId,
+        status: "active",
+        enrollmentDate: Date.now(),
+        createdBy: anyUser._id,
+        updatedAt: Date.now(),
+      });
+
+      // Track in set to avoid re-inserting within this batch
+      enrolledPairs.add(pairKey);
+      created++;
+    }
+
+    return { created, skipped };
+  },
+});
+
+/**
  * Internal batch import for enrollment records.
  * No auth (internalMutation — not callable from frontend).
  * Deduplicates by clientId + programId: skips if an enrollment already exists for that pair.

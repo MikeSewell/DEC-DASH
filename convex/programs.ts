@@ -210,6 +210,25 @@ export const ensureSeeded = mutation({
 });
 
 /**
+ * Internal migration: remove deprecated isActive field from all programs.
+ * Run once via: npx convex run programs:removeIsActive
+ */
+export const removeIsActive = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const programs = await ctx.db.query("programs").collect();
+    let patched = 0;
+    for (const program of programs) {
+      if ((program as Record<string, unknown>).isActive !== undefined) {
+        await ctx.db.patch(program._id, { isActive: undefined });
+        patched++;
+      }
+    }
+    return { patched };
+  },
+});
+
+/**
  * Internal seed: create a program without auth (for CLI seeding).
  */
 export const seed = internalMutation({
