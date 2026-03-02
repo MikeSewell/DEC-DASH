@@ -35,6 +35,21 @@ export default function RootLayout({
   return (
     <ConvexAuthNextjsServerProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function() {
+                  try {
+                    var theme = localStorage.getItem('dec-theme');
+                    var isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    if (isDark) document.documentElement.classList.add('dark');
+                  } catch (e) {}
+                })();
+              `,
+            }}
+          />
+        </head>
         <body
           className={`${nunito.variable} ${fraunces.variable} ${geistMono.variable} antialiased noise-texture`}
         >
