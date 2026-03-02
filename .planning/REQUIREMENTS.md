@@ -32,10 +32,10 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 
 ### Dashboard Polish
 
-- [ ] **POLISH-01**: Dashboard sections are tighter with less vertical whitespace
-- [ ] **POLISH-02**: Cards have gradient top border accent on hover (from old app)
-- [ ] **POLISH-03**: Executive snapshot shows dense financial summary at top
-- [ ] **POLISH-04**: Programs sections consolidated (not duplicated for each program type)
+- [x] **POLISH-01**: Dashboard sections are tighter with less vertical whitespace
+- [x] **POLISH-02**: Cards have gradient top border accent on hover (from old app)
+- [x] **POLISH-03**: Executive snapshot shows dense financial summary at top
+- [x] **POLISH-04**: Programs sections consolidated (not duplicated for each program type)
 
 ### Infrastructure
 
@@ -76,10 +76,10 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 | VIZ-03 | Phase 28 | Complete |
 | VIZ-04 | Phase 28 | Complete |
 | VIZ-05 | Phase 28 | Complete |
-| POLISH-01 | Phase 29 | Pending |
-| POLISH-02 | Phase 29 | Pending |
-| POLISH-03 | Phase 29 | Pending |
-| POLISH-04 | Phase 29 | Pending |
+| POLISH-01 | Phase 29 | Complete |
+| POLISH-02 | Phase 29 | Complete |
+| POLISH-03 | Phase 29 | Complete |
+| POLISH-04 | Phase 29 | Complete |
 | INFRA-01 | Phase 29 | Pending |
 
 **Coverage:**

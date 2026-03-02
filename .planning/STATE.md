@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 28 — Visual Elements (In Progress)
+**Current focus:** Phase 29 — Dashboard Polish + Infrastructure (In Progress)
 
 ## Current Position
 
-Phase: 28 of 29 (v3.0) — Visual Elements
-Plan: 2 of 2 in current phase (28-02 complete — Phase 28 DONE)
-Status: Phase 28 complete, Phase 29 pending
-Last activity: 2026-03-02 — Completed 28-02: Donation source cards, urgency color coding on GrantTracking and CalendarWidget
+Phase: 29 of 29 (v3.0) — Dashboard Polish + Infrastructure
+Plan: 1 of 2 in current phase (29-01 complete)
+Status: Phase 29 in progress, plan 29-01 done
+Last activity: 2026-03-02 — Completed 29-01: Dashboard layout tightening, gradient hover accent, ExecutiveSnapshot unwrap, Programs consolidation
 
 Progress: [████░░░░░░] 15% (v3.0)
 
@@ -53,6 +53,9 @@ Progress: [████░░░░░░] 15% (v3.0)
 - [28-02]: CalendarWidget urgency thresholds (1/3 days) differ from GrantTracking (7/30 days) — calendar events are near-term by nature
 - [28-02]: getEventUrgencyClasses returns "" for past events (diffDays < 0) to avoid tinting already-past items
 - [28-02]: DeadlineCountdown comfortable state uses text-emerald-600 dark:text-emerald-400 (not text-muted) for green visual consistency
+- [29-01]: ExecutiveSnapshot rendered directly without DashboardSection wrapper — always visible, cannot be hidden/reordered/collapsed by users
+- [29-01]: ProgramsConsolidated is an inline function component in page.tsx — tab state is local, only active tab's component data loads
+- [29-01]: Removed executive-snapshot/programs-coparent/programs-legal from DashboardSectionId — stale user prefs silently ignored by existing if (!SectionComponent) return null guard
 
 ### Pending Todos
 
@@ -66,5 +69,5 @@ Progress: [████░░░░░░] 15% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 28-02-PLAN.md — Donation source cards in DonationPerformance, urgency color coding (red/amber/green) on GrantTracking deadlines and CalendarWidget event rows
+Stopped at: Completed 29-01-PLAN.md — Dashboard layout tightening (space-y-4, py-3/py-2.5), gradient top-border hover accent (.hover-lift ::before), ExecutiveSnapshot unwrapped as always-visible row, Programs consolidated into tabbed section
 Resume file: None
