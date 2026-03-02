@@ -9,8 +9,8 @@ Requirements for the Polish & Deploy milestone. Each maps to roadmap phases.
 
 ### UI Fixes
 
-- [ ] **UI-01**: Programs sidebar icon renders correctly without visual glitches
-- [ ] **UI-02**: Programs `isActive` field removed from schema, backend, and frontend (field is meaningless)
+- [x] **UI-01**: Programs sidebar icon renders correctly without visual glitches
+- [x] **UI-02**: Programs `isActive` field removed from schema, backend, and frontend (field is meaningless)
 
 ### Calendar UX
 
@@ -49,8 +49,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | Phase 23 | Pending |
-| UI-02 | Phase 23 | Pending |
+| UI-01 | Phase 23 | Complete |
+| UI-02 | Phase 23 | Complete |
 | DATA-01 | Phase 23 | Pending |
 | CAL-01 | Phase 24 | Pending |
 | CAL-02 | Phase 24 | Pending |

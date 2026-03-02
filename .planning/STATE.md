@@ -8,7 +8,7 @@ progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 0
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 23 of 25 (UI & Data Cleanup)
-Plan: 0 of 2 in current phase
-Status: Planned — ready to execute
-Last activity: 2026-03-02 — Phase 23 plans created (23-01 icon+schema, 23-02 data import)
+Plan: 1 of 2 in current phase
+Status: In progress — 23-01 complete, 23-02 pending
+Last activity: 2026-03-02 — Completed 23-01 (Programs icon + isActive removal)
 
-Progress: [░░░░░░░░░░] 0% (0/5 plans)
+Progress: [█░░░░░░░░░] 20% (1/5 plans)
 
 ## Accumulated Context
 
@@ -36,6 +36,10 @@ Progress: [░░░░░░░░░░] 0% (0/5 plans)
 Recent decisions from PROJECT.md affecting v2.1:
 - App as source of truth (v2.0): Sheets program sync removed; export provides data portability
 - Enrollment-based RBAC: by_status index scan + Set intersection for role-filtered client lists
+
+Phase 23-01 decisions:
+- Programs sidebar icon: Grid (2x2 blocks) instead of Users (people) — better semantic match for programs-as-categories
+- isActive removed from programs: programs just exist or get deleted, no active/inactive concept needed
 
 ### Pending Todos
 
@@ -49,5 +53,5 @@ Recent decisions from PROJECT.md affecting v2.1:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Phase 23 planned — 2 plans created, ready to execute
+Stopped at: Completed 23-01-PLAN.md (Programs icon + isActive removal)
 Resume file: None
