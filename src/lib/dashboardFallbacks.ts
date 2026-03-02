@@ -151,6 +151,14 @@ export const FALLBACK_KB_SUMMARY_BULLETS = [
   "Co-parenting workshop attendance averaged 14 participants per session, with a 92% satisfaction rating.",
 ];
 
+// ─── Funding Goal Thermometer ──────────────────────────────────────────────────
+
+export const FALLBACK_FUNDING_GOAL = {
+  current: 285400,
+  goal: 500000,
+  label: "FY 2024 Funding Goal",
+} as const;
+
 // ─── Donation Performance (Income Trend) ──────────────────────────────────────
 
 /** Fallback income trend — 12 months of sample data */
