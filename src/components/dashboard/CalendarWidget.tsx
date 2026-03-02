@@ -71,6 +71,26 @@ function getDayKey(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
+function getEventUrgencyClasses(startAt: number, now: number): string {
+  const diffMs = startAt - now;
+  const diffDays = diffMs / 86400000;
+
+  if (diffDays < 0) {
+    // Past event / currently happening — no urgency tint
+    return "";
+  }
+  if (diffDays <= 1) {
+    // Today or tomorrow — red tint (imminent)
+    return "bg-red-500/[0.03] dark:bg-red-500/[0.06]";
+  }
+  if (diffDays <= 3) {
+    // Within 3 days — amber tint (approaching)
+    return "bg-amber-500/[0.03] dark:bg-amber-500/[0.06]";
+  }
+  // 4+ days away — green tint (comfortable), very subtle
+  return "bg-emerald-500/[0.02] dark:bg-emerald-500/[0.04]";
+}
+
 // --- Skeleton ---
 
 function CalendarWidgetSkeleton() {
@@ -137,14 +157,21 @@ interface EventRowProps {
 function EventRow({ event, eventType, now }: EventRowProps) {
   const isHappening = !event.isAllDay && now >= event.startAt && now < event.endAt;
   const countdown = !event.isAllDay ? formatCountdown(event.startAt, now) : null;
+  const urgencyClass = getEventUrgencyClasses(event.startAt, now);
+  const diffDays = (event.startAt - now) / 86400000;
 
   const rowContent = (
     <div
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 transition-colors ${urgencyClass} ${
         isHappening ? "border-l-4" : ""
       }`}
       style={isHappening ? { borderLeftColor: eventType.dotColor } : undefined}
     >
+      {/* Pulsing red dot for events happening within 24 hours (future only) */}
+      {diffDays <= 1 && diffDays >= 0 && !event.isAllDay && (
+        <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+      )}
+
       {/* Time column */}
       <div className="w-16 shrink-0 text-xs text-muted">
         {event.isAllDay ? (
