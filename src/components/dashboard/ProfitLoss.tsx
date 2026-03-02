@@ -12,6 +12,7 @@ import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { ProfitLossData } from "@/types";
+import { FALLBACK_PNL } from "@/lib/dashboardFallbacks";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -28,37 +29,21 @@ const EXPENSE_COLORS = [
   "#A3D65A",
 ];
 
-export default function ProfitLoss() {
-  const plResult = useProfitAndLoss();
+interface ProfitLossContentProps {
+  data: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netIncome: number;
+    expensesByCategory: Record<string, number>;
+    period?: { start: string; end: string };
+  };
+  fetchedAt: number | null;
+  isFallback?: boolean;
+}
 
-  if (plResult === undefined) {
-    return <ChartSkeleton />;
-  }
-
-  if (plResult === null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <svg className="h-10 w-10 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-        </svg>
-        <p className="text-sm">No P&L data available.</p>
-        <p className="text-xs mt-1">Connect QuickBooks to view Profit & Loss information.</p>
-        <a href="/admin" className="text-primary hover:underline text-xs mt-2 inline-block">Connect QuickBooks →</a>
-      </div>
-    );
-  }
-
-  const data = plResult.data as ProfitLossData | null;
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted">
-        <p className="text-sm">P&L report is empty.</p>
-      </div>
-    );
-  }
-
+function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentProps) {
   const { totalRevenue, totalExpenses, netIncome, expensesByCategory } = data;
-  const isPositive = netIncome >= 0;
+  const isPositive = (netIncome || 0) >= 0;
 
   // Expense breakdown for donut chart
   const categories = Object.entries(expensesByCategory ?? {})
@@ -94,7 +79,7 @@ export default function ProfitLoss() {
             const dataset = chart.data.datasets[0];
             const labels = chart.data.labels as string[];
             return labels.map((label, i) => ({
-              text: `${label}: ${formatCurrency((dataset.data[i] as number) ?? 0)}`,
+              text: `${label}: ${formatCurrency((dataset.data[i] as number) || 0)}`,
               fillStyle: (dataset.backgroundColor as string[])[i],
               strokeStyle: "transparent",
               index: i,
@@ -115,9 +100,9 @@ export default function ProfitLoss() {
         callbacks: {
           label: (ctx: { label: string; raw: unknown }) => {
             const val = ctx.raw as number;
-            const total = totalExpenses || 1;
+            const total = (totalExpenses || 1);
             const pct = ((val / total) * 100).toFixed(1);
-            return `${ctx.label}: ${formatCurrency(val)} (${pct}%)`;
+            return `${ctx.label}: ${formatCurrency(val || 0)} (${pct}%)`;
           },
         },
       },
@@ -130,16 +115,16 @@ export default function ProfitLoss() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Revenue</p>
-          <p className="text-2xl font-bold text-success">{formatCurrency(totalRevenue)}</p>
+          <p className="text-2xl font-bold text-success">{formatCurrency(totalRevenue || 0)}</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Total Expenses</p>
-          <p className="text-2xl font-bold text-danger">{formatCurrency(totalExpenses)}</p>
+          <p className="text-2xl font-bold text-danger">{formatCurrency(totalExpenses || 0)}</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
           <p className="text-xs text-muted mb-1 uppercase tracking-wide">Net Income</p>
           <p className={cn("text-2xl font-bold", isPositive ? "text-success" : "text-danger")}>
-            {formatCurrency(netIncome)}
+            {formatCurrency(netIncome || 0)}
           </p>
         </div>
       </div>
@@ -163,11 +148,38 @@ export default function ProfitLoss() {
         </p>
       )}
 
-      {plResult.fetchedAt && (
+      {/* Fallback indicator */}
+      {isFallback && (
+        <p className="text-xs text-muted/50 text-right">
+          Sample data &mdash; <a href="/admin" className="hover:underline">connect QuickBooks</a> for live figures
+        </p>
+      )}
+
+      {/* Live sync timestamp */}
+      {!isFallback && fetchedAt && (
         <p className="text-xs text-muted text-right">
-          Last synced: {timeAgo(plResult.fetchedAt)}
+          Last synced: {timeAgo(fetchedAt)}
         </p>
       )}
     </div>
   );
+}
+
+export default function ProfitLoss() {
+  const plResult = useProfitAndLoss();
+
+  if (plResult === undefined) {
+    return <ChartSkeleton />;
+  }
+
+  if (plResult === null) {
+    return <ProfitLossContent data={FALLBACK_PNL} fetchedAt={null} isFallback={true} />;
+  }
+
+  const data = plResult.data as ProfitLossData | null;
+  if (!data) {
+    return <ProfitLossContent data={FALLBACK_PNL} fetchedAt={null} isFallback={true} />;
+  }
+
+  return <ProfitLossContent data={data} fetchedAt={plResult.fetchedAt} isFallback={false} />;
 }
