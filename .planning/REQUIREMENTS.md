@@ -10,9 +10,9 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 ### Dummy Data
 
 - [x] **DATA-01**: Dashboard renders hardcoded financial data (revenue, expenses, net income, cash on hand) when QB is not connected
-- [ ] **DATA-02**: Dashboard renders hardcoded calendar events when Google Calendar is not configured
-- [ ] **DATA-03**: Dashboard renders hardcoded KB metrics when no documents are uploaded
-- [ ] **DATA-04**: Dashboard renders hardcoded donation performance data when income accounts aren't designated
+- [x] **DATA-02**: Dashboard renders hardcoded calendar events when Google Calendar is not configured
+- [x] **DATA-03**: Dashboard renders hardcoded KB metrics when no documents are uploaded
+- [x] **DATA-04**: Dashboard renders hardcoded donation performance data when income accounts aren't designated
 - [x] **DATA-05**: P&L section shows valid numbers (fix $NaN bug) with dummy expense breakdown
 
 ### Theme
@@ -63,9 +63,9 @@ Requirements for dashboard redesign. Each maps to roadmap phases.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DATA-01 | Phase 26 | Complete |
-| DATA-02 | Phase 26 | Pending |
-| DATA-03 | Phase 26 | Pending |
-| DATA-04 | Phase 26 | Pending |
+| DATA-02 | Phase 26 | Complete |
+| DATA-03 | Phase 26 | Complete |
+| DATA-04 | Phase 26 | Complete |
 | DATA-05 | Phase 26 | Complete |
 | THEME-01 | Phase 27 | Pending |
 | THEME-02 | Phase 27 | Pending |

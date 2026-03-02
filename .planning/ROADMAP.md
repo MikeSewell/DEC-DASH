@@ -92,7 +92,7 @@ Full details: `milestones/v2.1-ROADMAP.md`
 
 #### Phase 26: Dummy Data Fallbacks
 
-- [ ] **Phase 26: Dummy Data Fallbacks** — Dashboard renders complete, realistic data in all sections when integrations are not connected
+- [x] **Phase 26: Dummy Data Fallbacks** — Dashboard renders complete, realistic data in all sections when integrations are not connected (completed 2026-03-02)
 
 #### Phase 27: Theme Toggle
 
@@ -185,7 +185,7 @@ Full details: `milestones/v2.1-ROADMAP.md`
 | 23. UI & Data Cleanup | v2.1 | 2/2 | Complete | 2026-03-02 |
 | 24. Calendar Multi-Select | v2.1 | 2/2 | Complete | 2026-03-02 |
 | 25. Production Deploy | v2.1 | 1/1 | Complete | 2026-03-02 |
-| 26. Dummy Data Fallbacks | 1/2 | In Progress|  | - |
+| 26. Dummy Data Fallbacks | 2/2 | Complete   | 2026-03-02 | - |
 | 27. Theme Toggle | v3.0 | 0/TBD | Not started | - |
 | 28. Visual Elements | v3.0 | 0/TBD | Not started | - |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 0/TBD | Not started | - |
