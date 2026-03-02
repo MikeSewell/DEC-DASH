@@ -16,7 +16,7 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ AI expense categorization — 4-factor scoring, GPT-4o batch processing, QB write-back — existing
 - ✓ Grant tracker — 5-stage pipeline, detail pages, inline editing, Excel import — existing
 - ✓ Client & program management — unified roster, legal + co-parent intake forms, role-based views — existing
-- ✓ AI Director (Iceberg AI) — multi-session chat with knowledge base, vector store search — existing
+- ✓ AI Director — multi-session chat with knowledge base, vector store search — existing
 - ✓ Newsletter system — section editor, AI HTML generation, Constant Contact send — existing
 - ✓ RBAC — 6-tier role system (admin, manager, staff, lawyer, psychologist, readonly) — existing
 - ✓ Admin console — 9-tab configuration (Users, QB, CC, Sheets, Google Calendar, Knowledge Base, Alerts, Audit Log, AI Config) — existing

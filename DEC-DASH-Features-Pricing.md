@@ -99,7 +99,7 @@ Unified client roster with role-based filtering and full intake form system.
 - **Role-locked views** — Lawyers see only legal clients, psychologists see only co-parent clients
 - **Bulk import scripts** — Excel import for legal intake, 3-sheet co-parent import with deduplication
 
-### 6. AI Director (Iceberg AI)
+### 6. AI Director
 
 A ChatGPT-style assistant with persistent sessions and organizational knowledge.
 

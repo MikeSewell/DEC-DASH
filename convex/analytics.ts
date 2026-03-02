@@ -239,13 +239,15 @@ export const getAllDemographics = query({
  * Designed for the Programs tab — high-level metrics an ED cares about.
  */
 export const getProgramOverview = query({
-  args: { programId: v.id("programs") },
+  args: { programId: v.optional(v.id("programs")) },
   handler: async (ctx, { programId }) => {
-    // All enrollments for this program
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .withIndex("by_programId", (q) => q.eq("programId", programId))
-      .collect();
+    // All enrollments — filtered by program if specified, otherwise all
+    const enrollments = programId
+      ? await ctx.db
+          .query("enrollments")
+          .withIndex("by_programId", (q) => q.eq("programId", programId))
+          .collect()
+      : await ctx.db.query("enrollments").collect();
 
     const enrolledClientIds = new Set(enrollments.map((e) => e.clientId));
     const totalParticipants = enrolledClientIds.size;
@@ -253,11 +255,13 @@ export const getProgramOverview = query({
       enrollments.filter((e) => e.status === "completed").map((e) => e.clientId)
     ).size;
 
-    // All sessions for enrolled clients
+    // All sessions — filtered by program if specified, otherwise all
     const allSessions = await ctx.db.query("sessions").collect();
-    const programSessions = allSessions.filter(
-      (s) => s.programId === programId || enrolledClientIds.has(s.clientId)
-    );
+    const programSessions = programId
+      ? allSessions.filter(
+          (s) => s.programId === programId || enrolledClientIds.has(s.clientId)
+        )
+      : allSessions;
 
     const totalSessions = programSessions.length;
 

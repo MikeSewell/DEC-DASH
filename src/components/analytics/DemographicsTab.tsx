@@ -116,6 +116,10 @@ export default function DemographicsTab() {
   const programs = useQuery(api.programs.list);
   const [selectedProgram, setSelectedProgram] = useState<string | undefined>(undefined);
   const demographics = useAllDemographics(selectedProgram);
+  const overview = useQuery(
+    api.analytics.getProgramOverview,
+    selectedProgram ? { programId: selectedProgram as any } : {}
+  );
 
   const programOptions: ProgramOption[] = [
     { id: undefined, label: "All Programs" },
@@ -180,11 +184,40 @@ export default function DemographicsTab() {
           ))}
         </div>
         <div className="flex items-center gap-4 text-sm text-muted">
-          <span><strong className="text-foreground">{total}</strong> total</span>
-          <span className="text-primary"><strong>{active}</strong> enrolled</span>
+          <span><strong className="text-foreground">{total}</strong> total clients</span>
           <span className="text-accent"><strong>{completed}</strong> completed</span>
         </div>
       </div>
+
+      {/* Overview Stats */}
+      {overview && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-foreground">{overview.totalParticipants}</p>
+            <p className="text-xs text-muted mt-1">Total Participants</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-primary">{overview.multiSessionClients}</p>
+            <p className="text-xs text-muted mt-1">Returning (2+ sessions)</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-foreground">{overview.totalSessions}</p>
+            <p className="text-xs text-muted mt-1">Total Sessions</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-primary">{overview.avgSessionsPerClient}</p>
+            <p className="text-xs text-muted mt-1">Avg Sessions / Person</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-accent">{overview.attendanceRate !== null ? `${overview.attendanceRate}%` : "—"}</p>
+            <p className="text-xs text-muted mt-1">Attendance Rate</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+            <p className="text-2xl font-bold text-foreground">{overview.zipCodeReach}</p>
+            <p className="text-xs text-muted mt-1">Zip Codes Reached</p>
+          </div>
+        </div>
+      )}
 
       {/* Row 1: Ethnicity (wide bar) + Gender (doughnut) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -15,15 +15,13 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
 import Table from "@/components/ui/Table";
-import DemographicsTab from "@/components/analytics/DemographicsTab";
-import ClientActivityTab from "@/components/analytics/ClientActivityTab";
+import ProgramOverviewTab from "@/components/analytics/ProgramOverviewTab";
 
-type PageView = "clients" | "demographics" | "client-activity";
+type PageView = "programs" | "clients";
 
 const PAGE_VIEWS: { id: PageView; label: string }[] = [
+  { id: "programs", label: "Programs" },
   { id: "clients", label: "Clients" },
-  { id: "demographics", label: "Demographics" },
-  { id: "client-activity", label: "Client Activity" },
 ];
 
 interface ClientFormData {
@@ -64,7 +62,7 @@ export default function ClientsPage() {
   const programs = useQuery(api.programs.list);
   const clientStats = useQuery(api.clients.getStats);
 
-  const [pageView, setPageView] = useState<PageView>("clients");
+  const [pageView, setPageView] = useState<PageView>("programs");
   const [activeTab, setActiveTab] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -249,7 +247,7 @@ export default function ClientsPage() {
             Programs
           </h1>
           <p className="text-sm text-muted mt-1">
-            Manage clients, demographics, and program activity
+            Program overview, demographics, and client management
           </p>
         </div>
         {pageView === "clients" && (
@@ -333,17 +331,14 @@ export default function ClientsPage() {
         </nav>
       </div>
 
-      {/* Demographics view */}
-      {pageView === "demographics" && <DemographicsTab />}
-
-      {/* Client Activity view */}
-      {pageView === "client-activity" && <ClientActivityTab />}
+      {/* Programs overview */}
+      {pageView === "programs" && <ProgramOverviewTab />}
 
       {/* Clients view */}
       {pageView !== "clients" ? null : (<>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-primary">
@@ -354,19 +349,6 @@ export default function ClientsPage() {
             <div>
               <p className="text-sm text-muted">Total Clients</p>
               <p className="text-2xl font-bold text-foreground">{clientStats?.total ?? 0}</p>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-accent">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-muted">Enrolled</p>
-              <p className="text-2xl font-bold text-foreground">{clientStats?.active ?? 0}</p>
             </div>
           </div>
         </Card>
