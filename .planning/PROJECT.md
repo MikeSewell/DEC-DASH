@@ -58,9 +58,28 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ Production deploy — v2.1 build deployed to VPS with Convex schema, PM2 online — v2.1
 - ✓ Route rename — `/clients` → `/programs` for nav label consistency — v2.1
 
+## Current Milestone: v3.0 Dashboard Redesign
+
+**Goal:** Overhaul the dashboard with dummy data, dark/light theme toggle, and ported visual elements from the old desktop app for a polished, data-dense command center.
+
+**Target features:**
+- Hardcoded dummy data for all empty dashboard sections (QB financials, calendar, KB metrics, donations)
+- Dark/light theme toggle (warm cream light mode + polished dark mode)
+- Port visual elements from old app (funding thermometer, expense progress bars, donation source cards, deadline calendar urgency)
+- Overall dashboard polish — tighter layout, more visual density, better at-a-glance impact
+- Calendar cron fix (use selected calendars from googleCalendarConfig)
+
 ### Active
 
-(No active requirements — start next milestone with `/gsd:new-milestone`)
+- [ ] Dummy data for all empty dashboard sections
+- [ ] Dark/light theme toggle with persistence
+- [ ] Funding thermometer visualization
+- [ ] Expense progress bars
+- [ ] Donation source cards with icons
+- [ ] Deadline calendar with urgency levels
+- [ ] Dense metric cards (large values, trend indicators)
+- [ ] Dashboard layout tightened and polished
+- [ ] Calendar cron uses selected calendars from config
 
 ### Out of Scope
 
@@ -86,6 +105,8 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 ## Context
 
 Shipped v2.1 Polish & Deploy — production VPS running full v2.0+v2.1 build. 428 real clients imported from master spreadsheet, calendar admin uses multi-select dropdown, Programs route properly named, all schema changes live.
+
+Starting v3.0 Dashboard Redesign — visual overhaul bringing back polished elements from the old desktop app (Electron/Vite/Supabase at Desktop_template), adding dark/light theme toggle, and filling all empty sections with hardcoded dummy data to nail the design before connecting real integrations.
 
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API (grants only), Google Calendar API, OpenAI Assistants API.
 26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
@@ -147,4 +168,4 @@ Known operational notes:
 | Route rename /clients → /programs | Nav label said "Programs" but route was /clients — inconsistent mental model | ✓ Good — caught during production verification |
 
 ---
-*Last updated: 2026-03-02 after v2.1 milestone completion*
+*Last updated: 2026-03-02 after v3.0 milestone start*
