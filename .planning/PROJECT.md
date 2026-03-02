@@ -2,7 +2,7 @@
 
 ## What This Is
 
-An executive command center for the Dads' Education Center (DEC) nonprofit. A single-pane-of-glass dashboard that connects financial data (QuickBooks), client/program management, grant tracking, AI-powered tools, newsletter creation (Constant Contact), organizational scheduling (Google Calendar), and data analytics — with proactive alerts, trend indicators, and a dedicated analytics page surfacing demographics, client activity, operational health, and donation trends.
+An executive command center for the Dads' Education Center (DEC) nonprofit. A single-pane-of-glass dashboard connecting financial data (QuickBooks), client/program management with enrollment-based tracking, grant tracking, AI-powered tools, newsletter creation (Constant Contact), organizational scheduling (Google Calendar), and data analytics — with proactive alerts, trend indicators, and a dedicated analytics page surfacing demographics, client activity, and donation trends. The app is the authoritative source for client and program data.
 
 ## Core Value
 
@@ -20,7 +20,7 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ Newsletter system — section editor, AI HTML generation, Constant Contact send — existing
 - ✓ RBAC — 6-tier role system (admin, manager, staff, lawyer, psychologist, readonly) — existing
 - ✓ Admin console — 9-tab configuration (Users, QB, CC, Sheets, Google Calendar, Knowledge Base, Alerts, Audit Log, AI Config) — existing
-- ✓ Google Sheets sync — grant tracking + demographics data, 30-min cron — existing
+- ✓ Google Sheets sync — grant tracking data, 30-min cron — existing
 - ✓ Expense management — 5-tab system (By Vendor, By Account, By Class, AI Insights, AI Categorize) — existing
 - ✓ PDF export — date-filtered expense reports — existing
 - ✓ Excel import scripts — legal intake, co-parent intake, grant matrix — existing
@@ -39,21 +39,22 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ KB-powered KPI cards — Chat Completions extraction from KB docs, stat cards with provenance — v1.2
 - ✓ AI-generated summary panel — 3-5 bullet organizational highlights, manual regeneration — v1.2
 - ✓ Dashboard summary KPI cards — active clients, session volume, intake trend — v1.3
-- ✓ /analytics page with Demographics tab — gender, ethnicity, age group, referral sources, outcomes, zip codes — v1.3
+- ✓ /analytics page with Demographics tab — gender, ethnicity, age group, referral sources, zip codes — v1.3
 - ✓ /analytics page with Client Activity tab — session trends, goal status, intake volume — v1.3
 - ✓ /analytics page with Operations tab — staff activity feed, per-user stats, categorization metrics — v1.3
 - ✓ Donation Performance Charts — QB income trends, multi-line chart, admin account designation — v1.3
+- ✓ Client → Enrollment → Session data model — enrollments table, demographics on clients, attendance on sessions — v2.0
+- ✓ Enrollment CRUD + session tracking — create enrollments, log sessions with attendance status/notes — v2.0
+- ✓ Data migration — existing clients migrated to enrollment model, demographics backfilled from intake forms — v2.0
+- ✓ Analytics rewrite — demographics and session queries read Convex directly, not Sheets — v2.0
+- ✓ Unified client list — all clients in one list with enrollment-based RBAC filtering — v2.0
+- ✓ Google Sheets program sync removed — app is source of truth for client/program data — v2.0
+- ✓ Schema cleanup — programDataCache table removed, legacy client fields stripped — v2.0
+- ✓ Data export — admin CSV/Excel download of clients with enrollments and session counts — v2.0
 
 ### Active
 
-- [ ] Data model refactor — Client → Enrollment → Session architecture with demographics on client records
-- [ ] Session tracking — individual visit records with date, attendance status, and notes
-- [ ] Unified client list — all clients in one list, not split by program type
-- [ ] One-time data migration — import cleaned spreadsheet data into new Convex data model
-- [ ] Unify Google OAuth — single credentials + token store for Calendar (Sheets dependency removed)
-- [ ] Remove Sheets sync for program data — app becomes source of truth
-- [ ] Data export — backup capability to export client/program data from the app
-- [ ] Analytics rewrite — Demographics and client activity queries use Convex data instead of Sheets
+(None — next milestone requirements defined via `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -65,47 +66,37 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - Google Drive integration — documents stay in Drive
 - Two-way Google Calendar editing — creates sync conflicts; read-only with link-out is sufficient
 - Google Calendar webhooks — cron polling is simpler and sufficient for infrequently-changing event data
-- Real-time push notifications (browser/mobile) — in-app alerts panel sufficient; push is v2+
+- Real-time push notifications (browser/mobile) — in-app alerts panel sufficient
 - Newsletter mobile-responsive template — low priority vs dashboard/alert/calendar polish
 - Interactive geographic map for zip codes — simple table/list sufficient
 - Cross-tab linked filtering on analytics — each tab is self-contained
-- Multi-sheet support — removed; Sheets no longer used for program data
-- Google Sheets sync for program data — replaced by app-as-source-of-truth model
-
-## Current Milestone: v2.0 Data Foundation
-
-**Goal:** Refactor the data model to Client → Enrollment → Session, make the app the source of truth for client/program data, remove Google Sheets dependency, and unify Google OAuth.
-
-**Target features:**
-- Client → Enrollment → Session data model with demographics on client records
-- Individual session tracking (date, attendance, notes)
-- Unified client list (not split by program type)
-- One-time historical data migration from cleaned spreadsheet
-- Unified Google OAuth for Calendar
-- Data export for backup
-- Analytics rewritten to query Convex instead of Sheets
+- Google Sheets sync for program data — replaced by app-as-source-of-truth model (v2.0)
+- Two-way Sheets sync — app is source of truth; data flows out (export), not in
+- Real-time check-in kiosk / QR codes — DEC cohort sizes make manual session logging fast enough
+- Automatic silent deduplication — healthcare-adjacent data requires admin review of conflicts
+- Multi-level program hierarchy (programs > cohorts > sessions) — enrollment IS the cohort equivalent
+- Bulk session import from Excel — historical session data lacks structure for the new model
 
 ## Context
 
-Shipped v1.3 Analytics milestone — dedicated /analytics page with 3 tabs (Demographics, Client Activity, Operations), 3 dashboard KPI summary cards, and real QB income trend charts with admin account designation.
+Shipped v2.0 Data Foundation — the app is now the authoritative source for client and program data. Client → Enrollment → Session relational model deployed, Google Sheets program sync removed, analytics queries read Convex directly, admin can export full dataset as CSV/Excel.
 
-Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API, Google Calendar API, OpenAI Assistants API.
-26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
-Codebase: 24,548 LOC TypeScript across 94+ files.
-
-Dashboard renders live financial data from QuickBooks with year-over-year trend arrows, color-coded calendar events with countdown badges, configurable proactive alerts with dismissal persistence, KB-powered KPI stat cards, AI-generated summary panel, analytics summary cards, and real QB income trend charts. Analytics page surfaces demographics from Google Sheets, client session/goal/intake trends from Convex tables, and operational metrics from audit logs and allocation data.
+Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API (grants only), Google Calendar API, OpenAI Assistants API.
+26 database tables (programDataCache removed), 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
+Codebase: ~24,767 LOC TypeScript across 155 files.
 
 Known operational notes:
-- Google Calendar service account must be manually shared with each calendar for events to sync (silent empty-result failure mode)
+- Google Calendar service account must be manually shared with each calendar for events to sync
 - `npx convex dev --once` must be run interactively to deploy schema changes
-- Pre-existing TypeScript errors in 6 Convex files (allocationActions.ts, grants.ts, newsletterActions.ts, auth.ts, seedPrograms.ts, constantContactActions.ts) — `npm run build` still passes
-- `getSessionVolume` does a full-table scan on sessions (no by_sessionDate index) — works at current scale
-- Current client data model uses single `programId` on clients table — being replaced by enrollments table in v2.0
+- Pre-existing TypeScript errors in several Convex files — `npm run build` still passes
+- Cleaned master spreadsheet for full data import was never provided (v2.0 migrated existing Convex data only)
+- Programs "active" status flagged as meaningless — needs removal in next milestone
+- Production deployment (v1.3) is behind — v2.0 changes not yet deployed to VPS
 
 ## Constraints
 
 - **Tech stack**: Next.js 15 + Convex backend — must build within existing architecture
-- **Integrations**: QuickBooks, Constant Contact, Google Sheets, Google Calendar connected
+- **Integrations**: QuickBooks, Constant Contact, Google Sheets (grants only), Google Calendar connected
 - **Deployment**: Standalone Next.js build on Hostinger VPS via rsync + PM2
 - **Convex**: Single deployment (`aware-finch-86`) used for both dev and production
 - **Auth**: @convex-dev/auth with Password provider — no changes needed
@@ -138,9 +129,14 @@ Known operational notes:
 | Single ChartSkeleton loading guard | One skeleton covers all hooks in each tab vs partial renders | ✓ Good — simpler code, consistent across all 3 analytics tabs |
 | fetchIncomeTrend in QB sync cycle | Income data refreshes every 15 min with other QB data | ✓ Good — no separate cron needed |
 | Admin account designation for donations | appSettings key stores designated income accounts | ✓ Good — closed read/write loop, instructive empty state |
-
-| App as source of truth | Google Sheets sync was fragile; nonprofit needs reliable data they control | — Pending |
-| Client → Enrollment → Session model | Supports repeat participation tracking, new vs returning metrics, session-level notes | — Pending |
+| App as source of truth | Google Sheets sync was fragile; nonprofit needs reliable data they control | ✓ Good — Sheets program sync removed, export provides data portability |
+| Client → Enrollment → Session model | Supports repeat participation tracking, new vs returning metrics, session-level notes | ✓ Good — enrollment-based RBAC cleaner than programId check |
+| v.optional for all new schema fields | Additive changes deploy without breaking existing code; tightened after migration | ✓ Good — zero-downtime schema evolution |
+| Enrollment-based RBAC | by_status index scan + Set intersection for role-filtered client lists | ✓ Good — correct semantics for multi-program clients |
+| Ethnicity normalization at query time | ETHNICITY_MAP in analytics.ts, not at migration time — preserves raw intake data | ✓ Good — flexible, no data loss |
+| Migration dry-run/execute pattern | Always preview before writing to live data | ✓ Good — caught zero issues, built confidence |
+| internalMutation for migrations | Cannot be called from frontend, CLI-only execution | ✓ Good — safety constraint, reusable pattern |
+| Convex skip pattern for export | Query only fires when exportFormat is non-null — no page-load overhead | ✓ Good — efficient, no wasted reads |
 
 ---
-*Last updated: 2026-03-01 after v2.0 milestone start*
+*Last updated: 2026-03-02 after v2.0 milestone*

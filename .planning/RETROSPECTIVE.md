@@ -138,6 +138,56 @@
 
 ---
 
+## Milestone: v2.0 — Data Foundation
+
+**Shipped:** 2026-03-02
+**Phases:** 7 | **Plans:** 9 | **Commits:** 58
+
+### What Was Built
+- Client → Enrollment → Session relational data model with enrollments table, demographics on clients, attendance on sessions
+- Enrollment CRUD (7 functions) + session attendance tracking with backward-compatible v2.0 fields, RBAC, and audit logging
+- Data migration — 350 existing clients restructured to enrollment model, 345 demographics backfilled from intake forms
+- Analytics queries rewritten to use Convex index scans instead of Sheets programDataCache
+- Google Sheets program sync removed (cron, action, alerts, admin UI) while preserving grant sync and Calendar
+- Legacy schema cleaned — programDataCache table removed, dead code deleted, client legacy fields stripped
+- Admin CSV/Excel export of full client + enrollment + session dataset
+
+### What Worked
+- **Strict phase dependency ordering** — schema → backend → migration → analytics → frontend → cleanup → export. Each phase built on the last with zero rework.
+- **v.optional first, tighten later** — all new schema fields deployed as optional, allowing incremental migration without breaking existing code
+- **Dry-run/execute migration pattern** — preview mode caught zero issues but built confidence for the live run; idempotency confirmed on re-run
+- **Co-dependent phase coordination** — analytics rewrite (Phase 19) and Sheets removal (Phase 20) deployed together as planned, no data gaps
+- **Enrollment-based RBAC** — by_status index scan + Set intersection is cleaner and more correct than the old programId check, especially for multi-program clients
+- **internalMutation for migrations** — CLI-only safety constraint prevented accidental frontend invocation
+
+### What Was Inefficient
+- **MIGR-01 never truly completed** — migration script restructured existing Convex data but the cleaned master spreadsheet was never provided. This gap was only caught at milestone completion, not during Phase 18 execution.
+- **Programs "active" status** — user flagged this as meaningless during v2.0 work but it was never addressed; should have been a quick fix in Phase 20 or 21
+- **SUMMARY.md one-liner extraction still broken** — 4th consecutive milestone where CLI returns null. The frontmatter field is simply not used.
+- **Production deployment lagging** — v1.3 is still running on VPS; v2.0 schema is only on dev deployment. Gap widening.
+- **Phase 17 plan file stale** — 17-01-PLAN.md was created but never captured in the handoff file, required manual discovery
+
+### Patterns Established
+- **Additive schema evolution**: Deploy v.optional fields, migrate data, tighten schema — zero-downtime data model changes
+- **Enrollment-based RBAC**: by_status index → Set intersection → role-filtered client lists for multi-program support
+- **Convex skip pattern for expensive queries**: State gate (null → non-null) prevents query execution on page load
+- **Query-time normalization**: ETHNICITY_MAP in analytics.ts normalizes at read, not write — preserves raw intake data flexibility
+- **Dead code cleanup after deprecation**: Phase 21 systematically removed all deprecated code paths after Phase 20 proved they were unused
+
+### Key Lessons
+1. **Verify user-dependent prerequisites before marking requirements complete** — MIGR-01 was checked off but the user never provided the cleaned spreadsheet
+2. **Co-dependent phases should be planned as a single wave** — Phases 19+20 always needed to ship together; treating them as separate created an unnecessary checkpoint
+3. **Schema evolution works in Convex** — the v.optional → migrate → tighten pattern is reliable and should be the default for all data model changes
+4. **Export skip pattern avoids Convex read overhead** — gating a query on a non-null state value is more efficient than a boolean flag
+5. **XLSX.write requires type: "buffer" not "array"** in xlsx 0.18.5 CE — type "array" returns undefined silently
+
+### Cost Observations
+- Model mix: ~60% opus, ~30% sonnet, ~10% haiku (estimated)
+- Sessions: ~5 across research, planning, execution, milestone completion
+- Notable: 7 phases completed in 2 days — strict dependency chain meant each phase unlocked the next with zero rework
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -147,6 +197,7 @@
 | v1.0 | ~8 | 4 | First milestone — established GSD workflow patterns |
 | v1.1 | ~4 | 3 | Lean polish milestone — reused established patterns for fast delivery |
 | v1.3 | ~3 | 5 | Largest milestone by phase count — formulaic tab pattern enabled rapid execution |
+| v2.0 | ~5 | 7 | Data model refactor — strict dependency chain, schema evolution pattern |
 
 ### Cumulative Quality
 
@@ -155,6 +206,7 @@
 | v1.0 | 22/22 | 100% satisfied | 3 INFO items, 1 orphaned export |
 | v1.1 | 13/13 truths (Ph 5+6) | 8/8 requirements (code verified) | 1 dead export, missing Ph 07 VERIFICATION.md |
 | v1.3 | 22/22 | 100% satisfied | 5 INFO items (skeleton mismatch, full-table scan, frontmatter bookkeeping, type gap) |
+| v2.0 | No audit | 26/26 checked (MIGR-01 partial) | Spreadsheet import pending, programs "active" removal, production deploy behind |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -163,4 +215,6 @@
 3. Singleton config table pattern is highly replicable — new config tables can follow `.first()` / upsert in minutes
 4. Always create VERIFICATION.md after phase execution — even when code is correct, missing docs create audit gaps
 5. Formulaic UI patterns (skeleton → hooks → chart component) compound across phases — Phase 14 was nearly copy-paste from Phase 12
-6. SUMMARY frontmatter fields must be populated during execution — 3 milestones of broken one-liner extraction confirms the CLI depends on it
+6. SUMMARY frontmatter fields must be populated during execution — 4 milestones of broken one-liner extraction confirms the CLI depends on it
+7. Verify user-dependent prerequisites before marking requirements complete — checked-off requirements may have external dependencies
+8. Schema evolution via v.optional → migrate → tighten is reliable for zero-downtime data model changes in Convex

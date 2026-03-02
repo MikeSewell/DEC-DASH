@@ -1,5 +1,40 @@
 # Milestones
 
+## v2.0 Data Foundation (Shipped: 2026-03-02)
+
+**Phases:** 7 | **Plans:** 9 | **Commits:** 58 | **Files:** 28 | **LOC:** 24,767 TS
+**Timeline:** 2 days (Mar 1-2, 2026)
+**Git range:** `feat(16-01)..feat(22-01)` | **Tag:** `v2.0`
+
+**Delivered:** Refactored the data model from flat client-with-programId to Client → Enrollment → Session, made the app the authoritative source for client/program data, removed Google Sheets program sync dependency, cleaned legacy schema, and added admin data export.
+
+**Key accomplishments:**
+- Deployed Client → Enrollment → Session data model with enrollments table (9 fields, 3 indexes) and 5 demographic fields on clients
+- Built enrollment CRUD (7 functions) + session attendance tracking with backward-compatible v2.0 fields, RBAC, and audit logging
+- Migrated 350 existing clients to enrollment model, backfilled 345 client demographics from intake forms via idempotent internalMutation
+- Rewrote 4 analytics queries to Convex index scans, eliminated programDataCache dependency, redesigned Programs page with filter pills
+- Removed Google Sheets program sync from cron/action/alerts/admin UI while preserving grant sync and Calendar independence
+- Cleaned legacy schema — removed programDataCache table, sheetsStalenessHours, and legacy programId/enrollmentDate/status fields from clients
+- Added admin CSV/Excel export with full client + enrollment + session joins using Convex skip-pattern query
+
+**Phases:**
+1. Schema Foundation (1 plan) — enrollments table, client demographic fields, session attendance fields, new indexes
+2. Enrollment and Sessions Backend (1 plan) — enrollment CRUD, sessions attendance extension, RBAC, importBatch
+3. Data Migration (1 plan) — migrateAll internalMutation, 350 enrollments created, 345 demographics backfilled
+4. Analytics Backend Rewrite (1 plan) — 4 queries rewritten to index scans, demographics from clients table, Programs page redesign
+5. Frontend and Sheets Removal (2 plans) — enrollment-based RBAC, client detail enrollments card, Sheets sync excised
+6. Schema Cleanup (2 plans) — programDataCache removed, dead code deleted, legacy client fields stripped
+7. Data Export (1 plan) — exportAll query, exportUtils, admin Export button with CSV/Excel download
+
+### Known Gaps
+
+- **MIGR-01 partial:** Cleaned master spreadsheet was never provided — migration ran against existing Convex data (350 clients from prior imports), not from a new consolidated dataset. Spreadsheet import deferred.
+- **Programs "active" status:** User requested removal of "active" from programs (meaningless in context) — not addressed in v2.0.
+
+**Archives:** `milestones/v2.0-ROADMAP.md` | `milestones/v2.0-REQUIREMENTS.md`
+
+---
+
 ## v1.3 Analytics (Shipped: 2026-03-01)
 
 **Phases:** 5 | **Plans:** 10 | **Commits:** 39 | **Files:** 42 | **LOC:** 24,548 TS
