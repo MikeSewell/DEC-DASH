@@ -181,11 +181,29 @@ body {
 
 /* ── Hover lift ── */
 .hover-lift {
+  position: relative;
+  overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+  border-radius: 9999px 9999px 0 0;
 }
 .hover-lift:hover {
   transform: translateY(-2px);
   box-shadow: var(--warm-shadow-md);
+}
+.hover-lift:hover::before {
+  opacity: 1;
 }
 
 /* ── Warm gradient background ── */
