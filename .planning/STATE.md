@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Dashboard Redesign
 status: unknown
-last_updated: "2026-03-02T11:21:10Z"
+last_updated: "2026-03-02T11:27:30Z"
 progress:
   total_phases: 7
   completed_phases: 7
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 13
+  completed_plans: 13
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 27 of 29 (v3.0) — Theme Toggle
-Plan: 1 of 1 in current phase (27-01 complete)
+Plan: 2 of 2 in current phase (27-01 and 27-02 complete)
 Status: Phase 27 complete
-Last activity: 2026-03-02 — Completed 27-01: Dark palette updated, flash-prevention script added, useTheme refined
+Last activity: 2026-03-02 — Completed 27-02: All four dashboard chart components made theme-aware
 
 Progress: [███░░░░░░░] 12% (v3.0)
 
@@ -44,6 +44,8 @@ Progress: [███░░░░░░░] 12% (v3.0)
 - [27-01]: Dark palette uses #0F0F0F bg, #1E1E1E surface, #26A69A teal primary, #404040 border, #FFFFFF foreground — matching old desktop app
 - [27-01]: Flash-prevention uses IIFE in <head> with dangerouslySetInnerHTML — runs synchronously before body parse
 - [27-01]: useTheme hook initialized from localStorage via useState initializer to eliminate state/class mismatch on mount
+- [27-02]: useChartConfig() hook pattern used in Programs components — module-level chart constants converted to hook so resolvedTheme is captured at render time
+- [27-02]: Light mode color branches preserve original hardcoded values exactly — no visual regression in light mode
 
 ### Pending Todos
 
@@ -57,5 +59,5 @@ Progress: [███░░░░░░░] 12% (v3.0)
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 27-01-PLAN.md — Dark palette updated to old-app values, flash-prevention script added, useTheme hook refined, Phase 27 complete
+Stopped at: Completed 27-02-PLAN.md — All four dashboard chart components (ProfitLoss, DonationPerformance, ProgramsCoparent, ProgramsLegal) made theme-aware with resolvedTheme
 Resume file: None

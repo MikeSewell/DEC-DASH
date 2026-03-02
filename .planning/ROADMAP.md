@@ -96,7 +96,7 @@ Full details: `milestones/v2.1-ROADMAP.md`
 
 #### Phase 27: Theme Toggle
 
-- [ ] **Phase 27: Theme Toggle** — Dark/light theme switch with polished dark palette and persistent preference
+- [x] **Phase 27: Theme Toggle** — Dark/light theme switch with polished dark palette and persistent preference (completed 2026-03-02)
 
 #### Phase 28: Visual Elements
 
@@ -186,6 +186,6 @@ Full details: `milestones/v2.1-ROADMAP.md`
 | 24. Calendar Multi-Select | v2.1 | 2/2 | Complete | 2026-03-02 |
 | 25. Production Deploy | v2.1 | 1/1 | Complete | 2026-03-02 |
 | 26. Dummy Data Fallbacks | 2/2 | Complete    | 2026-03-02 | - |
-| 27. Theme Toggle | 1/2 | In Progress|  | - |
+| 27. Theme Toggle | 2/2 | Complete   | 2026-03-02 | - |
 | 28. Visual Elements | v3.0 | 0/TBD | Not started | - |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 0/TBD | Not started | - |
