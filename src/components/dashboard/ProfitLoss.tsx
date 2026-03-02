@@ -149,6 +149,43 @@ function ProfitLossContent({ data, fetchedAt, isFallback }: ProfitLossContentPro
         <p className="text-sm text-muted text-center py-4">No expense categories available.</p>
       )}
 
+      {/* Expense category progress bars */}
+      {categories.length > 0 && (
+        <div className="border-t border-border pt-4 mt-4">
+          <h4 className="text-sm font-semibold text-foreground mb-3">Expense Categories</h4>
+          <div className="space-y-1">
+            {categories.map(([name, amount], i) => {
+              const pct = totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0;
+              const fillColor = EXPENSE_COLORS[i % EXPENSE_COLORS.length];
+              return (
+                <div key={name} className="flex items-center gap-2 py-1.5 dads-category-bar">
+                  <span className="text-sm font-medium text-foreground w-36 shrink-0 truncate" title={name}>
+                    {name}
+                  </span>
+                  <div className="flex-1 mx-3">
+                    <div className="h-2 rounded-full bg-border/30">
+                      <div
+                        className="h-2 rounded-full transition-[width] duration-700"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: fillColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground shrink-0">
+                    {formatCurrency(amount)}
+                  </span>
+                  <span className="text-xs text-muted shrink-0 w-12 text-right">
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Period info */}
       {data.period && (
         <p className="text-xs text-muted text-right">
