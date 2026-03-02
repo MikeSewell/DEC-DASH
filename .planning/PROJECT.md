@@ -54,7 +54,11 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
-(None — next milestone requirements defined via `/gsd:new-milestone`)
+- [ ] Fix Programs sidebar icon (broken/glitchy rendering)
+- [ ] Calendar config UX — dropdown selector of available Google calendars instead of manual ID entry
+- [ ] Remove "active" status from programs (meaningless field)
+- [ ] Import cleaned master spreadsheet
+- [ ] Deploy v2.1 to production VPS
 
 ### Out of Scope
 
@@ -89,8 +93,7 @@ Known operational notes:
 - Google Calendar service account must be manually shared with each calendar for events to sync
 - `npx convex dev --once` must be run interactively to deploy schema changes
 - Pre-existing TypeScript errors in several Convex files — `npm run build` still passes
-- Cleaned master spreadsheet for full data import was never provided (v2.0 migrated existing Convex data only)
-- Programs "active" status flagged as meaningless — needs removal in next milestone
+- Cleaned master spreadsheet available — import pending for v2.1
 - Production deployment (v1.3) is behind — v2.0 changes not yet deployed to VPS
 
 ## Constraints
@@ -139,4 +142,4 @@ Known operational notes:
 | Convex skip pattern for export | Query only fires when exportFormat is non-null — no page-load overhead | ✓ Good — efficient, no wasted reads |
 
 ---
-*Last updated: 2026-03-02 after v2.0 milestone*
+*Last updated: 2026-03-02 after v2.1 milestone start*
