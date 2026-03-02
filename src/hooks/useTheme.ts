@@ -4,25 +4,32 @@ import { useState, useEffect, useCallback } from "react";
 
 type Theme = "light" | "dark" | "system";
 
-export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
+function getStoredTheme(): Theme {
+  if (typeof window === "undefined") return "system";
+  try {
     const stored = localStorage.getItem("dec-theme") as Theme | null;
-    if (stored) {
-      setThemeState(stored);
-    }
-  }, []);
+    if (stored === "light" || stored === "dark" || stored === "system") return stored;
+  } catch {}
+  return "system";
+}
+
+function resolveTheme(theme: Theme): "light" | "dark" {
+  if (theme === "light" || theme === "dark") return theme;
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+export function useTheme() {
+  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() => resolveTheme(getStoredTheme()));
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     function updateResolved() {
-      const isDark =
-        theme === "dark" || (theme === "system" && mediaQuery.matches);
-      setResolvedTheme(isDark ? "dark" : "light");
-      document.documentElement.classList.toggle("dark", isDark);
+      const resolved = resolveTheme(theme);
+      setResolvedTheme(resolved);
+      document.documentElement.classList.toggle("dark", resolved === "dark");
     }
 
     updateResolved();
@@ -32,7 +39,9 @@ export function useTheme() {
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem("dec-theme", newTheme);
+    try {
+      localStorage.setItem("dec-theme", newTheme);
+    } catch {}
   }, []);
 
   return { theme, resolvedTheme, setTheme };
