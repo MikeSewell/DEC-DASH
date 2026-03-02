@@ -296,6 +296,7 @@ export const create = mutation({
     zipCode: v.optional(v.string()),
     ageGroup: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
+    gender: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -307,6 +308,7 @@ export const create = mutation({
       zipCode: args.zipCode,
       ageGroup: args.ageGroup,
       ethnicity: args.ethnicity,
+      gender: args.gender,
       notes: args.notes,
       createdAt: Date.now(),
     });
@@ -334,6 +336,7 @@ export const update = mutation({
     zipCode: v.optional(v.string()),
     ageGroup: v.optional(v.string()),
     ethnicity: v.optional(v.string()),
+    gender: v.optional(v.string()),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -348,6 +351,7 @@ export const update = mutation({
     if (args.zipCode !== undefined) updates.zipCode = args.zipCode;
     if (args.ageGroup !== undefined) updates.ageGroup = args.ageGroup;
     if (args.ethnicity !== undefined) updates.ethnicity = args.ethnicity;
+    if (args.gender !== undefined) updates.gender = args.gender;
     if (args.notes !== undefined) updates.notes = args.notes;
 
     await ctx.db.patch(args.clientId, updates);

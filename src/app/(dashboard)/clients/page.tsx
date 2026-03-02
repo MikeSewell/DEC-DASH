@@ -32,6 +32,7 @@ interface ClientFormData {
   zipCode: string;
   ageGroup: string;
   ethnicity: string;
+  gender: string;
   notes: string;
 }
 
@@ -41,6 +42,7 @@ const emptyClientForm: ClientFormData = {
   zipCode: "",
   ageGroup: "",
   ethnicity: "",
+  gender: "",
   notes: "",
 };
 
@@ -159,6 +161,7 @@ export default function ClientsPage() {
         zipCode: clientForm.zipCode || undefined,
         ageGroup: clientForm.ageGroup || undefined,
         ethnicity: clientForm.ethnicity || undefined,
+        gender: clientForm.gender || undefined,
         notes: clientForm.notes || undefined,
       });
       setClientForm(emptyClientForm);
@@ -509,6 +512,25 @@ export default function ClientsPage() {
               <option value="Pacific Islander">Pacific Islander</option>
               <option value="Two or More Races">Two or More Races</option>
               <option value="Other">Other</option>
+              <option value="Prefer Not to Say">Prefer Not to Say</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Gender
+            </label>
+            <select
+              value={clientForm.gender}
+              onChange={(e) =>
+                setClientForm((prev) => ({ ...prev, gender: e.target.value }))
+              }
+              className="w-full px-3 py-2 rounded-xl text-sm bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+            >
+              <option value="">Select...</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Non-binary">Non-binary</option>
               <option value="Prefer Not to Say">Prefer Not to Say</option>
             </select>
           </div>
