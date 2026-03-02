@@ -51,14 +51,16 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 - ✓ Google Sheets program sync removed — app is source of truth for client/program data — v2.0
 - ✓ Schema cleanup — programDataCache table removed, legacy client fields stripped — v2.0
 - ✓ Data export — admin CSV/Excel download of clients with enrollments and session counts — v2.0
+- ✓ Programs sidebar icon fix — Grid 2x2 icon replacing broken Users icon — v2.1
+- ✓ Remove "active" status from programs — isActive field removed from schema, backend, and UI — v2.1
+- ✓ Master spreadsheet import — 428 clients with enrollments populated from Excel — v2.1
+- ✓ Calendar config UX — multi-select dropdown of available Google calendars with stale detection — v2.1
+- ✓ Production deploy — v2.1 build deployed to VPS with Convex schema, PM2 online — v2.1
+- ✓ Route rename — `/clients` → `/programs` for nav label consistency — v2.1
 
 ### Active
 
-- [ ] Fix Programs sidebar icon (broken/glitchy rendering)
-- [ ] Calendar config UX — dropdown selector of available Google calendars instead of manual ID entry
-- [ ] Remove "active" status from programs (meaningless field)
-- [ ] Import cleaned master spreadsheet
-- [ ] Deploy v2.1 to production VPS
+(No active requirements — start next milestone with `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -83,18 +85,17 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ## Context
 
-Shipped v2.0 Data Foundation — the app is now the authoritative source for client and program data. Client → Enrollment → Session relational model deployed, Google Sheets program sync removed, analytics queries read Convex directly, admin can export full dataset as CSV/Excel.
+Shipped v2.1 Polish & Deploy — production VPS running full v2.0+v2.1 build. 428 real clients imported from master spreadsheet, calendar admin uses multi-select dropdown, Programs route properly named, all schema changes live.
 
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API (grants only), Google Calendar API, OpenAI Assistants API.
-26 database tables (programDataCache removed), 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
-Codebase: ~24,767 LOC TypeScript across 155 files.
+26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
+Codebase: ~25,000 LOC TypeScript across 155+ files.
 
 Known operational notes:
 - Google Calendar service account must be manually shared with each calendar for events to sync
 - `npx convex dev --once` must be run interactively to deploy schema changes
 - Pre-existing TypeScript errors in several Convex files — `npm run build` still passes
-- Cleaned master spreadsheet available — import pending for v2.1
-- Production deployment (v1.3) is behind — v2.0 changes not yet deployed to VPS
+- Production VPS (187.77.19.63) running v2.1 build, PM2 process `dec-dash` online
 
 ## Constraints
 
@@ -140,6 +141,10 @@ Known operational notes:
 | Migration dry-run/execute pattern | Always preview before writing to live data | ✓ Good — caught zero issues, built confidence |
 | internalMutation for migrations | Cannot be called from frontend, CLI-only execution | ✓ Good — safety constraint, reusable pattern |
 | Convex skip pattern for export | Query only fires when exportFormat is non-null — no page-load overhead | ✓ Good — efficient, no wasted reads |
+| Grid icon for Programs | 2x2 rounded rects instead of Users silhouette — better semantic match for programs-as-categories | ✓ Good — clean icon, consistent SVG style |
+| isActive removal | Programs just exist or get deleted — no active/inactive concept needed for DEC's use case | ✓ Good — simplified schema, removed unused UI |
+| Intent-driven calendar fetch | No auto-fetch on mount — admin clicks "Fetch Calendars" to avoid unnecessary API calls | ✓ Good — reduces API usage, explicit UX |
+| Route rename /clients → /programs | Nav label said "Programs" but route was /clients — inconsistent mental model | ✓ Good — caught during production verification |
 
 ---
-*Last updated: 2026-03-02 after v2.1 milestone start*
+*Last updated: 2026-03-02 after v2.1 milestone completion*

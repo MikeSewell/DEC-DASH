@@ -188,6 +188,49 @@
 
 ---
 
+## Milestone: v2.1 — Polish & Deploy
+
+**Shipped:** 2026-03-02
+**Phases:** 3 | **Plans:** 5 | **Files:** 42
+
+### What Was Built
+- Programs sidebar icon fixed (Grid 2x2) and isActive field removed from schema, backend, and UI
+- Master spreadsheet imported — 428 clients with enrollments populated in Convex (78 net new from this import)
+- Calendar multi-select backend — listAvailableCalendars action querying Google Calendar API + useListCalendars hook
+- GoogleCalendarConfig rewritten with checkbox multi-select picker, stale calendar detection, and auto-sync on save
+- Route renamed `/clients` → `/programs` for nav label consistency
+- Full v2.1 deployed to production VPS — Convex schema + Next.js standalone build, PM2 online
+
+### What Worked
+- **Small focused milestone** — 3 phases, 5 plans, all shipped in a single day. Tight scope with clear deliverables.
+- **Human verification checkpoint caught real issues** — the `/clients` → `/programs` route rename was discovered during production verification, not during planning
+- **Deploy plan with human checkpoint** — splitting automated deploy (Task 1) from visual verification (Task 2) ensured both machine and human validation
+- **Pattern reuse across phases** — import script followed the established importIntake/importCoparent/importGrantMatrix pattern; calendar hooks followed useCalendarSync pattern
+
+### What Was Inefficient
+- **SUMMARY.md one-liner extraction still broken** — 5th consecutive milestone where CLI returns null
+- **PM2 restart counter ambiguity** — verification flagged restart_time=29 as a gap; had to reset counter to pass
+- **DEPLOY-01/DEPLOY-02 not checked off in REQUIREMENTS.md** — traceability table showed "Pending" even after successful deploy
+- **Route naming inconsistency** — `/clients` route existed since early phases but was never renamed when nav label changed to "Programs" in Phase 20
+
+### Patterns Established
+- **Human verification checkpoints for deploy plans** — automated deploy + manual browser verification as separate tasks
+- **Intent-driven admin API calls** — "Fetch Calendars" button instead of auto-fetch on mount reduces unnecessary API usage
+- **PM2 counter reset after deploy** — `pm2 reset` clears restart counter after iterative deploys for clean verification
+
+### Key Lessons
+1. **Route names should match nav labels** — if the sidebar says "Programs", the URL should be `/programs`, not `/clients`
+2. **Deploy verification needs a human in the loop** — automated smoke tests (HTTP 307) don't catch visual regressions or missing routes
+3. **PM2 restart counter is misleading** — `restart_time` counts all restarts including intentional ones; `unstable_restarts` is the real crash indicator
+4. **Traceability tables should be updated when requirements are satisfied** — not just at milestone completion
+
+### Cost Observations
+- Model mix: ~50% opus, ~40% sonnet, ~10% haiku (estimated)
+- Sessions: ~2 (planning + execution/completion)
+- Notable: Smallest milestone yet — focused scope enabled same-day ship
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -198,6 +241,7 @@
 | v1.1 | ~4 | 3 | Lean polish milestone — reused established patterns for fast delivery |
 | v1.3 | ~3 | 5 | Largest milestone by phase count — formulaic tab pattern enabled rapid execution |
 | v2.0 | ~5 | 7 | Data model refactor — strict dependency chain, schema evolution pattern |
+| v2.1 | ~2 | 3 | Smallest milestone — focused polish + deploy, same-day ship |
 
 ### Cumulative Quality
 
@@ -207,6 +251,7 @@
 | v1.1 | 13/13 truths (Ph 5+6) | 8/8 requirements (code verified) | 1 dead export, missing Ph 07 VERIFICATION.md |
 | v1.3 | 22/22 | 100% satisfied | 5 INFO items (skeleton mismatch, full-table scan, frontmatter bookkeeping, type gap) |
 | v2.0 | No audit | 26/26 checked (MIGR-01 partial) | Spreadsheet import pending, programs "active" removal, production deploy behind |
+| v2.1 | No audit | 8/8 satisfied | Cron sync calendar filter deferred, one-liner extraction still broken |
 
 ### Top Lessons (Verified Across Milestones)
 

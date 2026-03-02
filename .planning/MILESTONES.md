@@ -1,5 +1,30 @@
 # Milestones
 
+## v2.1 Polish & Deploy (Shipped: 2026-03-02)
+
+**Phases:** 3 | **Plans:** 5 | **Files:** 42 | **LOC:** ~25,000 TS
+**Timeline:** 1 day (Mar 2, 2026)
+**Git range:** `feat(23-01)..feat(25-01)` | **Tag:** `v2.1`
+
+**Delivered:** Polished the app with UI fixes, imported 428 real clients from the master spreadsheet, added calendar multi-select admin UI, renamed `/clients` route to `/programs`, and deployed the full v2.0+v2.1 build to production VPS.
+
+**Key accomplishments:**
+- Fixed Programs sidebar icon (Grid 2x2) and removed meaningless isActive field from programs schema/UI
+- Imported master spreadsheet — 428 clients with enrollments populated in Convex (78 net new)
+- Built calendar multi-select backend — listAvailableCalendars action querying Google Calendar API + useListCalendars hook
+- Rewrote GoogleCalendarConfig with checkbox multi-select picker, stale calendar detection, and auto-sync on save
+- Renamed `/clients` route to `/programs` for nav label consistency
+- Deployed full v2.1 to production VPS — Convex schema + Next.js standalone build, PM2 online
+
+**Phases:**
+1. UI & Data Cleanup (2 plans) — Grid icon, isActive removal, master spreadsheet import (428 clients)
+2. Calendar Multi-Select (2 plans) — listAvailableCalendars action, GoogleCalendarConfig rewrite with checkbox picker
+3. Production Deploy (1 plan) — Convex schema deploy, Next.js build, rsync to VPS, PM2 restart, human verification
+
+**Archives:** `milestones/v2.1-ROADMAP.md` | `milestones/v2.1-REQUIREMENTS.md`
+
+---
+
 ## v2.0 Data Foundation (Shipped: 2026-03-02)
 
 **Phases:** 7 | **Plans:** 9 | **Commits:** 58 | **Files:** 28 | **LOC:** 24,767 TS
