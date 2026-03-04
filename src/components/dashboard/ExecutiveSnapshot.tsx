@@ -73,8 +73,30 @@ export default function ExecutiveSnapshot() {
     );
   }
 
-  // Disconnected state: QB not configured or token expired — show fallback data
-  if (qbConfig === null || qbConfig.isExpired) {
+  // Check if cached data is available (queries read from cache regardless of token status)
+  const hasCachedData = pnl !== null || accounts !== null;
+  const isExpired = qbConfig !== null && qbConfig.isExpired;
+  const isDisconnected = qbConfig === null;
+
+  // Extract values with null safety
+  const cashOnHand = accounts?.data?.totalCash ?? null;
+  const totalRevenue = pnl?.data?.totalRevenue ?? null;
+  const totalExpenses = pnl?.data?.totalExpenses ?? null;
+
+  // Trend indicators (null if no prior-year data available)
+  const revenueTrend = trends?.revenue
+    ? { value: `${Math.abs(trends.revenue.pctChange).toFixed(1)}% vs last year`, positive: trends.revenue.positive }
+    : null;
+
+  const expensesTrend = trends?.expenses
+    ? { value: `${Math.abs(trends.expenses.pctChange).toFixed(1)}% vs last year`, positive: trends.expenses.positive }
+    : null;
+
+  // Determine most recent fetchedAt for timestamp
+  const latestFetchedAt = Math.max(accounts?.fetchedAt ?? 0, pnl?.fetchedAt ?? 0);
+
+  // No cached data and not connected — show fallback
+  if (isDisconnected && !hasCachedData) {
     return (
       <div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
@@ -156,23 +178,6 @@ export default function ExecutiveSnapshot() {
     );
   }
 
-  // Extract values with null safety
-  const cashOnHand = accounts?.data?.totalCash ?? null;
-  const totalRevenue = pnl?.data?.totalRevenue ?? null;
-  const totalExpenses = pnl?.data?.totalExpenses ?? null;
-
-  // Trend indicators (null if no prior-year data available)
-  const revenueTrend = trends?.revenue
-    ? { value: `${Math.abs(trends.revenue.pctChange).toFixed(1)}% vs last year`, positive: trends.revenue.positive }
-    : null;
-
-  const expensesTrend = trends?.expenses
-    ? { value: `${Math.abs(trends.expenses.pctChange).toFixed(1)}% vs last year`, positive: trends.expenses.positive }
-    : null;
-
-  // Determine most recent fetchedAt for timestamp
-  const latestFetchedAt = Math.max(accounts?.fetchedAt ?? 0, pnl?.fetchedAt ?? 0);
-
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
@@ -252,6 +257,9 @@ export default function ExecutiveSnapshot() {
       {latestFetchedAt > 0 && (
         <p className="text-xs text-muted text-right mt-3">
           Updated {timeAgo(latestFetchedAt)}
+          {isExpired && (
+            <span className="text-muted/50"> &mdash; QB token expired, <a href="/admin" className="hover:underline">reconnect</a> to refresh</span>
+          )}
         </p>
       )}
     </div>
