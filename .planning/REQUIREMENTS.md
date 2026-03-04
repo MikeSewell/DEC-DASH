@@ -9,12 +9,12 @@ Requirements for Grant Budget Restoration. Each maps to roadmap phases.
 
 ### QB Budget Data
 
-- [ ] **BGTD-01**: System fetches active Budget entities from QB using existing OAuth connection
-- [ ] **BGTD-02**: System fetches active Classes from QB to map budgets to grant programs
-- [ ] **BGTD-03**: System fetches BudgetVsActuals report per budget/class combination
-- [ ] **BGTD-04**: System parses report data into revenue, expenses, net revenue, and account-level line items
-- [ ] **BGTD-05**: Parsed budget vs actuals data is cached in a Convex table
-- [ ] **BGTD-06**: Budget data syncs on cron with existing QB 15-min cycle
+- [x] **BGTD-01**: System fetches active Budget entities from QB using existing OAuth connection
+- [x] **BGTD-02**: System fetches active Classes from QB to map budgets to grant programs
+- [x] **BGTD-03**: System fetches BudgetVsActuals report per budget/class combination
+- [x] **BGTD-04**: System parses report data into revenue, expenses, net revenue, and account-level line items
+- [x] **BGTD-05**: Parsed budget vs actuals data is cached in a Convex table
+- [x] **BGTD-06**: Budget data syncs on cron with existing QB 15-min cycle
 
 ### Grant Budget UI
 
@@ -42,12 +42,12 @@ Requirements for Grant Budget Restoration. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BGTD-01 | Phase 30 | Pending |
-| BGTD-02 | Phase 30 | Pending |
-| BGTD-03 | Phase 30 | Pending |
-| BGTD-04 | Phase 30 | Pending |
-| BGTD-05 | Phase 30 | Pending |
-| BGTD-06 | Phase 30 | Pending |
+| BGTD-01 | Phase 30 | Complete |
+| BGTD-02 | Phase 30 | Complete |
+| BGTD-03 | Phase 30 | Complete |
+| BGTD-04 | Phase 30 | Complete |
+| BGTD-05 | Phase 30 | Complete |
+| BGTD-06 | Phase 30 | Complete |
 | BGUI-01 | Phase 31 | Pending |
 | BGUI-02 | Phase 31 | Pending |
 | BGUI-03 | Phase 31 | Pending |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Grant Budget Restoration
 status: unknown
-last_updated: "2026-03-04T15:34:40.263Z"
+last_updated: "2026-03-04T15:38:16Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -23,27 +23,28 @@ See: .planning/PROJECT.md (updated 2026-03-04)
 ## Current Position
 
 Phase: 30 of 32 (QB Budget Data Pipeline)
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase — PHASE COMPLETE
 Status: In Progress
-Last activity: 2026-03-04 — Completed 30-01-PLAN.md (budgetCache schema + internal mutations)
+Last activity: 2026-03-04 — Completed 30-02-PLAN.md (QB sync pipeline + public budget queries)
 
-Progress: [#░░░░░░░░░] 10%
+Progress: [##░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v3.1)
-- Average duration: 90s
-- Total execution time: 90s
+- Total plans completed: 2 (v3.1)
+- Average duration: 105s
+- Total execution time: 210s
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 30 P01 | 1 | 90s | 90s |
+| 30 P02 | 1 | 120s | 120s |
 
 **Recent Trend:**
-- Last 5 plans: 90s
+- Last 5 plans: 105s avg
 - Trend: baseline
 
 *Updated after each plan completion*
@@ -60,6 +61,9 @@ Recent decisions affecting v3.1:
 - [Phase 30]: lineItems stored as JSON string in budgetCache to avoid Convex nested-object schema complexity
 - [Phase 30]: batchUpsertBudgetRecords accepts records as JSON string to avoid Convex argument size limits
 - [Phase 30]: grantId uses v.optional(v.id('grants')) for type-safe foreign key to grants table
+- [Phase 30-02]: Dual-write to quickbooksCache + budgetCache during transition — existing UI has zero breakage
+- [Phase 30-02]: matchBudgetToGrant uses bidirectional substring match (funder includes class AND class includes funder)
+- [Phase 30-02]: Grant fuzzy matching runs after quickbooksCache write so a grants query failure cannot prevent backward-compat write
 
 ### Pending Todos
 
@@ -74,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 30-01-PLAN.md — budgetCache schema + internal mutations
+Stopped at: Completed 30-02-PLAN.md — QB sync pipeline + public budget queries (Phase 30 complete)
 Resume file: None

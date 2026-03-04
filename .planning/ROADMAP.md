@@ -103,7 +103,7 @@ Full details: `milestones/v3.0-ROADMAP.md`
 
 **Milestone Goal:** Restore the full Grant Budget Overview dashboard section with real QB Budget API integration, tabbed table/chart views, and per-grant detail drill-down.
 
-- [ ] **Phase 30: QB Budget Data Pipeline** — Fetch, parse, and cache budget vs actuals data from QuickBooks
+- [x] **Phase 30: QB Budget Data Pipeline** — Fetch, parse, and cache budget vs actuals data from QuickBooks (completed 2026-03-04)
 - [ ] **Phase 31: Grant Budget Core UI** — Summary cards, table view with progress bars and status badges, theme integration
 - [ ] **Phase 32: Grant Budget Charts and Detail** — Chart view with pie/bar visualizations, per-grant detail modal
 
@@ -179,6 +179,6 @@ Plans:
 | 27. Theme Toggle | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 28. Visual Elements | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
-| 30. QB Budget Data Pipeline | 1/2 | In Progress|  | - |
+| 30. QB Budget Data Pipeline | 2/2 | Complete   | 2026-03-04 | - |
 | 31. Grant Budget Core UI | v3.1 | 0/TBD | Not started | - |
 | 32. Grant Budget Charts and Detail | v3.1 | 0/TBD | Not started | - |
