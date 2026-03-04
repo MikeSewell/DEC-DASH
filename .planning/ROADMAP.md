@@ -119,7 +119,10 @@ Full details: `milestones/v3.0-ROADMAP.md`
   3. Each budget record is correctly associated with a QB Class (grant program) via the class mapping fetch
   4. The existing QB 15-minute cron includes budget sync — budget data refreshes automatically without manual intervention
   5. A budget record with no matching QB data returns a graceful empty state rather than crashing the sync
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 30-01-PLAN.md — Schema foundation: budgetCache table + internal upsert mutations
+- [ ] 30-02-PLAN.md — Sync pipeline: fetchBudgetVsActuals writes to budgetCache + grant matching + public queries
 
 ### Phase 31: Grant Budget Core UI
 **Goal**: Users can view the Grant Budget Overview section on the dashboard with summary cards, toggle between Table and Chart views, and see per-grant rows with spend progress in a theme-consistent display
@@ -176,6 +179,6 @@ Full details: `milestones/v3.0-ROADMAP.md`
 | 27. Theme Toggle | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 28. Visual Elements | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
-| 30. QB Budget Data Pipeline | v3.1 | 0/TBD | Not started | - |
+| 30. QB Budget Data Pipeline | v3.1 | 0/2 | Not started | - |
 | 31. Grant Budget Core UI | v3.1 | 0/TBD | Not started | - |
 | 32. Grant Budget Charts and Detail | v3.1 | 0/TBD | Not started | - |
