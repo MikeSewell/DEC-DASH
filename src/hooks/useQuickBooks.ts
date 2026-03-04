@@ -2,6 +2,7 @@
 
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export function useQuickBooksConfig() {
   return useQuery(api.quickbooks.getConfig);
@@ -41,6 +42,24 @@ export function useBalanceSheet() {
 
 export function useBudgetVsActuals() {
   return useQuery(api.quickbooks.getBudgetVsActuals);
+}
+
+// New budget data hooks — consume the budgetCache data pipeline (Phase 30).
+// Three-state pattern: undefined=loading, null=no data, object/array=ready.
+
+export function useBudgetSummary() {
+  return useQuery(api.budgetQueries.getBudgetSummary);
+}
+
+export function useBudgetRecords() {
+  return useQuery(api.budgetQueries.listBudgetRecords);
+}
+
+export function useBudgetByGrantId(grantId: Id<"grants"> | undefined) {
+  return useQuery(
+    api.budgetQueries.getBudgetByGrantId,
+    grantId ? { grantId } : "skip"
+  );
 }
 
 export function useDonations() {
