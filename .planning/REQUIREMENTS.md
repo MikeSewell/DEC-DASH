@@ -18,12 +18,12 @@ Requirements for Grant Budget Restoration. Each maps to roadmap phases.
 
 ### Grant Budget UI
 
-- [ ] **BGUI-01**: User sees 4 summary cards: Total Revenue (actual vs budget), Total Expenses (actual vs budget), Budget Remaining ($+%), Overall Burn Rate
-- [ ] **BGUI-02**: User can toggle between Table View and Chart View
-- [ ] **BGUI-03**: Table View shows per-grant rows with Budget, Actual, Remaining, % Spent progress bar, and status badge (On Track / Caution / Over Budget)
+- [x] **BGUI-01**: User sees 4 summary cards: Total Revenue (actual vs budget), Total Expenses (actual vs budget), Budget Remaining ($+%), Overall Burn Rate
+- [x] **BGUI-02**: User can toggle between Table View and Chart View
+- [x] **BGUI-03**: Table View shows per-grant rows with Budget, Actual, Remaining, % Spent progress bar, and status badge (On Track / Caution / Over Budget)
 - [ ] **BGUI-04**: Chart View shows expense distribution pie chart, budget vs actual horizontal bar chart, and individual grant cards with mini pie charts
 - [ ] **BGUI-05**: User can click any grant to open a detail modal with account-level line-item breakdown and expense distribution pie chart
-- [ ] **BGUI-06**: Grant Budget section adapts to dark/light theme using existing useChartConfig pattern
+- [x] **BGUI-06**: Grant Budget section adapts to dark/light theme using existing useChartConfig pattern
 
 ## Future Requirements
 
@@ -48,12 +48,12 @@ Requirements for Grant Budget Restoration. Each maps to roadmap phases.
 | BGTD-04 | Phase 30 | Complete |
 | BGTD-05 | Phase 30 | Complete |
 | BGTD-06 | Phase 30 | Complete |
-| BGUI-01 | Phase 31 | Pending |
-| BGUI-02 | Phase 31 | Pending |
-| BGUI-03 | Phase 31 | Pending |
+| BGUI-01 | Phase 31 | Complete |
+| BGUI-02 | Phase 31 | Complete |
+| BGUI-03 | Phase 31 | Complete |
 | BGUI-04 | Phase 32 | Pending |
 | BGUI-05 | Phase 32 | Pending |
-| BGUI-06 | Phase 31 | Pending |
+| BGUI-06 | Phase 31 | Complete |
 
 **Coverage:**
 - v3.1 requirements: 12 total
