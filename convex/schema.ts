@@ -50,6 +50,48 @@ export default defineSchema({
     .index("by_reportType", ["reportType"])
     .index("by_fetchedAt", ["fetchedAt"]),
 
+  budgetCache: defineTable({
+    // QB entity references
+    budgetId: v.string(),          // QB Budget entity ID
+    budgetName: v.string(),        // e.g. "FY2025 Budget"
+    classId: v.string(),           // QB Class entity ID (empty string if no class filter)
+    className: v.string(),         // e.g. "PCFP Grant" or "All"
+
+    // Revenue figures
+    revenueActual: v.number(),
+    revenueBudget: v.number(),
+    revenueVariance: v.number(),
+    revenuePercentUsed: v.number(),
+
+    // Expense figures
+    expenseActual: v.number(),
+    expenseBudget: v.number(),
+    expenseVariance: v.number(),
+    expensePercentUsed: v.number(),
+
+    // Net figures
+    netActual: v.number(),
+    netBudget: v.number(),
+    netVariance: v.number(),
+    netPercentUsed: v.number(),
+
+    // Account-level line items (JSON string of { category, group, actual, budget, variance }[])
+    lineItems: v.string(),
+
+    // Fiscal period
+    periodStart: v.string(),       // ISO date e.g. "2025-01-01"
+    periodEnd: v.string(),         // ISO date e.g. "2025-12-31"
+
+    // Grant matching (filled during sync)
+    grantId: v.optional(v.id("grants")),
+
+    // Sync metadata
+    syncedAt: v.number(),
+  })
+    .index("by_budgetId_classId", ["budgetId", "classId"])
+    .index("by_grantId", ["grantId"])
+    .index("by_syncedAt", ["syncedAt"]),
+
   googleSheetsConfig: defineTable({
     spreadsheetId: v.string(),
     sheetName: v.string(),
