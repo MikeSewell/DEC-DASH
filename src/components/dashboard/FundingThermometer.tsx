@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { FALLBACK_FUNDING_GOAL } from "@/lib/dashboardFallbacks";
 import { formatCurrency } from "@/lib/utils";
 
 const FUNDING_GOAL_TARGET = 500_000;
@@ -18,13 +17,12 @@ export default function FundingThermometer() {
 
   const grantStats = useQuery(api.grants.getStats);
 
-  // Determine data source
+  // Single source of truth: grants table (same as Grants tab)
   const isLoading = grantStats === undefined;
-  const hasLiveData = grantStats !== undefined && grantStats !== null && grantStats.totalAwarded > 0;
+  const current = grantStats?.totalAwarded ?? 0;
+  const hasLiveData = current > 0;
 
-  const current = hasLiveData ? grantStats!.totalAwarded : FALLBACK_FUNDING_GOAL.current;
-  const goal = hasLiveData ? FUNDING_GOAL_TARGET : FALLBACK_FUNDING_GOAL.goal;
-  const isFallback = !hasLiveData;
+  const goal = FUNDING_GOAL_TARGET;
 
   const percentage = Math.min(100, goal > 0 ? (current / goal) * 100 : 0);
   const fillHeight = mounted ? `${percentage}%` : "0%";
@@ -76,7 +74,7 @@ export default function FundingThermometer() {
       <div className="flex flex-col justify-center gap-4 flex-1">
         <div>
           <p className="text-xs text-muted uppercase tracking-wide mb-1">
-            {isFallback ? FALLBACK_FUNDING_GOAL.label : "FY Funding Goal"}
+            FY Funding Goal
           </p>
           <p className="text-4xl font-black text-primary leading-none">
             {percentage.toFixed(1)}%
@@ -98,17 +96,7 @@ export default function FundingThermometer() {
             Remaining: <span className="font-semibold text-foreground">{formatCurrency(Math.max(0, goal - current))}</span>
           </p>
         </div>
-
-        {/* Fallback indicator */}
-        {isFallback && (
-          <p className="text-xs text-muted/50">
-            Sample data &mdash;{" "}
-            <a href="/grants" className="hover:underline">
-              import grant data
-            </a>{" "}
-            for live figures
-          </p>
-        )}
+        {!hasLiveData && <p className="text-xs text-muted/60">No grant data available yet.</p>}
       </div>
     </div>
   );

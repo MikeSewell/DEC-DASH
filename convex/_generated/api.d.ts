@@ -21,6 +21,8 @@ import type * as allocationTypes from "../allocationTypes.js";
 import type * as analytics from "../analytics.js";
 import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
+import type * as budgetInternal from "../budgetInternal.js";
+import type * as budgetQueries from "../budgetQueries.js";
 import type * as clientGoals from "../clientGoals.js";
 import type * as clients from "../clients.js";
 import type * as constantContact from "../constantContact.js";
@@ -83,6 +85,8 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   auditLog: typeof auditLog;
   auth: typeof auth;
+  budgetInternal: typeof budgetInternal;
+  budgetQueries: typeof budgetQueries;
   clientGoals: typeof clientGoals;
   clients: typeof clients;
   constantContact: typeof constantContact;

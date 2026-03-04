@@ -2,16 +2,33 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireRole } from "./users";
 
+function normalizeFundingStage(value: string | undefined): string {
+  const lower = (value ?? "").toLowerCase().trim();
+  if (!lower) return "";
+  if (lower.includes("active")) return "active";
+  if (lower.includes("committed")) return "committed";
+  if (lower.includes("pending")) return "pending";
+  if (lower.includes("cultivating")) return "cultivating";
+  if (lower.includes("denied") || lower.includes("decline")) return "denied";
+  return lower;
+}
+
 export const list = query({
   args: {
     fundingStage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (args.fundingStage) {
-      return ctx.db
+      const exact = await ctx.db
         .query("grants")
         .withIndex("by_fundingStage", (q) => q.eq("fundingStage", args.fundingStage!))
         .collect();
+      if (exact.length > 0) return exact;
+
+      // Backward compatibility for historical values like "Active Grants".
+      const target = normalizeFundingStage(args.fundingStage);
+      const all = await ctx.db.query("grants").collect();
+      return all.filter((g) => normalizeFundingStage(g.fundingStage) === target);
     }
     return ctx.db.query("grants").collect();
   },
@@ -38,7 +55,8 @@ export const getStats = query({
     for (const grant of allGrants) {
       byStage[grant.fundingStage] = (byStage[grant.fundingStage] || 0) + 1;
 
-      if (grant.fundingStage === "active" || grant.fundingStage === "committed") {
+      const normalizedStage = normalizeFundingStage(grant.fundingStage);
+      if (normalizedStage === "active" || normalizedStage === "committed") {
         totalAwarded += grant.amountAwarded ?? 0;
       }
 

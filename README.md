@@ -28,6 +28,7 @@ The UI uses a **warm, organic** aesthetic inspired by community and nature — a
 - **Executive Snapshot** — Revenue, expenses, cash flow, grant utilization at a glance
 - **Financial Dashboard** — QuickBooks-synced P&L, expense breakdowns, vendor spend
 - **Grant Tracker** — Full grant pipeline across 5 funding stages (Active, Committed, Pending, Cultivating, Denied) with 20 fields per grant; imported from Grant Matrix Excel; detail pages with contact info, reporting timelines with countdown badges, and QB budget-vs-spending; inline editing for admin/manager users; fuzzy-matches grants to QuickBooks classes for live spending data
+- **Grant Budget Dashboard** — Table and Chart views for grant budget data sourced from QuickBooks; summary cards (total budget, spent, remaining, grant count) with a funding thermometer; Chart View with expense distribution pie chart, budget-vs-actual horizontal bar chart, and individual grant mini-pie cards; click any grant row or card to open a detail modal with account-level line items and grant-specific expense breakdown
 - **Grant & Budget Dashboard** — Google Sheets-synced grant status, burn rates, deadlines (dashboard widgets)
 - **Unified Client & Program Management** — Combined `/clients` page with program tabs, role-based filtering (lawyers see only legal clients, psychologists see only co-parent clients), per-client intake forms, program CRUD, and search
 - **AI Director** — OpenAI-powered assistant with document knowledge base for strategic Q&A

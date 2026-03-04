@@ -77,7 +77,7 @@ Each task was committed atomically:
 1. **Task 1: Implement Chart View** - `a895e89` (feat) — Chart View + mini-pie cards + clickable table rows
 2. **Task 2: Grant Detail Modal** — included in `a895e89` (both tasks implemented in single atomic file write)
 
-**Plan metadata:** (docs commit to follow)
+**Plan metadata:** `cddadb7` (docs: complete plan 01)
 
 ## Files Created/Modified
 - `src/components/dashboard/GrantBudget.tsx` - Full Chart View + Grant Detail Modal added; table rows made clickable; useChartConfig expanded; PALETTE, getGrantName, truncateLabel, getStatusInfo helpers added
@@ -102,6 +102,15 @@ None - no external service configuration required.
 - Phase 32 Plan 01 is the only plan in the phase — phase is now complete
 - GrantBudget.tsx has full feature set: summary cards (BGUI-01), view toggle (BGUI-02), table view (BGUI-03), chart view (BGUI-04), detail modal (BGUI-05)
 - Grant Budget dashboard section is production-ready when QB budget data is available
+
+## Self-Check: PASSED
+
+- src/components/dashboard/GrantBudget.tsx — FOUND
+- Commit a895e89 (feat: Chart View + modal) — FOUND
+- Commit cddadb7 (docs: plan metadata) — FOUND
+- .planning/phases/32-grant-budget-charts-and-detail/32-01-SUMMARY.md — FOUND
+- Zero TypeScript errors in GrantBudget.tsx — CONFIRMED
+- BGUI-04 and BGUI-05 requirements marked complete — CONFIRMED
 
 ---
 *Phase: 32-grant-budget-charts-and-detail*
