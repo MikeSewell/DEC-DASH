@@ -72,7 +72,15 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ### Active
 
-(No active milestone — v3.0 complete, next milestone TBD)
+## Current Milestone: v3.1 Grant Budget Restoration
+
+**Goal:** Restore the full Grant Budget Overview dashboard section with real QB Budget API integration, tabbed table/chart views, and per-grant detail drill-down.
+
+**Target features:**
+- QB Budget API integration (Budget query + BudgetVsActuals report per budget/class)
+- Budget data caching in Convex with cron sync
+- Rich Grant Budget component: summary cards, table view with progress bars and status badges, chart view with pie/bar charts
+- Detail modal with account-level line-item breakdown per grant
 
 ### Out of Scope
 
@@ -100,7 +108,9 @@ When Kareem opens this app each morning, he immediately sees the financial pictu
 
 ## Context
 
-Shipped v3.0 Dashboard Redesign — the dashboard is now a data-dense command center with dummy data fallbacks for all sections, dark/light theme toggle with old-app-inspired dark palette, rich visual elements (funding thermometer, progress bars, urgency calendar, donation source cards), tighter layout, and executive snapshot. Calendar cron correctly syncs only admin-selected calendars. Production VPS still running v2.1 build — v3.0 has not been deployed yet.
+Shipped v3.0 Dashboard Redesign — data-dense command center with dummy data fallbacks, dark/light theme, rich visual elements (funding thermometer, progress bars, urgency calendar, donation source cards). Calendar cron correctly syncs only admin-selected calendars. Production VPS still running v2.1 build — v3.0 has not been deployed yet.
+
+Starting v3.1 — restoring the full Grant Budget Overview section from the old Electron desktop app (AutomateImpact/Desktop_template). The old version had a tabbed table/chart interface, 4 summary cards, per-grant status badges with progress bars, chart view with pie/bar visualizations, and a detail modal with account-level line-item drill-down. Data was fetched via n8n from QB Budget entities and BudgetVsActuals reports per budget/class combination — this needs to be replicated as a Convex action.
 
 Tech stack: Next.js 15, Convex backend, QuickBooks API, Constant Contact API, Google Sheets API (grants only), Google Calendar API, OpenAI Assistants API.
 26 database tables, 100+ backend functions, 14 routes, 4 AI systems, 5 third-party integrations.
@@ -172,4 +182,4 @@ Known operational notes:
 | Calendar cleanup after sync loop | cleanupDeselectedCalendars runs after per-calendar sync completes — prevents premature cleanup on partial failure | ✓ Good — safe ordering, full scan acceptable for <500 rows |
 
 ---
-*Last updated: 2026-03-02 after v3.0 milestone completion*
+*Last updated: 2026-03-04 after v3.1 milestone start*
