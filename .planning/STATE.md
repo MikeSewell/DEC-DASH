@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Grant Budget Restoration
-status: unknown
-last_updated: "2026-03-04T16:15:30.318Z"
+status: complete
+last_updated: "2026-03-04T16:33:35Z"
 progress:
   total_phases: 7
   completed_phases: 7
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 13
+  completed_plans: 13
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-04)
 
 **Core value:** When Kareem opens this app each morning, he immediately sees the financial picture, client activity, upcoming deadlines, and what needs his attention — without switching tools or digging through data.
-**Current focus:** Phase 31 — Grant Budget Core UI
+**Current focus:** Phase 32 — Grant Budget Charts and Detail (Complete)
 
 ## Current Position
 
-Phase: 31 of 32 (Grant Budget Core UI)
-Plan: 1 of 2 in current phase — Plan 01 complete
-Status: In Progress
-Last activity: 2026-03-04 — Completed 31-01-PLAN.md (Grant Budget summary cards, table view, hooks)
+Phase: 32 of 32 (Grant Budget Charts and Detail)
+Plan: 1 of 1 in current phase — Plan 01 complete
+Status: Complete (milestone v3.1 achieved)
+Last activity: 2026-03-04 — Completed 32-01-PLAN.md (Chart View: Pie+Bar+mini-pie cards, Grant Detail Modal with lineItems table)
 
-Progress: [###░░░░░░] 30%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [###░░░░░░] 30%
 | 30 P01 | 1 | 90s | 90s |
 | 30 P02 | 1 | 120s | 120s |
 | 31 P01 | 1 | 105s | 105s |
+| 32 P01 | 1 | 240s | 240s |
 
 **Recent Trend:**
 - Last 5 plans: 105s avg
@@ -68,6 +69,9 @@ Recent decisions affecting v3.1:
 - [Phase 31-01]: GrantBudget exclusively uses budgetCache pipeline; grants.list and useBudgetVsActuals removed from component
 - [Phase 31-01]: Chart view is a placeholder in Phase 31; full chart implementation is Phase 32 scope
 - [Phase 31-01]: className === "All" rows filtered at component level since aggregate already shown in summary cards
+- [Phase 32-01]: Tasks 1 and 2 implemented atomically in single file write — both chart view and detail modal committed together
+- [Phase 32-01]: GrantDetailModal extracted as local function component in same file to share types and chart config via props
+- [Phase 32-01]: lineItems pie chart filters to actual > 0 only to avoid zero-value wedges in expense distribution chart
 
 ### Pending Todos
 
@@ -82,5 +86,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed 31-01-PLAN.md — Grant Budget core UI (summary cards, table view, hooks)
+Stopped at: Completed 32-01-PLAN.md — Grant Budget Charts and Detail (Chart View + Detail Modal)
 Resume file: None

@@ -105,7 +105,7 @@ Full details: `milestones/v3.0-ROADMAP.md`
 
 - [x] **Phase 30: QB Budget Data Pipeline** — Fetch, parse, and cache budget vs actuals data from QuickBooks (completed 2026-03-04)
 - [x] **Phase 31: Grant Budget Core UI** — Summary cards, table view with progress bars and status badges, theme integration (completed 2026-03-04)
-- [ ] **Phase 32: Grant Budget Charts and Detail** — Chart view with pie/bar visualizations, per-grant detail modal
+- [x] **Phase 32: Grant Budget Charts and Detail** — Chart view with pie/bar visualizations, per-grant detail modal (completed 2026-03-04)
 
 ## Phase Details
 
@@ -183,4 +183,4 @@ Plans:
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 30. QB Budget Data Pipeline | 2/2 | Complete    | 2026-03-04 | - |
 | 31. Grant Budget Core UI | 1/1 | Complete    | 2026-03-04 | - |
-| 32. Grant Budget Charts and Detail | v3.1 | 0/TBD | Not started | - |
+| 32. Grant Budget Charts and Detail | 1/1 | Complete   | 2026-03-04 | - |
