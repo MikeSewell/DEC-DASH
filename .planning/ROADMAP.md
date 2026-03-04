@@ -9,6 +9,7 @@
 - ✅ **v2.0 Data Foundation** — Phases 16-22 (shipped 2026-03-02)
 - ✅ **v2.1 Polish & Deploy** — Phases 23-25 (shipped 2026-03-02)
 - ✅ **v3.0 Dashboard Redesign** — Phases 26-29 (shipped 2026-03-02)
+- 🚧 **v3.1 Grant Budget Restoration** — Phases 30-32 (in progress)
 
 ## Phases
 
@@ -98,6 +99,51 @@ Full details: `milestones/v3.0-ROADMAP.md`
 
 </details>
 
+### 🚧 v3.1 Grant Budget Restoration (In Progress)
+
+**Milestone Goal:** Restore the full Grant Budget Overview dashboard section with real QB Budget API integration, tabbed table/chart views, and per-grant detail drill-down.
+
+- [ ] **Phase 30: QB Budget Data Pipeline** — Fetch, parse, and cache budget vs actuals data from QuickBooks
+- [ ] **Phase 31: Grant Budget Core UI** — Summary cards, table view with progress bars and status badges, theme integration
+- [ ] **Phase 32: Grant Budget Charts and Detail** — Chart view with pie/bar visualizations, per-grant detail modal
+
+## Phase Details
+
+### Phase 30: QB Budget Data Pipeline
+**Goal**: Live budget vs actuals data for every grant is fetched from QuickBooks, parsed into structured records, and cached in Convex on the existing 15-minute cron cycle
+**Depends on**: Nothing (QB OAuth is already configured and working)
+**Requirements**: BGTD-01, BGTD-02, BGTD-03, BGTD-04, BGTD-05, BGTD-06
+**Success Criteria** (what must be TRUE):
+  1. Running the QB sync action populates the budgetCache Convex table with at least one budget record per active QB budget
+  2. Each cached record contains revenue actuals, expense actuals, net revenue, budget amounts, and account-level line items
+  3. Each budget record is correctly associated with a QB Class (grant program) via the class mapping fetch
+  4. The existing QB 15-minute cron includes budget sync — budget data refreshes automatically without manual intervention
+  5. A budget record with no matching QB data returns a graceful empty state rather than crashing the sync
+**Plans**: TBD
+
+### Phase 31: Grant Budget Core UI
+**Goal**: Users can view the Grant Budget Overview section on the dashboard with summary cards, toggle between Table and Chart views, and see per-grant rows with spend progress in a theme-consistent display
+**Depends on**: Phase 30
+**Requirements**: BGUI-01, BGUI-02, BGUI-03, BGUI-06
+**Success Criteria** (what must be TRUE):
+  1. User sees 4 summary cards displaying Total Revenue (actual vs budget), Total Expenses (actual vs budget), Budget Remaining ($ and %), and Overall Burn Rate
+  2. User can click a toggle to switch between Table View and Chart View — the active view persists within the session
+  3. Table View renders one row per grant with Budget, Actual, Remaining, a % Spent progress bar, and a status badge (On Track / Caution / Over Budget)
+  4. The Grant Budget section renders correctly in both dark and light themes with no unstyled elements or contrast failures
+**Plans**: TBD
+
+### Phase 32: Grant Budget Charts and Detail
+**Goal**: Users can explore budget data visually via chart view and drill into any individual grant to see a full account-level line-item breakdown
+**Depends on**: Phase 31
+**Requirements**: BGUI-04, BGUI-05
+**Success Criteria** (what must be TRUE):
+  1. Chart View displays an expense distribution pie chart showing each grant's share of total spend
+  2. Chart View displays a horizontal bar chart comparing budget vs actual spend per grant
+  3. Each grant in Chart View shows an individual mini pie chart card with its own budget vs actual ratio
+  4. Clicking any grant row (Table View) or grant card (Chart View) opens a detail modal showing account-level line items and an expense distribution pie chart specific to that grant
+  5. The detail modal closes cleanly and the user returns to their prior Table or Chart view state
+**Plans**: TBD
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -130,3 +176,6 @@ Full details: `milestones/v3.0-ROADMAP.md`
 | 27. Theme Toggle | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 28. Visual Elements | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
+| 30. QB Budget Data Pipeline | v3.1 | 0/TBD | Not started | - |
+| 31. Grant Budget Core UI | v3.1 | 0/TBD | Not started | - |
+| 32. Grant Budget Charts and Detail | v3.1 | 0/TBD | Not started | - |

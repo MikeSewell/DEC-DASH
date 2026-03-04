@@ -42,24 +42,24 @@ Requirements for Grant Budget Restoration. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BGTD-01 | — | Pending |
-| BGTD-02 | — | Pending |
-| BGTD-03 | — | Pending |
-| BGTD-04 | — | Pending |
-| BGTD-05 | — | Pending |
-| BGTD-06 | — | Pending |
-| BGUI-01 | — | Pending |
-| BGUI-02 | — | Pending |
-| BGUI-03 | — | Pending |
-| BGUI-04 | — | Pending |
-| BGUI-05 | — | Pending |
-| BGUI-06 | — | Pending |
+| BGTD-01 | Phase 30 | Pending |
+| BGTD-02 | Phase 30 | Pending |
+| BGTD-03 | Phase 30 | Pending |
+| BGTD-04 | Phase 30 | Pending |
+| BGTD-05 | Phase 30 | Pending |
+| BGTD-06 | Phase 30 | Pending |
+| BGUI-01 | Phase 31 | Pending |
+| BGUI-02 | Phase 31 | Pending |
+| BGUI-03 | Phase 31 | Pending |
+| BGUI-04 | Phase 32 | Pending |
+| BGUI-05 | Phase 32 | Pending |
+| BGUI-06 | Phase 31 | Pending |
 
 **Coverage:**
 - v3.1 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12 ⚠️
+- Mapped to phases: 12
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-04*
-*Last updated: 2026-03-04 after initial definition*
+*Last updated: 2026-03-04 after roadmap creation*
