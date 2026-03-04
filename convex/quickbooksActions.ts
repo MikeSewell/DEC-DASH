@@ -352,14 +352,74 @@ export const fetchBudgetVsActuals = internalAction({
       }
     }
 
+    // Write to quickbooksCache for backward compatibility (existing UI components still consume this)
     await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
       reportType: "budget_vs_actuals",
       data: JSON.stringify(results),
       periodStart: startDate,
       periodEnd: endDate,
     });
+
+    // Read grants for fuzzy matching and write structured records to budgetCache
+    const grants = await ctx.runQuery(internal.budgetInternal.getAllGrants);
+
+    const budgetRecords = results.map((parsed: any, idx: number) => {
+      const combo = combinations[idx];
+      const matchedGrantId = matchBudgetToGrant(combo.className, grants);
+      return {
+        budgetId: combo.budgetId,
+        budgetName: combo.budgetName,
+        classId: combo.classId,
+        className: combo.className,
+        revenueActual: parsed.revenue?.actual ?? 0,
+        revenueBudget: parsed.revenue?.budget ?? 0,
+        revenueVariance: parsed.revenue?.variance ?? 0,
+        revenuePercentUsed: parsed.revenue?.percentUsed ?? 0,
+        expenseActual: parsed.expenses?.actual ?? 0,
+        expenseBudget: parsed.expenses?.budget ?? 0,
+        expenseVariance: parsed.expenses?.variance ?? 0,
+        expensePercentUsed: parsed.expenses?.percentUsed ?? 0,
+        netActual: parsed.net?.actual ?? 0,
+        netBudget: parsed.net?.budget ?? 0,
+        netVariance: parsed.net?.variance ?? 0,
+        netPercentUsed: parsed.net?.percentUsed ?? 0,
+        lineItems: JSON.stringify(parsed.lineItems ?? []),
+        periodStart: startDate,
+        periodEnd: endDate,
+        grantId: matchedGrantId ?? undefined,
+        syncedAt: Date.now(),
+      };
+    });
+
+    if (budgetRecords.length > 0) {
+      await ctx.runMutation(internal.budgetInternal.batchUpsertBudgetRecords, {
+        records: JSON.stringify(budgetRecords),
+      });
+    }
   },
 });
+
+// Fuzzy-match a QB class name to a grant record by fundingSource / programName
+function matchBudgetToGrant(
+  className: string,
+  grants: Array<{ _id: any; fundingSource: string; programName?: string | null }>
+): any | null {
+  const classLower = (className ?? "").toLowerCase().trim();
+  if (!classLower || classLower === "all") return null;
+
+  for (const grant of grants) {
+    const funderLower = (grant.fundingSource ?? "").toLowerCase().trim();
+    const programLower = (grant.programName ?? "").toLowerCase().trim();
+    if (
+      funderLower.includes(classLower) ||
+      classLower.includes(funderLower) ||
+      (programLower && (programLower.includes(classLower) || classLower.includes(programLower)))
+    ) {
+      return grant._id;
+    }
+  }
+  return null;
+}
 
 // Parse a single BudgetVsActuals report response
 function parseBudgetVsActualsReport(report: any, budgetName: string, className: string) {

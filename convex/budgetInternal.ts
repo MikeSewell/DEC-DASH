@@ -99,3 +99,10 @@ export const getAllBudgetRecords = internalQuery({
     return await ctx.db.query("budgetCache").collect();
   },
 });
+
+// Get all grants for fuzzy matching during budget sync
+export const getAllGrants = internalQuery({
+  handler: async (ctx) => {
+    return await ctx.db.query("grants").collect();
+  },
+});
