@@ -3,7 +3,6 @@
 import { useQuickBooksConfig, useAccounts, useProfitAndLoss, useTrends } from "@/hooks/useQuickBooks";
 import { StatCardSkeleton } from "@/components/dashboard/skeletons/StatCardSkeleton";
 import { cn, formatDollars, formatCurrencyExact, timeAgo } from "@/lib/utils";
-import { FALLBACK_QB_SNAPSHOT } from "@/lib/dashboardFallbacks";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -95,84 +94,18 @@ export default function ExecutiveSnapshot() {
   // Determine most recent fetchedAt for timestamp
   const latestFetchedAt = Math.max(accounts?.fetchedAt ?? 0, pnl?.fetchedAt ?? 0);
 
-  // No cached data and not connected — show fallback
-  if (isDisconnected && !hasCachedData) {
+  // No data available — show empty state prompting connection
+  if (!hasCachedData) {
     return (
-      <div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
-          {/* Card 1: Cash on Hand (fallback) */}
-          <StatCard
-            icon={
-              <svg
-                className="h-5 w-5 text-primary"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
-                />
-              </svg>
-            }
-            value={formatDollars(FALLBACK_QB_SNAPSHOT.cashOnHand)}
-            label="Cash on Hand"
-            tooltip={formatCurrencyExact(FALLBACK_QB_SNAPSHOT.cashOnHand)}
-            accentColor="text-primary"
-          />
-
-          {/* Card 2: Revenue YTD (fallback) */}
-          <StatCard
-            icon={
-              <svg
-                className="h-5 w-5 text-success"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
-                />
-              </svg>
-            }
-            value={formatDollars(FALLBACK_QB_SNAPSHOT.totalRevenue)}
-            label="Revenue YTD"
-            tooltip={formatCurrencyExact(FALLBACK_QB_SNAPSHOT.totalRevenue)}
-            accentColor="text-success"
-            trend={FALLBACK_QB_SNAPSHOT.revenueTrend}
-          />
-
-          {/* Card 3: Total Expenses (fallback) */}
-          <StatCard
-            icon={
-              <svg
-                className="h-5 w-5 text-danger"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z"
-                />
-              </svg>
-            }
-            value={formatDollars(FALLBACK_QB_SNAPSHOT.totalExpenses)}
-            label="Total Expenses"
-            tooltip={formatCurrencyExact(FALLBACK_QB_SNAPSHOT.totalExpenses)}
-            accentColor="text-danger"
-            trend={FALLBACK_QB_SNAPSHOT.expensesTrend}
-          />
+      <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+          </svg>
         </div>
-        <p className="text-xs text-muted/50 text-right mt-3">
-          Sample data &mdash; <a href="/admin" className="hover:underline">connect QuickBooks</a> for live figures
+        <p className="text-sm font-medium text-foreground">No financial data available</p>
+        <p className="text-xs text-muted">
+          <a href="/admin" className="text-primary hover:underline">Connect QuickBooks</a> to see cash, revenue, and expense figures.
         </p>
       </div>
     );

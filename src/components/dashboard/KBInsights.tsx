@@ -5,7 +5,6 @@ import { api } from "../../../convex/_generated/api";
 import { useState } from "react";
 import { cn, timeAgo } from "@/lib/utils";
 import { StatCardSkeleton } from "@/components/dashboard/skeletons/StatCardSkeleton";
-import { FALLBACK_KB_METRICS, FALLBACK_KB_SUMMARY_BULLETS } from "@/lib/dashboardFallbacks";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -210,16 +209,15 @@ export default function KBInsights() {
           ))}
         </div>
       ) : (
-        /* Fallback metric cards — shown when no real metrics extracted */
-        <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {FALLBACK_KB_METRICS.map((metric) => (
-              <MetricCard key={metric.key} metric={{ ...metric }} />
-            ))}
+        /* No metrics extracted yet */
+        <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
           </div>
-          <p className="text-xs text-muted/50 mt-3 text-right">
-            Sample data — upload documents in Knowledge Base and click Extract Metrics for live figures
-          </p>
+          <p className="text-sm font-medium text-foreground">No metrics extracted yet</p>
+          <p className="text-xs text-muted">Upload documents to the Knowledge Base, then click Extract Metrics.</p>
         </div>
       )}
 
@@ -294,20 +292,10 @@ export default function KBInsights() {
             ))}
           </ul>
         ) : (
-          /* Fallback summary bullets */
-          <div>
-            <ul className="space-y-2">
-              {FALLBACK_KB_SUMMARY_BULLETS.map((bullet, i) => (
-                <li key={i} className="flex gap-2 text-sm text-foreground leading-relaxed">
-                  <span className="text-primary mt-0.5 shrink-0">&#8226;</span>
-                  <span>{bullet}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted/50 mt-3">
-              Sample summary — generate from real KB documents for live insights
-            </p>
-          </div>
+          /* No summary generated yet */
+          <p className="text-sm text-muted text-center py-4">
+            No summary generated yet. Click Regenerate to create one from your KB documents.
+          </p>
         )}
 
         {/* Inline error */}
