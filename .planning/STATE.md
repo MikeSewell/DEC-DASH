@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Grant Budget Restoration
-status: complete
-last_updated: "2026-03-04T16:33:35Z"
+status: unknown
+last_updated: "2026-03-04T16:39:28.347Z"
 progress:
-  total_phases: 7
-  completed_phases: 7
+  total_phases: 8
+  completed_phases: 8
   total_plans: 13
   completed_plans: 13
 ---

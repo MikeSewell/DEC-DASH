@@ -183,4 +183,4 @@ Plans:
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 30. QB Budget Data Pipeline | 2/2 | Complete    | 2026-03-04 | - |
 | 31. Grant Budget Core UI | 1/1 | Complete    | 2026-03-04 | - |
-| 32. Grant Budget Charts and Detail | 1/1 | Complete   | 2026-03-04 | - |
+| 32. Grant Budget Charts and Detail | 1/1 | Complete    | 2026-03-04 | - |
