@@ -145,7 +145,9 @@ Plans:
   3. Each grant in Chart View shows an individual mini pie chart card with its own budget vs actual ratio
   4. Clicking any grant row (Table View) or grant card (Chart View) opens a detail modal showing account-level line items and an expense distribution pie chart specific to that grant
   5. The detail modal closes cleanly and the user returns to their prior Table or Chart view state
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 32-01-PLAN.md — Chart view (Pie + Bar + grant cards) and detail modal (line items + expense pie)
 
 ## Progress
 
