@@ -179,6 +179,6 @@ Plans:
 | 27. Theme Toggle | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 28. Visual Elements | v3.0 | 2/2 | Complete | 2026-03-02 |
 | 29. Dashboard Polish + Infrastructure | v3.0 | 2/2 | Complete | 2026-03-02 |
-| 30. QB Budget Data Pipeline | v3.1 | 0/2 | Not started | - |
+| 30. QB Budget Data Pipeline | 1/2 | In Progress|  | - |
 | 31. Grant Budget Core UI | v3.1 | 0/TBD | Not started | - |
 | 32. Grant Budget Charts and Detail | v3.1 | 0/TBD | Not started | - |
