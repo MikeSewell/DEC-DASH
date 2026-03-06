@@ -518,6 +518,9 @@ function SettingsPanel() {
         )}
       </div>
 
+      {/* Funding Goal */}
+      <FundingGoalConfig />
+
       {/* Static app info */}
       <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
         <h3 className="text-base font-semibold text-foreground mb-4">
@@ -548,6 +551,82 @@ function SettingsPanel() {
           dashboard supports light and dark modes.
         </p>
       </div>
+    </div>
+  );
+}
+
+function FundingGoalConfig() {
+  const goalSetting = useQuery(api.settings.get, { key: "funding_goal" });
+  const setSetting = useMutation(api.settings.set);
+  const [goalValue, setGoalValue] = useState("");
+  const [initialized, setInitialized] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    if (goalSetting !== undefined && !initialized) {
+      setGoalValue(goalSetting?.value ?? "500000");
+      setInitialized(true);
+    }
+  }, [goalSetting, initialized]);
+
+  const currentGoal = goalSetting?.value ? Number(goalSetting.value) : 500000;
+  const hasChanges = goalValue !== String(currentGoal);
+
+  async function handleSave() {
+    const parsed = Number(goalValue);
+    if (isNaN(parsed) || parsed <= 0) return;
+    setSaving(true);
+    setSaveMessage("");
+    try {
+      await setSetting({ key: "funding_goal", value: String(Math.round(parsed)) });
+      setSaveMessage("Funding goal saved.");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch {
+      setSaveMessage("Failed to save funding goal.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (goalSetting === undefined) return null;
+
+  return (
+    <div className="bg-surface rounded-2xl border border-border p-6 shadow-[var(--warm-shadow-sm)]">
+      <h3 className="text-base font-semibold text-foreground mb-1">
+        Yearly Fundraising Goal
+      </h3>
+      <p className="text-sm text-muted mb-4">
+        Set the annual fundraising target displayed on the Funding Thermometer. Default: $500,000.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">$</span>
+          <input
+            type="number"
+            value={goalValue}
+            onChange={(e) => setGoalValue(e.target.value)}
+            min={1}
+            step={1000}
+            className="w-full pl-7 pr-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving || !hasChanges || isNaN(Number(goalValue)) || Number(goalValue) <= 0}
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {saving ? "Saving..." : "Save Goal"}
+        </button>
+      </div>
+      {saveMessage && (
+        <p className={cn(
+          "mt-2 text-sm",
+          saveMessage.includes("saved") ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+        )}>
+          {saveMessage}
+        </p>
+      )}
     </div>
   );
 }

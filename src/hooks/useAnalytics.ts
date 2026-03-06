@@ -49,3 +49,17 @@ export function useStaffActionStats() {
 export function useCategorizationStats() {
   return useQuery(api.analytics.getCategorizationStats);
 }
+
+export function useLegalInsights(programId?: string) {
+  return useQuery(
+    api.analytics.getLegalInsights,
+    programId ? { programId: programId as any } : {}
+  );
+}
+
+export function useCpcInsights(programId?: string) {
+  return useQuery(
+    api.analytics.getCpcInsights,
+    programId ? { programId: programId as any } : {}
+  );
+}

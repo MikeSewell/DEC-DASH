@@ -81,6 +81,30 @@ export const getBudgetSummary = query({
     // Find the latest syncedAt across all records
     const lastSyncedAt = Math.max(...records.map((r) => r.syncedAt));
 
+    // Compute months elapsed from period start to now (or period end, whichever is earlier)
+    const periodStartDate = new Date(records[0]?.periodStart ?? "");
+    const periodEndDate = new Date(records[0]?.periodEnd ?? "");
+    const now = new Date();
+    const effectiveEnd = now < periodEndDate ? now : periodEndDate;
+    const monthsElapsed = Math.max(
+      1,
+      (effectiveEnd.getFullYear() - periodStartDate.getFullYear()) * 12 +
+        (effectiveEnd.getMonth() - periodStartDate.getMonth()) +
+        (effectiveEnd.getDate() >= periodStartDate.getDate() ? 1 : 0)
+    );
+
+    const monthlyCashBurn = Math.round(totalExpenseActual / monthsElapsed);
+    const expenseRatio =
+      totalRevenueActual > 0
+        ? Math.round((totalExpenseActual / totalRevenueActual) * 1000) / 10
+        : 0;
+    const operatingMargin =
+      totalRevenueActual > 0
+        ? Math.round(
+            ((totalRevenueActual - totalExpenseActual) / totalRevenueActual) * 1000
+          ) / 10
+        : 0;
+
     return {
       totalRevenueActual,
       totalRevenueBudget,
@@ -89,6 +113,10 @@ export const getBudgetSummary = query({
       budgetRemaining,
       budgetRemainingPct,
       burnRate,
+      monthlyCashBurn,
+      expenseRatio,
+      operatingMargin,
+      monthsElapsed,
       recordCount: filtered.length,
       lastSyncedAt,
       // Period from any record (they all share the same sync period)

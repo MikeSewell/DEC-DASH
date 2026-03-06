@@ -71,11 +71,33 @@ export const getStats = query({
       }
     }
 
+    // Success rate: committed / (committed + denied)
+    const committedGrants = allGrants.filter(
+      (g) => normalizeFundingStage(g.fundingStage) === "committed"
+    );
+    const deniedGrants = allGrants.filter(
+      (g) => normalizeFundingStage(g.fundingStage) === "denied"
+    );
+    const successDenomCount = committedGrants.length + deniedGrants.length;
+    const committedTotal = committedGrants.reduce((s, g) => s + (g.amountAwarded ?? 0), 0);
+    const deniedTotal = deniedGrants.reduce((s, g) => s + (g.amountAwarded ?? 0), 0);
+    const successDenomAmount = committedTotal + deniedTotal;
+
     return {
       total: allGrants.length,
       byStage,
       totalAwarded,
       upcomingReports,
+      successRate: {
+        byCount: successDenomCount > 0
+          ? Math.round((committedGrants.length / successDenomCount) * 1000) / 10
+          : null,
+        byAmount: successDenomAmount > 0
+          ? Math.round((committedTotal / successDenomAmount) * 1000) / 10
+          : null,
+        committedCount: committedGrants.length,
+        deniedCount: deniedGrants.length,
+      },
     };
   },
 });
@@ -121,6 +143,35 @@ export const getUpcomingDeadlines = query({
     upcoming.sort((a, b) => new Date(a.deadlineDate).getTime() - new Date(b.deadlineDate).getTime());
 
     return upcoming;
+  },
+});
+
+/**
+ * Returns funding totals grouped by year (from dateFundsReceived).
+ * Used for year-over-year historical comparison in the dashboard.
+ */
+export const getFundingByYear = query({
+  args: {},
+  handler: async (ctx) => {
+    const allGrants = await ctx.db.query("grants").collect();
+
+    const byYear: Record<number, number> = {};
+    for (const grant of allGrants) {
+      if (grant.dateFundsReceived && grant.amountAwarded) {
+        const year = new Date(grant.dateFundsReceived).getFullYear();
+        if (!isNaN(year)) {
+          byYear[year] = (byYear[year] ?? 0) + grant.amountAwarded;
+        }
+      }
+    }
+
+    // Sort by year ascending
+    const years = Object.keys(byYear)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((year) => ({ year, amount: byYear[year] }));
+
+    return years;
   },
 });
 

@@ -471,6 +471,186 @@ export const getStaffActionStats = query({
 });
 
 /**
+ * Returns detailed legal program metrics from legalIntakeForms.
+ * Attorney representation %, court dates, restraining orders, order types,
+ * compliance, child support, safety concerns, new vs modified orders.
+ */
+export const getLegalInsights = query({
+  args: { programId: v.optional(v.id("programs")) },
+  handler: async (ctx, { programId }) => {
+    let forms = await ctx.db.query("legalIntakeForms").collect();
+
+    // If programId provided, filter forms to clients enrolled in that program
+    if (programId) {
+      const enrollments = await ctx.db
+        .query("enrollments")
+        .withIndex("by_programId", (q) => q.eq("programId", programId))
+        .collect();
+      const enrolledClientIds = new Set(enrollments.map((e) => String(e.clientId)));
+      forms = forms.filter((f) => f.clientId && enrolledClientIds.has(String(f.clientId)));
+    }
+
+    const total = forms.length;
+    if (total === 0) return null;
+
+    function countYesNo(field: (f: typeof forms[number]) => string | undefined) {
+      let yes = 0, no = 0;
+      for (const f of forms) {
+        const val = (field(f) ?? "").toLowerCase().trim();
+        if (val === "yes" || val === "y") yes++;
+        else if (val === "no" || val === "n") no++;
+      }
+      return { yes, no, total: yes + no, pct: (yes + no) > 0 ? Math.round((yes / (yes + no)) * 100) : 0 };
+    }
+
+    const attorney = countYesNo((f) => f.hasAttorney);
+    const restrainingOrder = countYesNo((f) => f.hasRestrainingOrder);
+    const safetyConcerns = countYesNo((f) => f.safetyFears);
+    const custodyFollowed = countYesNo((f) => f.custodyOrderFollowed);
+
+    // Upcoming court dates count
+    const now = new Date();
+    let upcomingCourtDates = 0;
+    for (const f of forms) {
+      if (f.upcomingCourtDate) {
+        const d = new Date(f.upcomingCourtDate);
+        if (d >= now) upcomingCourtDates++;
+      }
+    }
+
+    // Existing court orders breakdown
+    const orderTypes: Record<string, number> = {};
+    for (const f of forms) {
+      const val = (f.existingCourtOrders ?? "").trim();
+      if (val) {
+        orderTypes[val] = (orderTypes[val] ?? 0) + 1;
+      }
+    }
+    const orderTypeList = Object.entries(orderTypes)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Child support orders
+    const childSupport = countYesNo((f) => f.childSupportOrders);
+
+    // Payment status breakdown
+    const paymentStatuses: Record<string, number> = {};
+    for (const f of forms) {
+      const val = (f.paymentStatus ?? "").trim();
+      if (val) {
+        paymentStatuses[val] = (paymentStatuses[val] ?? 0) + 1;
+      }
+    }
+    const paymentStatusList = Object.entries(paymentStatuses)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Seeking new vs modified orders
+    const seekingTypes: Record<string, number> = {};
+    for (const f of forms) {
+      const val = (f.seekingTo ?? "").trim();
+      if (val) {
+        seekingTypes[val] = (seekingTypes[val] ?? 0) + 1;
+      }
+    }
+    const seekingTypeList = Object.entries(seekingTypes)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      total,
+      attorney,
+      restrainingOrder,
+      safetyConcerns,
+      custodyFollowed,
+      upcomingCourtDates,
+      orderTypeList,
+      childSupport,
+      paymentStatusList,
+      seekingTypeList,
+    };
+  },
+});
+
+/**
+ * Returns detailed CPC program metrics from coparentIntakeForms.
+ * Parent types, co-parent informed %, session completion distribution, unique families.
+ */
+export const getCpcInsights = query({
+  args: { programId: v.optional(v.id("programs")) },
+  handler: async (ctx, { programId }) => {
+    let forms = await ctx.db.query("coparentIntakeForms").collect();
+
+    // If programId provided, filter to enrolled clients
+    if (programId) {
+      const enrollments = await ctx.db
+        .query("enrollments")
+        .withIndex("by_programId", (q) => q.eq("programId", programId))
+        .collect();
+      const enrolledClientIds = new Set(enrollments.map((e) => String(e.clientId)));
+      forms = forms.filter((f) => f.clientId && enrolledClientIds.has(String(f.clientId)));
+    }
+
+    const total = forms.length;
+    if (total === 0) return null;
+
+    // Parent types (role field — "Mom" / "Dad" / etc.)
+    const roleTypes: Record<string, number> = {};
+    for (const f of forms) {
+      const val = (f.role ?? "Unknown").trim();
+      roleTypes[val] = (roleTypes[val] ?? 0) + 1;
+    }
+    const roleList = Object.entries(roleTypes)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Co-parent informed
+    let informedYes = 0, informedNo = 0;
+    for (const f of forms) {
+      const val = (f.coParentInformed ?? "").toLowerCase().trim();
+      if (val === "yes" || val === "y") informedYes++;
+      else if (val === "no" || val === "n") informedNo++;
+    }
+    const informedTotal = informedYes + informedNo;
+    const informedPct = informedTotal > 0 ? Math.round((informedYes / informedTotal) * 100) : 0;
+
+    // Session completion distribution
+    const buckets = { "0": 0, "1-2": 0, "3-4": 0, "5+": 0 };
+    for (const f of forms) {
+      const raw = f.sessionsCompleted ?? "0";
+      const n = parseInt(raw, 10);
+      if (isNaN(n) || n === 0) buckets["0"]++;
+      else if (n <= 2) buckets["1-2"]++;
+      else if (n <= 4) buckets["3-4"]++;
+      else buckets["5+"]++;
+    }
+    const sessionDistribution = Object.entries(buckets).map(([name, count]) => ({ name, count }));
+
+    // Unique families (by co-parent name as proxy)
+    const families = new Set<string>();
+    for (const f of forms) {
+      const name = (f.fullName ?? "").trim().toLowerCase();
+      const coParent = (f.coParentName ?? "").trim().toLowerCase();
+      if (name && coParent) {
+        // Normalize family key so both partners map to same family
+        const key = [name, coParent].sort().join("|");
+        families.add(key);
+      } else if (name) {
+        families.add(name);
+      }
+    }
+
+    return {
+      total,
+      roleList,
+      coParentInformed: { yes: informedYes, no: informedNo, total: informedTotal, pct: informedPct },
+      sessionDistribution,
+      uniqueFamilies: families.size,
+    };
+  },
+});
+
+/**
  * Returns expense categorization acceptance rate, category distribution,
  * and confidence breakdown from the expenseAllocations table.
  */

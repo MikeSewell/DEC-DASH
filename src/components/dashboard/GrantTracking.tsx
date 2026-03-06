@@ -51,6 +51,7 @@ function DeadlineCountdown({ dateStr }: { dateStr: string }) {
 export default function GrantTracking() {
   const grants = useQuery(api.grants.list, { fundingStage: "active" });
   const deadlines = useQuery(api.grants.getUpcomingDeadlines);
+  const grantStats = useQuery(api.grants.getStats);
 
   if (grants === undefined || deadlines === undefined) {
     return <TableSkeleton rows={5} />;
@@ -70,8 +71,31 @@ export default function GrantTracking() {
 
   const upcomingDeadlines = deadlines.slice(0, 5);
 
+  const successRate = grantStats?.successRate;
+
   return (
     <div className="space-y-6">
+      {/* Grant Success Rate */}
+      {successRate && (successRate.byCount !== null || successRate.byAmount !== null) && (
+        <div className="flex flex-wrap gap-4">
+          {successRate.byCount !== null && (
+            <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 shadow-[var(--warm-shadow-sm)]">
+              <span className="text-xs text-muted">Success Rate (by count):</span>
+              <span className="text-sm font-bold text-primary">{successRate.byCount}%</span>
+              <span className="text-[10px] text-muted">
+                ({successRate.committedCount} secured / {successRate.committedCount + successRate.deniedCount} decided)
+              </span>
+            </div>
+          )}
+          {successRate.byAmount !== null && (
+            <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 shadow-[var(--warm-shadow-sm)]">
+              <span className="text-xs text-muted">Success Rate (by $):</span>
+              <span className="text-sm font-bold text-accent">{successRate.byAmount}%</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Grants Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

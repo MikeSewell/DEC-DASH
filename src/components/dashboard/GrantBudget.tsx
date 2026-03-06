@@ -423,7 +423,7 @@ export default function GrantBudget() {
   return (
     <div>
       {/* Summary Cards (BGUI-01) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Card 1: Total Revenue */}
         <div
           className={cn(
@@ -482,6 +482,50 @@ export default function GrantBudget() {
             {summary.burnRate}%
           </p>
           <p className="text-xs text-muted mt-1">of total budget spent</p>
+        </div>
+      </div>
+
+      {/* Financial Health Metrics */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Card 5: Monthly Cash Burn */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-1">
+            Monthly Cash Burn
+          </p>
+          <p className="text-2xl font-bold text-foreground">
+            {formatCurrency(summary.monthlyCashBurn)}
+          </p>
+          <p className="text-xs text-muted mt-1">
+            avg over {summary.monthsElapsed} month{summary.monthsElapsed !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Card 6: Expense Ratio */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-1">
+            Expense Ratio
+          </p>
+          <p className={cn(
+            "text-2xl font-bold",
+            summary.expenseRatio > 100 ? "text-danger" : "text-foreground"
+          )}>
+            {summary.expenseRatio}%
+          </p>
+          <p className="text-xs text-muted mt-1">expenses / revenue</p>
+        </div>
+
+        {/* Card 7: Operating Margin */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-[var(--warm-shadow-sm)]">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted mb-1">
+            Operating Margin
+          </p>
+          <p className={cn(
+            "text-2xl font-bold",
+            summary.operatingMargin < 0 ? "text-danger" : "text-success"
+          )}>
+            {summary.operatingMargin}%
+          </p>
+          <p className="text-xs text-muted mt-1">(revenue - expenses) / revenue</p>
         </div>
       </div>
 
