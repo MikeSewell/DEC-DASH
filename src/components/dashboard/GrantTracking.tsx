@@ -83,7 +83,7 @@ export default function GrantTracking() {
               <span className="text-xs text-muted">Success Rate (by count):</span>
               <span className="text-sm font-bold text-primary">{successRate.byCount}%</span>
               <span className="text-[10px] text-muted">
-                ({successRate.committedCount} secured / {successRate.committedCount + successRate.deniedCount} decided)
+                ({successRate.securedCount} secured / {successRate.securedCount + successRate.deniedCount} decided)
               </span>
             </div>
           )}

@@ -71,17 +71,18 @@ export const getStats = query({
       }
     }
 
-    // Success rate: committed / (committed + denied)
-    const committedGrants = allGrants.filter(
-      (g) => normalizeFundingStage(g.fundingStage) === "committed"
-    );
+    // Success rate: (active + committed) / (active + committed + denied)
+    const securedGrants = allGrants.filter((g) => {
+      const stage = normalizeFundingStage(g.fundingStage);
+      return stage === "active" || stage === "committed";
+    });
     const deniedGrants = allGrants.filter(
       (g) => normalizeFundingStage(g.fundingStage) === "denied"
     );
-    const successDenomCount = committedGrants.length + deniedGrants.length;
-    const committedTotal = committedGrants.reduce((s, g) => s + (g.amountAwarded ?? 0), 0);
+    const successDenomCount = securedGrants.length + deniedGrants.length;
+    const securedTotal = securedGrants.reduce((s, g) => s + (g.amountAwarded ?? 0), 0);
     const deniedTotal = deniedGrants.reduce((s, g) => s + (g.amountAwarded ?? 0), 0);
-    const successDenomAmount = committedTotal + deniedTotal;
+    const successDenomAmount = securedTotal + deniedTotal;
 
     return {
       total: allGrants.length,
@@ -90,12 +91,12 @@ export const getStats = query({
       upcomingReports,
       successRate: {
         byCount: successDenomCount > 0
-          ? Math.round((committedGrants.length / successDenomCount) * 1000) / 10
+          ? Math.round((securedGrants.length / successDenomCount) * 1000) / 10
           : null,
         byAmount: successDenomAmount > 0
-          ? Math.round((committedTotal / successDenomAmount) * 1000) / 10
+          ? Math.round((securedTotal / successDenomAmount) * 1000) / 10
           : null,
-        committedCount: committedGrants.length,
+        securedCount: securedGrants.length,
         deniedCount: deniedGrants.length,
       },
     };
