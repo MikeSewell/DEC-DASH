@@ -140,18 +140,23 @@ export const getTrends = query({
   },
 });
 
-// Helper to extract category amounts from a P&L report section
+// Helper to extract category amounts from a P&L report section (recursive for nested QB sections)
 function extractCategories(sectionRow: any, target: Record<string, number>) {
   const subRows: any[] = sectionRow.Rows?.Row ?? [];
   for (const sub of subRows) {
-    if (sub.type === "Section" && sub.Header && sub.Summary) {
+    if (sub.type === "Section" && sub.Rows?.Row?.length > 0) {
+      // Has child rows — recurse into them instead of counting this section's summary
+      // (avoids double-counting parent summaries that aggregate child values)
+      extractCategories(sub, target);
+    } else if (sub.type === "Section" && sub.Header && sub.Summary) {
+      // Leaf section with no child rows — count its summary
       const catName = sub.Header.ColData?.[0]?.value ?? "Other";
       const catAmount = parseFloat(sub.Summary.ColData?.[1]?.value ?? "0");
-      if (catAmount !== 0) target[catName] = Math.abs(catAmount);
+      if (catAmount !== 0) target[catName] = (target[catName] ?? 0) + Math.abs(catAmount);
     } else if (sub.type === "Data" && sub.ColData) {
       const catName = sub.ColData[0]?.value ?? "Other";
       const catAmount = parseFloat(sub.ColData[1]?.value ?? "0");
-      if (catAmount !== 0) target[catName] = Math.abs(catAmount);
+      if (catAmount !== 0) target[catName] = (target[catName] ?? 0) + Math.abs(catAmount);
     }
   }
 }

@@ -41,13 +41,8 @@ export const DEFAULT_DASHBOARD_SECTIONS: {
   },
   {
     id: "client-activity",
-    title: "Client Activity",
-    description: "Active clients and program breakdown",
-  },
-  {
-    id: "analytics-cards",
-    title: "Analytics Snapshot",
-    description: "Active clients, session volume, and intake trends",
+    title: "Program Pulse",
+    description: "Client totals, intakes, sessions, and active programs",
   },
   {
     id: "calendar",

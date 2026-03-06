@@ -146,6 +146,7 @@ export default function ExpensesPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">Expense Management</h1>
           <p className="text-sm text-muted mt-1">
+            Purchase transactions (checks, credit cards, cash) &middot;{" "}
             {filteredExpenses.length} expenses | Total:{" "}
             {formatCurrencyExact(filteredExpenses.reduce((s, e) => s + e.amount, 0))}
           </p>

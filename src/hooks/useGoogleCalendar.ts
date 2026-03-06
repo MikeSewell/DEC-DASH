@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useAction } from "convex/react";
+import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export function useCalendarConfig() {
@@ -19,4 +19,14 @@ export function useCalendarSync() {
 export function useListCalendars() {
   const listCalendars = useAction(api.googleCalendarActions.listAvailableCalendars);
   return { listCalendars };
+}
+
+export function useCalendarDisconnect() {
+  const disconnect = useMutation(api.googleCalendar.disconnect);
+  return { disconnect };
+}
+
+export function useCalendarSaveConfig() {
+  const saveConfig = useMutation(api.googleCalendar.saveConfig);
+  return { saveConfig };
 }

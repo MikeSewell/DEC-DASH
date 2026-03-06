@@ -72,7 +72,7 @@ export const fetchProfitAndLoss = internalAction({
   },
 });
 
-// Fetch expenses
+// Fetch expenses (paginated — QB caps at 1000 per request)
 export const fetchExpenses = internalAction({
   args: { startDate: v.optional(v.string()), endDate: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -82,19 +82,34 @@ export const fetchExpenses = internalAction({
     const startDate = args.startDate || getFirstDayOfYear();
     const endDate = args.endDate || getToday();
 
-    const query = `SELECT * FROM Purchase WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' MAXRESULTS 1000`;
-    const response = await fetch(
-      `${baseUrl}/v3/company/${realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      }
-    );
+    const PAGE_SIZE = 1000;
+    let startPosition = 1;
+    const allPurchases: any[] = [];
 
-    if (!response.ok) throw new Error(`QB API error: ${response.status}`);
-    const data = await response.json();
+    // Paginate until we get fewer results than PAGE_SIZE
+    while (true) {
+      const q = `SELECT * FROM Purchase WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' STARTPOSITION ${startPosition} MAXRESULTS ${PAGE_SIZE}`;
+      const response = await fetch(
+        `${baseUrl}/v3/company/${realmId}/query?query=${encodeURIComponent(q)}&minorversion=65`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error(`QB API error: ${response.status}`);
+      const data = await response.json();
+      const purchases: any[] = data?.QueryResponse?.Purchase ?? [];
+      allPurchases.push(...purchases);
+
+      if (purchases.length < PAGE_SIZE) break;
+      startPosition += PAGE_SIZE;
+    }
+
+    // Wrap in the same QueryResponse shape the downstream parser expects
+    const data = { QueryResponse: { Purchase: allPurchases } };
 
     await ctx.runMutation(internal.quickbooksInternal.cacheReport, {
       reportType: "expenses",
@@ -510,7 +525,7 @@ export const fetchIncomeTrend = internalAction({
   },
 });
 
-// Fetch prior-year P&L for the same month as the current month (for trend comparison)
+// Fetch prior-year YTD P&L (Jan 1 to today's date in prior year) for trend comparison
 export const fetchPriorYearPnl = internalAction({
   handler: async (ctx) => {
     const { accessToken, realmId } = await getAuthenticatedConfig(ctx);
@@ -519,9 +534,9 @@ export const fetchPriorYearPnl = internalAction({
     const now = new Date();
     const priorYear = now.getFullYear() - 1;
     const month = String(now.getMonth() + 1).padStart(2, "0");
-    const lastDay = new Date(priorYear, now.getMonth() + 1, 0).getDate();
-    const startDate = `${priorYear}-${month}-01`;
-    const endDate = `${priorYear}-${month}-${String(lastDay).padStart(2, "0")}`;
+    const currentDay = String(now.getDate()).padStart(2, "0");
+    const startDate = `${priorYear}-01-01`;
+    const endDate = `${priorYear}-${month}-${currentDay}`;
 
     const response = await fetch(
       `${baseUrl}/v3/company/${realmId}/reports/ProfitAndLoss?start_date=${startDate}&end_date=${endDate}&minorversion=65`,

@@ -31,12 +31,24 @@ export const getBudgetSummary = query({
     const records = await ctx.db.query("budgetCache").collect();
     if (records.length === 0) return null;
 
+    // Filter out "All" records when per-class records exist for the same budgetId
+    // to prevent double-counting (the "All" record aggregates all class values)
+    const budgetIdsWithClasses = new Set<string>();
+    for (const r of records) {
+      if (r.className !== "All") {
+        budgetIdsWithClasses.add(r.budgetId);
+      }
+    }
+    const filtered = records.filter(
+      (r) => !(r.className === "All" && budgetIdsWithClasses.has(r.budgetId))
+    );
+
     let totalRevenueActual = 0;
     let totalRevenueBudget = 0;
     let totalExpenseActual = 0;
     let totalExpenseBudget = 0;
 
-    for (const r of records) {
+    for (const r of filtered) {
       totalRevenueActual += r.revenueActual;
       totalRevenueBudget += r.revenueBudget;
       totalExpenseActual += r.expenseActual;
@@ -64,7 +76,7 @@ export const getBudgetSummary = query({
       budgetRemaining,
       budgetRemainingPct,
       burnRate,
-      recordCount: records.length,
+      recordCount: filtered.length,
       lastSyncedAt,
       // Period from any record (they all share the same sync period)
       periodStart: records[0]?.periodStart ?? "",

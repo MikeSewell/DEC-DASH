@@ -7,6 +7,20 @@ export const getFullConfig = internalQuery({
   },
 });
 
+export const updateTokens = internalMutation({
+  args: {
+    configId: v.id("googleCalendarConfig"),
+    accessToken: v.string(),
+    tokenExpiry: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.configId, {
+      accessToken: args.accessToken,
+      tokenExpiry: args.tokenExpiry,
+    });
+  },
+});
+
 export const upsertEvent = internalMutation({
   args: {
     eventId: v.string(),
@@ -59,7 +73,6 @@ export const cleanupDeselectedCalendars = internalMutation({
   args: { selectedCalendarIds: v.array(v.string()) },
   handler: async (ctx, args) => {
     const selectedSet = new Set(args.selectedCalendarIds);
-    // Fetch all cached events and remove those whose calendarId is not in the selected set
     const allEvents = await ctx.db.query("googleCalendarCache").collect();
     let removed = 0;
     for (const event of allEvents) {
@@ -70,6 +83,15 @@ export const cleanupDeselectedCalendars = internalMutation({
     }
     if (removed > 0) {
       console.log(`Cleaned up ${removed} stale events from de-selected calendars`);
+    }
+  },
+});
+
+export const clearAllEvents = internalMutation({
+  handler: async (ctx) => {
+    const events = await ctx.db.query("googleCalendarCache").collect();
+    for (const event of events) {
+      await ctx.db.delete(event._id);
     }
   },
 });

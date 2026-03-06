@@ -10,6 +10,8 @@ export const getConfig = query({
       _id: config._id,
       calendars: config.calendars,
       lastSyncAt: config.lastSyncAt,
+      connectedAt: config.connectedAt ?? null,
+      isExpired: config.tokenExpiry ? config.tokenExpiry < Date.now() : false,
     };
   },
 });
@@ -36,7 +38,30 @@ export const getEvents = query({
   },
 });
 
-// Save config (singleton pattern — patch or insert)
+// Save OAuth tokens from callback (singleton — delete old, insert new)
+export const saveTokens = mutation({
+  args: {
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    tokenExpiry: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.query("googleCalendarConfig").first();
+    if (existing) {
+      await ctx.db.delete(existing._id);
+    }
+
+    await ctx.db.insert("googleCalendarConfig", {
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+      tokenExpiry: args.tokenExpiry,
+      connectedAt: Date.now(),
+      calendars: [],
+    });
+  },
+});
+
+// Save selected calendars (patch existing config)
 export const saveConfig = mutation({
   args: {
     calendars: v.array(v.object({
@@ -48,11 +73,22 @@ export const saveConfig = mutation({
     const existing = await ctx.db.query("googleCalendarConfig").first();
     if (existing) {
       await ctx.db.patch(existing._id, { calendars: args.calendars });
-    } else {
-      await ctx.db.insert("googleCalendarConfig", {
-        calendars: args.calendars,
-        configuredBy: "" as any, // matches Sheets pattern — no auth context in mutation
-      });
+    }
+  },
+});
+
+// Disconnect — clear config and all cached events
+export const disconnect = mutation({
+  handler: async (ctx) => {
+    const config = await ctx.db.query("googleCalendarConfig").first();
+    if (config) {
+      await ctx.db.delete(config._id);
+    }
+
+    // Clear all cached events
+    const events = await ctx.db.query("googleCalendarCache").collect();
+    for (const event of events) {
+      await ctx.db.delete(event._id);
     }
   },
 });

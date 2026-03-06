@@ -18,7 +18,6 @@ import ProfitLoss from "@/components/dashboard/ProfitLoss";
 import ProgramsCoparent from "@/components/dashboard/ProgramsCoparent";
 import ProgramsLegal from "@/components/dashboard/ProgramsLegal";
 import ClientActivity from "@/components/dashboard/ClientActivity";
-import AnalyticsCards from "@/components/dashboard/AnalyticsCards";
 import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import WhatNeedsAttention from "@/components/dashboard/WhatNeedsAttention";
 import Spinner from "@/components/ui/Spinner";
@@ -70,7 +69,6 @@ const SECTION_COMPONENTS: Record<DashboardSectionId, React.ComponentType> = {
   "profit-loss": ProfitLoss,
   "programs": ProgramsConsolidated,
   "client-activity": ClientActivity,
-  "analytics-cards": AnalyticsCards,
   "calendar": CalendarWidget,
 };
 
@@ -89,22 +87,32 @@ export default function DashboardPage() {
 
   // Derive current order and hidden state
   const defaultOrder = DEFAULT_DASHBOARD_SECTIONS.map((s) => s.id);
+  const validSectionIds = useMemo(
+    () => new Set<DashboardSectionId>(defaultOrder),
+    [defaultOrder]
+  );
 
   const sectionOrder: DashboardSectionId[] = useMemo(() => {
     if (localOrder) return localOrder;
     if (prefs?.sectionOrder && prefs.sectionOrder.length > 0) {
-      return prefs.sectionOrder as DashboardSectionId[];
+      const savedOrder = (prefs.sectionOrder as DashboardSectionId[]).filter((id) =>
+        validSectionIds.has(id)
+      );
+      const missingDefaults = defaultOrder.filter((id) => !savedOrder.includes(id));
+      return [...savedOrder, ...missingDefaults];
     }
     return defaultOrder;
-  }, [localOrder, prefs, defaultOrder]);
+  }, [localOrder, prefs, defaultOrder, validSectionIds]);
 
   const hiddenSections: DashboardSectionId[] = useMemo(() => {
     if (localHidden) return localHidden;
     if (prefs?.hiddenSections) {
-      return prefs.hiddenSections as DashboardSectionId[];
+      return (prefs.hiddenSections as DashboardSectionId[]).filter((id) =>
+        validSectionIds.has(id)
+      );
     }
     return [];
-  }, [localHidden, prefs]);
+  }, [localHidden, prefs, validSectionIds]);
 
   const visibleSections = sectionOrder.filter(
     (id) => !hiddenSections.includes(id)

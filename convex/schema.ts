@@ -115,7 +115,11 @@ export default defineSchema({
       displayName: v.string(),
     })),
     lastSyncAt: v.optional(v.number()),
-    configuredBy: v.id("users"),
+    configuredBy: v.optional(v.id("users")),
+    accessToken: v.optional(v.string()),
+    refreshToken: v.optional(v.string()),
+    tokenExpiry: v.optional(v.number()),
+    connectedAt: v.optional(v.number()),
   }),
 
   googleCalendarCache: defineTable({

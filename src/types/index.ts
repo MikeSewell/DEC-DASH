@@ -45,7 +45,6 @@ export type DashboardSectionId =
   | "profit-loss"
   | "programs"
   | "client-activity"
-  | "analytics-cards"
   | "calendar";
 
 // Analytics page tabs

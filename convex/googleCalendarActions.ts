@@ -3,22 +3,65 @@
 import { internalAction, action } from "./_generated/server";
 import { internal } from "./_generated/api";
 
+// Refresh the access token using the refresh token
+const refreshAccessToken = async (refreshToken: string): Promise<{ access_token: string; expires_in: number }> => {
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: process.env.GOOGLE_CALENDAR_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET!,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Token refresh failed: ${response.status} — ${errorBody}`);
+  }
+
+  return response.json();
+};
+
+// Get authenticated config — refresh token if expired
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getAuthenticatedConfig(ctx: any) {
+  const config = await ctx.runQuery(internal.googleCalendarInternal.getFullConfig);
+  if (!config || !config.accessToken || !config.refreshToken) {
+    throw new Error("Google Calendar not connected — no OAuth tokens found");
+  }
+
+  // Check if token is expired (with 5 min buffer)
+  const isExpired = config.tokenExpiry ? config.tokenExpiry < Date.now() + 5 * 60 * 1000 : true;
+
+  if (isExpired) {
+    console.log("Google Calendar access token expired, refreshing...");
+    const newToken = await refreshAccessToken(config.refreshToken);
+    const newExpiry = Date.now() + newToken.expires_in * 1000;
+
+    await ctx.runMutation(internal.googleCalendarInternal.updateTokens, {
+      configId: config._id,
+      accessToken: newToken.access_token,
+      tokenExpiry: newExpiry,
+    });
+
+    return { ...config, accessToken: newToken.access_token, tokenExpiry: newExpiry };
+  }
+
+  return config;
+}
+
 export const syncCalendars = internalAction({
   handler: async (ctx) => {
     const { google } = await import("googleapis");
 
-    const config = await ctx.runQuery(internal.googleCalendarInternal.getFullConfig);
-    if (!config) throw new Error("Google Calendar not configured");
+    const config = await getAuthenticatedConfig(ctx);
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-    });
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: config.accessToken });
 
-    const calendar = google.calendar({ version: "v3", auth });
+    const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
     const now = new Date();
     const timeMin = now.toISOString();
@@ -62,7 +105,6 @@ export const syncCalendars = internalAction({
           });
         }
       } catch (err) {
-        // Per-calendar errors logged but don't abort other calendars
         console.error(`Failed to sync calendar ${calendarId}:`, err);
       }
     }
@@ -84,21 +126,18 @@ export const triggerSync = action({
   },
 });
 
-// Public action — discovers all calendars accessible to the service account
+// Public action — discovers all calendars accessible to the connected Google account
 export const listAvailableCalendars = action({
-  handler: async (): Promise<Array<{ id: string; summary: string }>> => {
+  handler: async (ctx): Promise<Array<{ id: string; summary: string }>> => {
     try {
       const { google } = await import("googleapis");
 
-      const auth = new google.auth.GoogleAuth({
-        credentials: {
-          client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-        },
-        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
-      });
+      const config = await getAuthenticatedConfig(ctx);
 
-      const calendar = google.calendar({ version: "v3", auth });
+      const oauth2Client = new google.auth.OAuth2();
+      oauth2Client.setCredentials({ access_token: config.accessToken });
+
+      const calendar = google.calendar({ version: "v3", auth: oauth2Client });
       const response = await calendar.calendarList.list();
 
       const items = response.data.items ?? [];
