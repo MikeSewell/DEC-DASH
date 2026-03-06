@@ -3,12 +3,25 @@ import { v } from "convex/values";
 
 // List all budget cache records sorted by className.
 // Primary query for the Grant Budget dashboard section.
+// Filters out "All" aggregate records when per-class records exist (same logic as getBudgetSummary).
 export const listBudgetRecords = query({
   handler: async (ctx) => {
     const records = await ctx.db.query("budgetCache").collect();
+
+    // Filter out "All" records when per-class records exist for the same budgetId
+    const budgetIdsWithClasses = new Set<string>();
+    for (const r of records) {
+      if (r.className !== "All") {
+        budgetIdsWithClasses.add(r.budgetId);
+      }
+    }
+    const filtered = records.filter(
+      (r) => !(r.className === "All" && budgetIdsWithClasses.has(r.budgetId))
+    );
+
     // Sort by className for consistent UI display
-    records.sort((a, b) => a.className.localeCompare(b.className));
-    return records;
+    filtered.sort((a, b) => a.className.localeCompare(b.className));
+    return filtered;
   },
 });
 

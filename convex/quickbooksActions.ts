@@ -342,7 +342,7 @@ export const fetchBudgetVsActuals = internalAction({
 
     for (const combo of combinations) {
       try {
-        let url = `${baseUrl}/v3/company/${realmId}/reports/BudgetVsActuals?start_date=${startDate}&end_date=${endDate}&budget=${combo.budgetId}&minorversion=65`;
+        let url = `${baseUrl}/v3/company/${realmId}/reports/BudgetVsActuals?start_date=${startDate}&end_date=${endDate}&accounting_method=Accrual&budget=${combo.budgetId}&minorversion=65`;
         if (combo.classId) {
           url += `&class=${combo.classId}`;
         }

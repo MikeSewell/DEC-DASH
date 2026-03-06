@@ -415,9 +415,9 @@ export default function GrantBudget() {
     );
   }
 
-  // Filter out the "All" aggregate row — it is already represented by summary cards
+  // "All" aggregate records are already filtered out by listBudgetRecords query
   const grantRows = (records ?? []).filter(
-    (r) => r.className.trim().toLowerCase() !== "all" && r.className.trim() !== ""
+    (r) => r.className.trim() !== ""
   );
 
   return (

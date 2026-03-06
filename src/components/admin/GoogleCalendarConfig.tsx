@@ -46,7 +46,7 @@ export default function GoogleCalendarConfig() {
     }
   }, [config]);
 
-  const isConnected = config !== null && config.connectedAt !== null;
+  const isConnected = config !== null && config !== undefined;
   const isExpired = config?.isExpired ?? false;
   const hasCalendars = (config?.calendars?.length ?? 0) > 0;
 
