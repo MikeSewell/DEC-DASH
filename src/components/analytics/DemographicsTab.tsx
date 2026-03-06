@@ -191,7 +191,7 @@ export default function DemographicsTab() {
 
       {/* Overview Stats */}
       {overview && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
             <p className="text-2xl font-bold text-foreground">{overview.totalParticipants}</p>
             <p className="text-xs text-muted mt-1">Total Participants</p>
@@ -207,10 +207,6 @@ export default function DemographicsTab() {
           <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
             <p className="text-2xl font-bold text-primary">{overview.avgSessionsPerClient}</p>
             <p className="text-xs text-muted mt-1">Avg Sessions / Person</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-            <p className="text-2xl font-bold text-accent">{overview.attendanceRate !== null ? `${overview.attendanceRate}%` : "—"}</p>
-            <p className="text-xs text-muted mt-1">Attendance Rate</p>
           </div>
           <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
             <p className="text-2xl font-bold text-foreground">{overview.zipCodeReach}</p>

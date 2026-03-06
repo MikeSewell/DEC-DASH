@@ -155,7 +155,7 @@ export default function ProgramsCoparent() {
   return (
     <div className="space-y-6">
       {/* Executive overview stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{total}</p>
           <p className="text-xs text-muted">Total Participants</p>
@@ -168,14 +168,10 @@ export default function ProgramsCoparent() {
           <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">{overview?.totalSessions ?? 0}</p>
           <p className="text-xs text-muted">Total Sessions</p>
         </div>
-        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.completedCount ?? 0}</p>
-          <p className="text-xs text-muted">Completed Program</p>
-        </div>
       </div>
 
       {/* Second row — engagement metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{overview?.recentSessions ?? 0}</p>
           <p className="text-xs text-muted">Sessions (Last 30 Days)</p>
@@ -183,12 +179,6 @@ export default function ProgramsCoparent() {
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{overview?.avgSessionsPerClient ?? 0}</p>
           <p className="text-xs text-muted">Avg Sessions / Person</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">
-            {overview?.attendanceRate !== null ? `${overview?.attendanceRate}%` : "—"}
-          </p>
-          <p className="text-xs text-muted">Attendance Rate</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
           <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.zipCodeReach ?? 0}</p>

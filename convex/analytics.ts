@@ -251,25 +251,46 @@ export const getProgramOverview = query({
 
     const enrolledClientIds = new Set(enrollments.map((e) => e.clientId));
     const totalParticipants = enrolledClientIds.size;
-    const completedCount = new Set(
-      enrollments.filter((e) => e.status === "completed").map((e) => e.clientId)
-    ).size;
 
-    // All sessions — filtered by program if specified, otherwise all
-    const allSessions = await ctx.db.query("sessions").collect();
-    const programSessions = programId
-      ? allSessions.filter(
-          (s) => s.programId === programId || enrolledClientIds.has(s.clientId)
-        )
-      : allSessions;
+    // Determine program type to query the right intake table
+    let programType: string | null = null;
+    if (programId) {
+      const program = await ctx.db.get(programId);
+      programType = program?.type ?? null;
+    }
 
-    const totalSessions = programSessions.length;
+    // Each intake form = 1 session (visit). Query intake forms instead of empty sessions table.
+    type IntakeRecord = { clientId?: string; createdAt?: number; _creationTime: number };
+    let intakeForms: IntakeRecord[] = [];
+
+    if (programType === "legal" || !programId) {
+      const legalForms = await ctx.db.query("legalIntakeForms").collect();
+      const filtered = programId
+        ? legalForms.filter((f) => f.clientId && enrolledClientIds.has(f.clientId))
+        : legalForms;
+      intakeForms = intakeForms.concat(
+        filtered.map((f) => ({ clientId: f.clientId as string | undefined, createdAt: f.intakeDate, _creationTime: f._creationTime }))
+      );
+    }
+    if (programType === "coparent" || !programId) {
+      const coparentForms = await ctx.db.query("coparentIntakeForms").collect();
+      const filtered = programId
+        ? coparentForms.filter((f) => f.clientId && enrolledClientIds.has(f.clientId))
+        : coparentForms;
+      intakeForms = intakeForms.concat(
+        filtered.map((f) => ({ clientId: f.clientId as string | undefined, createdAt: f._creationTime, _creationTime: f._creationTime }))
+      );
+    }
+
+    const totalSessions = intakeForms.length;
 
     // Sessions per client — how many people came back more than once
     const sessionsPerClient: Record<string, number> = {};
-    for (const s of programSessions) {
-      const key = s.clientId as string;
-      sessionsPerClient[key] = (sessionsPerClient[key] ?? 0) + 1;
+    for (const f of intakeForms) {
+      const key = f.clientId as string;
+      if (key) {
+        sessionsPerClient[key] = (sessionsPerClient[key] ?? 0) + 1;
+      }
     }
     const clientsWithSessions = Object.keys(sessionsPerClient).length;
     const multiSessionClients = Object.values(sessionsPerClient).filter((c) => c > 1).length;
@@ -277,21 +298,12 @@ export const getProgramOverview = query({
       ? Math.round((totalSessions / clientsWithSessions) * 10) / 10
       : 0;
 
-    // Retention: completed / total (program completion rate)
-    const completionRate = totalParticipants > 0
-      ? Math.round((completedCount / totalParticipants) * 100)
-      : 0;
-
-    // Sessions in last 30 days
+    // Sessions in last 30 days (use createdAt or _creationTime)
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recentSessions = programSessions.filter((s) => s.sessionDate >= thirtyDaysAgo).length;
-
-    // Attendance breakdown
-    const attended = programSessions.filter((s) => s.attendanceStatus === "attended").length;
-    const missed = programSessions.filter((s) => s.attendanceStatus === "missed").length;
-    const attendanceRate = (attended + missed) > 0
-      ? Math.round((attended / (attended + missed)) * 100)
-      : null;
+    const recentSessions = intakeForms.filter((f) => {
+      const ts = f.createdAt ?? f._creationTime;
+      return ts >= thirtyDaysAgo;
+    }).length;
 
     // Zip code reach
     const clients = await Promise.all(
@@ -301,13 +313,10 @@ export const getProgramOverview = query({
 
     return {
       totalParticipants,
-      completedCount,
       totalSessions,
       recentSessions,
       multiSessionClients,
       avgSessionsPerClient,
-      completionRate,
-      attendanceRate,
       zipCodeReach: uniqueZips.size,
     };
   },
