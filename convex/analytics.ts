@@ -260,7 +260,8 @@ export const getProgramOverview = query({
     }
 
     // Each intake form = 1 session (visit). Query intake forms instead of empty sessions table.
-    type IntakeRecord = { clientId?: string; createdAt?: number; _creationTime: number };
+    // Group by normalized name (not clientId) because each import row created a unique client.
+    type IntakeRecord = { personKey: string; ts: number };
     let intakeForms: IntakeRecord[] = [];
 
     if (programType === "legal" || !programId) {
@@ -269,7 +270,10 @@ export const getProgramOverview = query({
         ? legalForms.filter((f) => f.clientId && enrolledClientIds.has(f.clientId))
         : legalForms;
       intakeForms = intakeForms.concat(
-        filtered.map((f) => ({ clientId: f.clientId as string | undefined, createdAt: f.intakeDate, _creationTime: f._creationTime }))
+        filtered.map((f) => ({
+          personKey: `${(f.firstName || "").trim()} ${(f.lastName || "").trim()}`.trim().toLowerCase(),
+          ts: f.intakeDate ?? f._creationTime,
+        }))
       );
     }
     if (programType === "coparent" || !programId) {
@@ -278,32 +282,31 @@ export const getProgramOverview = query({
         ? coparentForms.filter((f) => f.clientId && enrolledClientIds.has(f.clientId))
         : coparentForms;
       intakeForms = intakeForms.concat(
-        filtered.map((f) => ({ clientId: f.clientId as string | undefined, createdAt: f._creationTime, _creationTime: f._creationTime }))
+        filtered.map((f) => ({
+          personKey: (f.fullName || "").trim().toLowerCase(),
+          ts: f._creationTime,
+        }))
       );
     }
 
     const totalSessions = intakeForms.length;
 
-    // Sessions per client — how many people came back more than once
-    const sessionsPerClient: Record<string, number> = {};
+    // Sessions per person — group by name to detect returning clients
+    const sessionsPerPerson: Record<string, number> = {};
     for (const f of intakeForms) {
-      const key = f.clientId as string;
-      if (key) {
-        sessionsPerClient[key] = (sessionsPerClient[key] ?? 0) + 1;
+      if (f.personKey) {
+        sessionsPerPerson[f.personKey] = (sessionsPerPerson[f.personKey] ?? 0) + 1;
       }
     }
-    const clientsWithSessions = Object.keys(sessionsPerClient).length;
-    const multiSessionClients = Object.values(sessionsPerClient).filter((c) => c > 1).length;
-    const avgSessionsPerClient = clientsWithSessions > 0
-      ? Math.round((totalSessions / clientsWithSessions) * 10) / 10
+    const uniquePeople = Object.keys(sessionsPerPerson).length;
+    const multiSessionClients = Object.values(sessionsPerPerson).filter((c) => c > 1).length;
+    const avgSessionsPerClient = uniquePeople > 0
+      ? Math.round((totalSessions / uniquePeople) * 10) / 10
       : 0;
 
-    // Sessions in last 30 days (use createdAt or _creationTime)
+    // Sessions in last 30 days
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const recentSessions = intakeForms.filter((f) => {
-      const ts = f.createdAt ?? f._creationTime;
-      return ts >= thirtyDaysAgo;
-    }).length;
+    const recentSessions = intakeForms.filter((f) => f.ts >= thirtyDaysAgo).length;
 
     // Zip code reach
     const clients = await Promise.all(
@@ -312,7 +315,7 @@ export const getProgramOverview = query({
     const uniqueZips = new Set(clients.filter(Boolean).map((c) => c!.zipCode).filter(Boolean));
 
     return {
-      totalParticipants,
+      totalParticipants: uniquePeople || totalParticipants,
       totalSessions,
       recentSessions,
       multiSessionClients,
