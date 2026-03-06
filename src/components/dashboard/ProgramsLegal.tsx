@@ -157,19 +157,19 @@ export default function ProgramsLegal() {
       {/* Executive overview stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-foreground">{total}</p>
+          <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{total}</p>
           <p className="text-xs text-muted">Total Participants</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-primary">{overview?.multiSessionClients ?? 0}</p>
+          <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{overview?.multiSessionClients ?? 0}</p>
           <p className="text-xs text-muted">Returning (2+ Sessions)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">{overview?.totalSessions ?? 0}</p>
+          <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">{overview?.totalSessions ?? 0}</p>
           <p className="text-xs text-muted">Total Sessions</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-success">{overview?.completedCount ?? 0}</p>
+          <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.completedCount ?? 0}</p>
           <p className="text-xs text-muted">Completed Program</p>
         </div>
       </div>
@@ -177,21 +177,21 @@ export default function ProgramsLegal() {
       {/* Second row — engagement metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-foreground">{overview?.recentSessions ?? 0}</p>
+          <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{overview?.recentSessions ?? 0}</p>
           <p className="text-xs text-muted">Sessions (Last 30 Days)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-primary">{overview?.avgSessionsPerClient ?? 0}</p>
+          <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{overview?.avgSessionsPerClient ?? 0}</p>
           <p className="text-xs text-muted">Avg Sessions / Person</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">
+          <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">
             {overview?.attendanceRate !== null ? `${overview.attendanceRate}%` : "—"}
           </p>
           <p className="text-xs text-muted">Attendance Rate</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-success">{overview?.zipCodeReach ?? 0}</p>
+          <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.zipCodeReach ?? 0}</p>
           <p className="text-xs text-muted">Zip Codes Reached</p>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function ProgramsLegal() {
             onClick={() => setInsightsOpen(!insightsOpen)}
             className="w-full flex items-center justify-between px-5 py-4 text-left"
           >
-            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground font-[family-name:var(--font-fraunces)] flex items-center gap-2">
               <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.031.352 5.988 5.988 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 01-2.031.352 5.989 5.989 0 01-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971z" />
               </svg>
@@ -267,76 +267,76 @@ export default function ProgramsLegal() {
             <div className="px-5 pb-5 space-y-4">
               {/* Key metrics grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-primary">{legalInsights.attorney.pct}%</p>
-                  <p className="text-[10px] text-muted">Have Attorney</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{legalInsights.attorney.pct}%</p>
+                  <p className="text-xs text-muted">Have Attorney</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">{legalInsights.upcomingCourtDates}</p>
-                  <p className="text-[10px] text-muted">Upcoming Court Dates</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{legalInsights.upcomingCourtDates}</p>
+                  <p className="text-xs text-muted">Upcoming Court Dates</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-warning">{legalInsights.restrainingOrder.pct}%</p>
-                  <p className="text-[10px] text-muted">Restraining Orders</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-warning font-[family-name:var(--font-fraunces)]">{legalInsights.restrainingOrder.pct}%</p>
+                  <p className="text-xs text-muted">Restraining Orders</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-danger">{legalInsights.safetyConcerns.pct}%</p>
-                  <p className="text-[10px] text-muted">Safety Concerns</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-danger font-[family-name:var(--font-fraunces)]">{legalInsights.safetyConcerns.pct}%</p>
+                  <p className="text-xs text-muted">Safety Concerns</p>
                 </div>
               </div>
 
               {/* Second row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">{legalInsights.childSupport.yes}</p>
-                  <p className="text-[10px] text-muted">With Child Support Orders</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{legalInsights.childSupport.yes}</p>
+                  <p className="text-xs text-muted">With Child Support Orders</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-accent">{legalInsights.custodyFollowed.pct}%</p>
-                  <p className="text-[10px] text-muted">Custody Order Compliance</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">{legalInsights.custodyFollowed.pct}%</p>
+                  <p className="text-xs text-muted">Custody Order Compliance</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">{legalInsights.total}</p>
-                  <p className="text-[10px] text-muted">Total Intake Forms</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{legalInsights.total}</p>
+                  <p className="text-xs text-muted">Total Intake Forms</p>
                 </div>
               </div>
 
               {/* Breakdowns */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {legalInsights.orderTypeList.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted mb-2">Existing Court Orders</p>
-                    <div className="space-y-1">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
+                    <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Existing Court Orders</p>
+                    <div className="space-y-2">
                       {legalInsights.orderTypeList.map((o) => (
-                        <div key={o.name} className="flex justify-between text-xs">
-                          <span className="text-foreground truncate mr-2">{o.name}</span>
-                          <span className="text-muted font-medium">{o.count}</span>
+                        <div key={o.name} className="flex justify-between items-center text-xs">
+                          <span className="text-foreground truncate mr-3">{o.name}</span>
+                          <span className="text-muted font-semibold tabular-nums">{o.count}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
                 {legalInsights.seekingTypeList.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted mb-2">Seeking To</p>
-                    <div className="space-y-1">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
+                    <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Seeking To</p>
+                    <div className="space-y-2">
                       {legalInsights.seekingTypeList.map((s) => (
-                        <div key={s.name} className="flex justify-between text-xs">
-                          <span className="text-foreground truncate mr-2">{s.name}</span>
-                          <span className="text-muted font-medium">{s.count}</span>
+                        <div key={s.name} className="flex justify-between items-center text-xs">
+                          <span className="text-foreground truncate mr-3">{s.name}</span>
+                          <span className="text-muted font-semibold tabular-nums">{s.count}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
                 {legalInsights.paymentStatusList.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted mb-2">Payment Status</p>
-                    <div className="space-y-1">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
+                    <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Payment Status</p>
+                    <div className="space-y-2">
                       {legalInsights.paymentStatusList.map((p) => (
-                        <div key={p.name} className="flex justify-between text-xs">
-                          <span className="text-foreground truncate mr-2">{p.name}</span>
-                          <span className="text-muted font-medium">{p.count}</span>
+                        <div key={p.name} className="flex justify-between items-center text-xs">
+                          <span className="text-foreground truncate mr-3">{p.name}</span>
+                          <span className="text-muted font-semibold tabular-nums">{p.count}</span>
                         </div>
                       ))}
                     </div>

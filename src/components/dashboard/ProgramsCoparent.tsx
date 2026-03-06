@@ -157,19 +157,19 @@ export default function ProgramsCoparent() {
       {/* Executive overview stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-foreground">{total}</p>
+          <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{total}</p>
           <p className="text-xs text-muted">Total Participants</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-primary">{overview?.multiSessionClients ?? 0}</p>
+          <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{overview?.multiSessionClients ?? 0}</p>
           <p className="text-xs text-muted">Returning (2+ Sessions)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">{overview?.totalSessions ?? 0}</p>
+          <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">{overview?.totalSessions ?? 0}</p>
           <p className="text-xs text-muted">Total Sessions</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-success">{overview?.completedCount ?? 0}</p>
+          <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.completedCount ?? 0}</p>
           <p className="text-xs text-muted">Completed Program</p>
         </div>
       </div>
@@ -177,21 +177,21 @@ export default function ProgramsCoparent() {
       {/* Second row — engagement metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-foreground">{overview?.recentSessions ?? 0}</p>
+          <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{overview?.recentSessions ?? 0}</p>
           <p className="text-xs text-muted">Sessions (Last 30 Days)</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-primary">{overview?.avgSessionsPerClient ?? 0}</p>
+          <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{overview?.avgSessionsPerClient ?? 0}</p>
           <p className="text-xs text-muted">Avg Sessions / Person</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-accent">
+          <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">
             {overview?.attendanceRate !== null ? `${overview?.attendanceRate}%` : "—"}
           </p>
           <p className="text-xs text-muted">Attendance Rate</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
-          <p className="text-xl font-bold text-success">{overview?.zipCodeReach ?? 0}</p>
+          <p className="text-2xl font-bold text-success font-[family-name:var(--font-fraunces)]">{overview?.zipCodeReach ?? 0}</p>
           <p className="text-xs text-muted">Zip Codes Reached</p>
         </div>
       </div>
@@ -253,7 +253,7 @@ export default function ProgramsCoparent() {
             onClick={() => setInsightsOpen(!insightsOpen)}
             className="w-full flex items-center justify-between px-5 py-4 text-left"
           >
-            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground font-[family-name:var(--font-fraunces)] flex items-center gap-2">
               <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
@@ -267,36 +267,36 @@ export default function ProgramsCoparent() {
             <div className="px-5 pb-5 space-y-4">
               {/* Key metrics grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">{cpcInsights.total}</p>
-                  <p className="text-[10px] text-muted">Total Intakes</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">{cpcInsights.total}</p>
+                  <p className="text-xs text-muted">Total Intakes</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-primary">{cpcInsights.uniqueFamilies}</p>
-                  <p className="text-[10px] text-muted">Unique Families</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-primary font-[family-name:var(--font-fraunces)]">{cpcInsights.uniqueFamilies}</p>
+                  <p className="text-xs text-muted">Unique Families</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-accent">{cpcInsights.coParentInformed.pct}%</p>
-                  <p className="text-[10px] text-muted">Co-Parent Informed</p>
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-accent font-[family-name:var(--font-fraunces)]">{cpcInsights.coParentInformed.pct}%</p>
+                  <p className="text-xs text-muted">Co-Parent Informed</p>
                 </div>
-                <div className="rounded-xl border border-border bg-background p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">
+                <div className="rounded-2xl border border-border bg-surface p-4 text-center shadow-[var(--warm-shadow-sm)] hover-lift">
+                  <p className="text-2xl font-bold text-foreground font-[family-name:var(--font-fraunces)]">
                     {cpcInsights.coParentInformed.yes}/{cpcInsights.coParentInformed.total}
                   </p>
-                  <p className="text-[10px] text-muted">Informed Yes / Total</p>
+                  <p className="text-xs text-muted">Informed Yes / Total</p>
                 </div>
               </div>
 
               {/* Breakdowns */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {cpcInsights.roleList.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-muted mb-2">Parent Types</p>
-                    <div className="space-y-1">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
+                    <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Parent Types</p>
+                    <div className="space-y-2">
                       {cpcInsights.roleList.map((r) => (
-                        <div key={r.name} className="flex justify-between text-xs">
+                        <div key={r.name} className="flex justify-between items-center text-xs">
                           <span className="text-foreground">{r.name}</span>
-                          <span className="text-muted font-medium">
+                          <span className="text-muted font-semibold tabular-nums">
                             {r.count} ({cpcInsights.total > 0 ? Math.round((r.count / cpcInsights.total) * 100) : 0}%)
                           </span>
                         </div>
@@ -304,13 +304,13 @@ export default function ProgramsCoparent() {
                     </div>
                   </div>
                 )}
-                <div>
-                  <p className="text-xs font-semibold text-muted mb-2">Session Completion</p>
-                  <div className="space-y-1">
+                <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
+                  <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Session Completion</p>
+                  <div className="space-y-2">
                     {cpcInsights.sessionDistribution.map((s) => (
-                      <div key={s.name} className="flex justify-between text-xs">
+                      <div key={s.name} className="flex justify-between items-center text-xs">
                         <span className="text-foreground">{s.name} sessions</span>
-                        <span className="text-muted font-medium">{s.count}</span>
+                        <span className="text-muted font-semibold tabular-nums">{s.count}</span>
                       </div>
                     ))}
                   </div>
