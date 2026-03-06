@@ -45,7 +45,7 @@ function parsePnlTotals(rawData: string): { totalRevenue: number; totalExpenses:
 
   for (const row of rows) {
     const group = (row.group ?? row.Header?.ColData?.[0]?.value ?? "").toLowerCase();
-    const summaryValue = parseFloat(row.Summary?.ColData?.[1]?.value ?? "0");
+    const summaryValue = parseFloat(row.Summary?.ColData?.[1]?.value ?? "0") || 0;
 
     if (group.includes("income") && !group.includes("netincome") && !group.includes("net income")) {
       totalRevenue += summaryValue;
@@ -126,7 +126,7 @@ export const getTrends = query({
       prior: number,
       positiveWhenHigher: boolean
     ): { pctChange: number; positive: boolean } | null {
-      if (prior === 0) return null; // avoid division by zero
+      if (prior === 0 || isNaN(prior) || isNaN(current)) return null;
       const pctChange = Math.round(((current - prior) / Math.abs(prior)) * 1000) / 10; // 1 decimal place
       const positive = positiveWhenHigher ? current > prior : current < prior;
       return { pctChange, positive };
