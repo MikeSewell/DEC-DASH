@@ -306,7 +306,7 @@ export default function ProgramsLegal() {
                 {legalInsights.orderTypeList.length > 0 && (
                   <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
                     <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Existing Court Orders</p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
                       {legalInsights.orderTypeList.map((o) => (
                         <div key={o.name} className="flex justify-between items-center text-xs">
                           <span className="text-foreground truncate mr-3">{o.name}</span>
@@ -319,7 +319,7 @@ export default function ProgramsLegal() {
                 {legalInsights.seekingTypeList.length > 0 && (
                   <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
                     <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Seeking To</p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
                       {legalInsights.seekingTypeList.map((s) => (
                         <div key={s.name} className="flex justify-between items-center text-xs">
                           <span className="text-foreground truncate mr-3">{s.name}</span>
@@ -332,7 +332,7 @@ export default function ProgramsLegal() {
                 {legalInsights.paymentStatusList.length > 0 && (
                   <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--warm-shadow-sm)]">
                     <p className="text-xs font-semibold text-foreground font-[family-name:var(--font-fraunces)] mb-3">Payment Status</p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
                       {legalInsights.paymentStatusList.map((p) => (
                         <div key={p.name} className="flex justify-between items-center text-xs">
                           <span className="text-foreground truncate mr-3">{p.name}</span>
