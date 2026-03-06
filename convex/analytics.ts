@@ -260,9 +260,35 @@ export const getProgramOverview = query({
     }
 
     // Each intake form = 1 session (visit). Query intake forms instead of empty sessions table.
-    // Group by normalized name (not clientId) because each import row created a unique client.
+    // Match people by DOB + first word of last name to handle misspellings & middle initials.
+    // Falls back to firstName + lastName when DOB is missing.
     type IntakeRecord = { personKey: string; ts: number };
     let intakeForms: IntakeRecord[] = [];
+
+    /**
+     * Build a fuzzy person key from first word + last word of concatenated name.
+     * Handles: middle name variations ("Thomas Joseph Motzko" ≈ "Thomas Motzko"),
+     * first/last boundary shifts ("Lee Angelo" + "Viloria" ≈ "Lee" + "Angelo Viloria"),
+     * Jr/Sr suffixes, single-letter initials, and case differences.
+     * DOB is too inconsistent (mix of ages "38" vs dates "05/20/1986") to use as key.
+     */
+    function personKeyFromWords(words: string[]): string {
+      if (words.length === 0) return "";
+      if (words.length === 1) return words[0];
+      return `${words[0]}|${words[words.length - 1]}`;
+    }
+
+    function legalPersonKey(firstName?: string, lastName?: string): string {
+      const full = `${(firstName || "")} ${(lastName || "")}`.trim().toLowerCase();
+      const words = full.split(/\s+/).filter((w) => w.length > 1); // drop single-letter initials
+      return personKeyFromWords(words.length > 0 ? words : full.split(/\s+/).filter(Boolean));
+    }
+
+    function coparentPersonKey(fullName?: string): string {
+      const full = (fullName || "").trim().toLowerCase();
+      const words = full.split(/\s+/).filter((w) => w.length > 1);
+      return personKeyFromWords(words.length > 0 ? words : full.split(/\s+/).filter(Boolean));
+    }
 
     if (programType === "legal" || !programId) {
       const legalForms = await ctx.db.query("legalIntakeForms").collect();
@@ -271,7 +297,7 @@ export const getProgramOverview = query({
         : legalForms;
       intakeForms = intakeForms.concat(
         filtered.map((f) => ({
-          personKey: `${(f.firstName || "").trim()} ${(f.lastName || "").trim()}`.trim().toLowerCase(),
+          personKey: legalPersonKey(f.firstName, f.lastName),
           ts: f.intakeDate ?? f._creationTime,
         }))
       );
@@ -283,7 +309,7 @@ export const getProgramOverview = query({
         : coparentForms;
       intakeForms = intakeForms.concat(
         filtered.map((f) => ({
-          personKey: (f.fullName || "").trim().toLowerCase(),
+          personKey: coparentPersonKey(f.fullName),
           ts: f._creationTime,
         }))
       );
