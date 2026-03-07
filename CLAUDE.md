@@ -118,7 +118,7 @@ sshpass -e ssh -o StrictHostKeyChecking=no root@187.77.19.63 "pm2 restart dec-da
 ```
 
 ### Convex
-- **Deployment:** `aware-finch-86` (dev only — no separate prod deployment)
+- **Deployment:** `qualified-lyrebird-433` (team: dadsevokingchange, dev only — no separate prod deployment)
 - Deploy: `npx convex dev --once`
 - **IMPORTANT:** Do NOT use `npx convex deploy` — the project only uses the dev deployment for both dev and production
 
