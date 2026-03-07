@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   title: "DEC Dashboard — Dads Evoking Change",
   description:
     "Operations dashboard for Dads Evoking Change nonprofit organization",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
