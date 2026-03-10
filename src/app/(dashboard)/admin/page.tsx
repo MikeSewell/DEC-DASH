@@ -10,6 +10,7 @@ import QuickBooksConnect from "@/components/admin/QuickBooksConnect";
 import { useIncomeAccounts } from "@/hooks/useQuickBooks";
 import ConstantContactConnect from "@/components/admin/ConstantContactConnect";
 import GoogleCalendarConfig from "@/components/admin/GoogleCalendarConfig";
+import PayPalConfig from "@/components/admin/PayPalConfig";
 import KnowledgeBaseManager from "@/components/ai-director/KnowledgeBaseManager";
 import AuditLog from "@/components/admin/AuditLog";
 import AlertsConfig from "@/components/admin/AlertsConfig";
@@ -19,6 +20,7 @@ type AdminTab =
   | "quickbooks"
   | "constant-contact"
   | "google-calendar"
+  | "paypal"
   | "knowledge-base"
   | "audit-log"
   | "ai-config"
@@ -58,6 +60,15 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      </svg>
+    ),
+  },
+  {
+    id: "paypal",
+    label: "PayPal",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797H9.603c-.564 0-1.04.408-1.13.964L7.076 21.337z" />
       </svg>
     ),
   },
@@ -134,6 +145,8 @@ export default function AdminPage() {
         return <ConstantContactConnect />;
       case "google-calendar":
         return <GoogleCalendarConfig />;
+      case "paypal":
+        return <PayPalConfig />;
       case "knowledge-base":
         return (
           <div className="space-y-4">

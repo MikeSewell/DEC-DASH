@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
 import { Bar } from "react-chartjs-2";
 import {
@@ -19,7 +19,6 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 const DEFAULT_FUNDING_GOAL = 500_000;
 
 export default function FundingThermometer() {
-  // Animate fill on mount
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setMounted(true), 50);
@@ -32,17 +31,21 @@ export default function FundingThermometer() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  // Single source of truth: grants table (same as Grants tab)
-  const isLoading = grantStats === undefined || fundingGoalSetting === undefined;
-  const current = grantStats?.totalAwarded ?? 0;
-  const hasLiveData = current > 0;
+  const isLoading = grantStats === undefined || fundingGoalSetting === undefined || fundingByYear === undefined;
+  const totalAllTime = grantStats?.totalAwarded ?? 0;
+
+  // Current FY raised — find the current year in fundingByYear
+  const currentYear = new Date().getFullYear();
+  const currentYearData = fundingByYear?.find((d) => d.year === currentYear);
+  const raisedThisYear = currentYearData?.amount ?? 0;
 
   const goal = fundingGoalSetting?.value
     ? Number(fundingGoalSetting.value)
     : DEFAULT_FUNDING_GOAL;
 
-  const percentage = Math.min(100, goal > 0 ? (current / goal) * 100 : 0);
-  const fillHeight = mounted ? `${percentage}%` : "0%";
+  // Progress bar uses current FY raised vs annual goal
+  const percentage = Math.min(100, goal > 0 ? (raisedThisYear / goal) * 100 : 0);
+  const remaining = Math.max(0, goal - raisedThisYear);
 
   if (isLoading) {
     return (
@@ -66,82 +69,111 @@ export default function FundingThermometer() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 hover-lift">
-        {/* Thermometer bar */}
-        <div className="flex flex-col items-center gap-2 shrink-0">
-          <p className="text-xs font-medium text-muted uppercase tracking-wide">Progress</p>
-          <div
-            className="relative w-14 rounded-2xl bg-border/30 dark:bg-border/20 overflow-hidden"
-            style={{ height: 200 }}
-            aria-label={`Funding progress: ${percentage.toFixed(1)}%`}
-          >
-            {/* Fill — anchored to bottom */}
+      {/* Top row: progress bar + stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Goal progress — spans 2 cols */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Big number + label */}
+          <div className="flex items-baseline gap-3">
+            <span className="text-4xl font-black text-primary leading-none">
+              {percentage.toFixed(1)}%
+            </span>
+            <span className="text-sm text-muted">of FY {currentYear} goal reached</span>
+          </div>
+
+          {/* Full-width progress bar */}
+          <div className="relative h-8 rounded-full bg-border/20 overflow-hidden">
             <div
-              className="absolute bottom-0 left-0 right-0 rounded-2xl"
+              className="absolute inset-y-0 left-0 rounded-full"
               style={{
-                height: fillHeight,
-                background: "linear-gradient(to top, var(--primary-dark, #0D2216), var(--primary, #1B5E6B), #2B9E9E)",
-                transition: "height 1000ms ease-out",
+                width: mounted ? `${percentage}%` : "0%",
+                background: "linear-gradient(90deg, var(--primary-dark, #0D2216), var(--primary, #1B5E6B), #2B9E9E)",
+                transition: "width 1000ms ease-out",
               }}
             />
-            {/* Percentage label overlaid on fill */}
-            <div
-              className="absolute inset-0 flex items-center justify-center z-10"
-              style={{
-                textShadow: "0 1px 3px rgba(0,0,0,0.6)",
-              }}
-            >
-              <span className="text-white text-xs font-bold rotate-[-90deg] whitespace-nowrap">
-                {percentage.toFixed(0)}%
-              </span>
+            {/* Percentage badge on the bar */}
+            {percentage > 8 && (
+              <div
+                className="absolute inset-y-0 flex items-center"
+                style={{
+                  left: `${Math.min(percentage, 96)}%`,
+                  transform: "translateX(-100%)",
+                  paddingRight: 8,
+                }}
+              >
+                <span className="text-white text-xs font-bold drop-shadow-sm">
+                  {percentage.toFixed(0)}%
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Raised / Goal / Remaining / All-Time row */}
+          <div className="grid grid-cols-4 gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Raised FY {currentYear}</p>
+              <p className="text-xl font-bold text-foreground">{formatCurrency(raisedThisYear)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">FY Goal</p>
+              <p className="text-xl font-bold text-foreground">{formatCurrency(goal)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Remaining</p>
+              <p className={cn("text-xl font-bold", remaining === 0 ? "text-success" : "text-foreground")}>
+                {formatCurrency(remaining)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">All-Time Total</p>
+              <p className="text-xl font-bold text-foreground">{formatCurrency(totalAllTime)}</p>
             </div>
           </div>
-          {/* Goal line label */}
-          <p className="text-xs text-muted">100%</p>
         </div>
 
-        {/* Right side stats */}
-        <div className="flex flex-col justify-center gap-4 flex-1">
-          <div>
-            <p className="text-xs text-muted uppercase tracking-wide mb-1">
-              FY Funding Goal
-            </p>
-            <p className="text-4xl font-black text-primary leading-none">
-              {percentage.toFixed(1)}%
-            </p>
-            <p className="text-sm text-muted mt-1">of annual goal reached</p>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-foreground">
-                {formatCurrency(current)}
-              </span>
-              <span className="text-sm text-muted">raised</span>
+        {/* Right: Quick stats card */}
+        <div className="rounded-2xl border border-border bg-background p-5 space-y-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Grant Overview</p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Total Grants</span>
+              <span className="text-sm font-bold text-foreground">{grantStats?.total ?? 0}</span>
             </div>
-            <p className="text-sm text-muted">
-              Goal: {formatCurrency(goal)}
-            </p>
-            <p className="text-sm text-muted">
-              Remaining: <span className="font-semibold text-foreground">{formatCurrency(Math.max(0, goal - current))}</span>
-            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Active</span>
+              <span className="text-sm font-bold text-success">{grantStats?.activeCount ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Upcoming Reports</span>
+              <span className="text-sm font-bold text-foreground">{grantStats?.upcomingReports ?? 0}</span>
+            </div>
+            {grantStats?.successRate?.byCount !== null && grantStats?.successRate?.byCount !== undefined && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">Success Rate</span>
+                <span className="text-sm font-bold text-foreground">{grantStats.successRate.byCount}%</span>
+              </div>
+            )}
           </div>
-          {!hasLiveData && <p className="text-xs text-muted/60">No grant data available yet.</p>}
+          {yoyLabel && (
+            <div className="pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">YoY Change</span>
+                <span className={cn("text-sm font-bold", yoyLabel.positive ? "text-success" : "text-danger")}>
+                  {yoyLabel.positive ? "+" : ""}{yoyLabel.change}%
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Funds Raised by Year */}
+      {/* Funds Raised by Year chart */}
       {fundingByYear && fundingByYear.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide">Funds Raised by Year</p>
-            {yoyLabel && (
-              <span className={`text-xs font-semibold ${yoyLabel.positive ? "text-success" : "text-danger"}`}>
-                {yoyLabel.positive ? "+" : ""}{yoyLabel.change}% YoY
-              </span>
-            )}
-          </div>
-          <div style={{ height: Math.max(120, fundingByYear.length * 28) }}>
+          <p className="text-[11px] font-semibold text-muted uppercase tracking-wide mb-3">
+            Funds Raised by Year
+          </p>
+          <div style={{ height: Math.max(140, fundingByYear.length * 32) }}>
             <Bar
               data={{
                 labels: fundingByYear.map((d) => String(d.year)),
@@ -149,7 +181,7 @@ export default function FundingThermometer() {
                   {
                     label: "Funds Raised",
                     data: fundingByYear.map((d) => d.amount),
-                    backgroundColor: "#2D6A4F",
+                    backgroundColor: isDark ? "#2B9E9E" : "#2D6A4F",
                     borderRadius: 6,
                   },
                 ],
@@ -167,7 +199,7 @@ export default function FundingThermometer() {
                     cornerRadius: 8,
                     padding: 10,
                     callbacks: {
-                      label: (ctx) => formatCurrency(ctx.parsed.x),
+                      label: (ctx) => formatCurrency(ctx.parsed.x ?? 0),
                     },
                   },
                 },

@@ -13,6 +13,7 @@ import {
   Filler,
 } from "chart.js";
 import { useIncomeTrend, useQuickBooksConfig } from "@/hooks/useQuickBooks";
+import { usePayPalConfig, usePayPalData } from "@/hooks/usePayPal";
 import { useTheme } from "@/hooks/useTheme";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 import { formatCurrency, timeAgo } from "@/lib/utils";
@@ -111,7 +112,43 @@ function DonationSourceCards({ sources, total }: { sources: DonationSource[]; to
   );
 }
 
-// ─── DonationChart inner component ─────────────────────────────────────────────
+// ─── Top Payers sub-component (PayPal only) ──────────────────────────────────────
+
+interface TopPayer {
+  name: string;
+  email: string;
+  total: number;
+  transaction_count: number;
+}
+
+function TopPayersCards({ payers }: { payers: TopPayer[] }) {
+  if (payers.length === 0) return null;
+  const top5 = payers.slice(0, 5);
+  return (
+    <div>
+      <h4 className="text-sm font-semibold text-foreground mb-2">Top Donors</h4>
+      <div className="space-y-2">
+        {top5.map((payer, i) => (
+          <div
+            key={payer.email + i}
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-[var(--warm-shadow-sm)]"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold">
+              {i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{payer.name}</p>
+              <p className="text-xs text-muted truncate">{payer.transaction_count} transaction{payer.transaction_count !== 1 ? "s" : ""}</p>
+            </div>
+            <p className="text-sm font-bold text-primary shrink-0">{formatCurrency(payer.total)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── DonationChart inner component (QB data) ─────────────────────────────────────
 
 interface DonationChartProps {
   data: {
@@ -119,9 +156,10 @@ interface DonationChartProps {
     accounts: string[];
     fetchedAt: number | null;
   };
+  source: "quickbooks" | "paypal";
 }
 
-function DonationChart({ data }: DonationChartProps) {
+function DonationChart({ data, source }: DonationChartProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const { months, accounts, fetchedAt } = data;
@@ -147,7 +185,7 @@ function DonationChart({ data }: DonationChartProps) {
     : currentMonthTotal > 0 ? 100 : 0;
   const trendPositive = currentMonthTotal >= prevMonthTotal;
 
-  // Build chart data (DON-01 + DON-02)
+  // Build chart data
   const labels = months.map((m) => m.label);
   const datasets: {
     label: string;
@@ -295,10 +333,10 @@ function DonationChart({ data }: DonationChartProps) {
         </p>
       )}
 
-      {/* Sync timestamp — only for live data */}
+      {/* Sync timestamp */}
       {fetchedAt && (
         <p className="text-xs text-muted text-right">
-          Last synced: {timeAgo(fetchedAt)}
+          Source: {source === "paypal" ? "PayPal" : "QuickBooks"} &middot; Last synced: {timeAgo(fetchedAt)}
         </p>
       )}
 
@@ -306,19 +344,76 @@ function DonationChart({ data }: DonationChartProps) {
   );
 }
 
+// ─── PayPal data adapter — converts paypalCache into DonationChart format ────
+
+function PayPalDonationView({ data }: {
+  data: {
+    totalIncoming: number;
+    totalOutgoing: number;
+    netAmount: number;
+    averageTransaction: number;
+    monthlyBreakdown: Array<{ month: string; count: number; total: number; incoming: number; outgoing: number; net: number }>;
+    topPayers: Array<{ name: string; email: string; total: number; transaction_count: number }>;
+    fetchedAt: number;
+  };
+}) {
+  // Convert PayPal monthly breakdown → DonationChart format
+  const months = data.monthlyBreakdown.map((m) => {
+    const [year, monthNum] = m.month.split("-");
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const label = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+    return {
+      label,
+      total: m.incoming,
+      breakdown: { "PayPal Donations": m.incoming } as Record<string, number>,
+    };
+  });
+
+  const chartData = {
+    months,
+    accounts: ["PayPal Donations"],
+    fetchedAt: data.fetchedAt,
+  };
+
+  return (
+    <div className="space-y-6">
+      <DonationChart data={chartData} source="paypal" />
+      <TopPayersCards payers={data.topPayers} />
+    </div>
+  );
+}
+
 // ─── Main export ────────────────────────────────────────────────────────────────
 
 export default function DonationPerformance() {
-  const config = useQuickBooksConfig();
+  const qbConfig = useQuickBooksConfig();
   const incomeTrend = useIncomeTrend();
+  const paypalConfig = usePayPalConfig();
+  const paypalData = usePayPalData();
 
-  // Loading state
-  if (config === undefined || incomeTrend === undefined) {
+  // Loading state — wait for both PayPal and QB checks
+  if (paypalConfig === undefined || qbConfig === undefined) {
     return <ChartSkeleton />;
   }
 
-  // QB not connected
-  if (config === null) {
+  // Prefer PayPal data when connected and has data
+  if (paypalConfig !== null && paypalData !== undefined) {
+    if (paypalData !== null && paypalData.monthlyBreakdown.length > 0) {
+      return <PayPalDonationView data={paypalData} />;
+    }
+    // PayPal connected but no data yet — still loading or first sync pending
+    if (paypalData === undefined) {
+      return <ChartSkeleton />;
+    }
+  }
+
+  // Fall back to QB income trend
+  if (incomeTrend === undefined) {
+    return <ChartSkeleton />;
+  }
+
+  // Neither connected
+  if (qbConfig === null && paypalConfig === null) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -328,14 +423,14 @@ export default function DonationPerformance() {
         </div>
         <p className="text-sm font-medium text-foreground">No donation data</p>
         <p className="text-xs text-muted">
-          <Link href="/admin" className="text-primary hover:underline">Connect QuickBooks</Link> to see income trends.
+          <Link href="/admin?tab=paypal" className="text-primary hover:underline">Connect PayPal</Link> or <Link href="/admin?tab=quickbooks" className="text-primary hover:underline">QuickBooks</Link> to see income trends.
         </p>
       </div>
     );
   }
 
-  // Not configured (no income accounts selected)
-  if (incomeTrend === null || !incomeTrend.configured) {
+  // QB connected but no income accounts configured
+  if (qbConfig !== null && (incomeTrend === null || !incomeTrend.configured)) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -352,5 +447,10 @@ export default function DonationPerformance() {
     );
   }
 
-  return <DonationChart data={incomeTrend} />;
+  // QB data available
+  if (incomeTrend && incomeTrend.configured) {
+    return <DonationChart data={incomeTrend} source="quickbooks" />;
+  }
+
+  return null;
 }

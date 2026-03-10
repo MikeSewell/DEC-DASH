@@ -24,4 +24,11 @@ crons.interval(
   internal.googleCalendarSync.runSync
 );
 
+// Sync PayPal transactions every 30 minutes
+crons.interval(
+  "paypal-sync",
+  { minutes: 30 },
+  internal.paypalSync.runSync
+);
+
 export default crons;

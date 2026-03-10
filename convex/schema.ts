@@ -451,6 +451,33 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_userId_alertKey", ["userId", "alertKey"]),
 
+  paypalConfig: defineTable({
+    clientId: v.string(),
+    clientSecret: v.string(),
+    environment: v.union(v.literal("sandbox"), v.literal("production")),
+    connectedAt: v.number(),
+    connectedBy: v.optional(v.id("users")),
+  }),
+
+  paypalCache: defineTable({
+    // Summary totals
+    totalTransactions: v.number(),
+    totalIncoming: v.number(),
+    totalOutgoing: v.number(),
+    netAmount: v.number(),
+    averageTransaction: v.number(),
+    // Monthly breakdown (JSON string of { month, count, total, incoming, outgoing, net }[])
+    monthlyBreakdown: v.string(),
+    // Top payers (JSON string of { name, email, total, transaction_count }[])
+    topPayers: v.string(),
+    // Transaction details (JSON string — can be large)
+    transactionDetails: v.string(),
+    // Sync metadata
+    periodStart: v.string(),
+    periodEnd: v.string(),
+    fetchedAt: v.number(),
+  }),
+
   kbSummaryCache: defineTable({
     extractedAt: v.number(),
     documentCount: v.number(),

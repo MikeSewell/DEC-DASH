@@ -451,9 +451,9 @@ function parseBudgetVsActualsReport(report: any, budgetName: string, className: 
   for (const row of rows) {
     const group = row.group ?? "";
     const summary = row.Summary?.ColData ?? [];
-    // BvA report columns: [Name, Budget, Actual, Over Budget, % of Budget]
-    const budgetVal = parseFloat(summary[1]?.value ?? "0");
-    const actualVal = parseFloat(summary[2]?.value ?? "0");
+    // BvA report columns (matches n8n): [Name, Actual, Budget, Variance, %]
+    const actualVal = parseFloat(summary[1]?.value ?? "0");
+    const budgetVal = parseFloat(summary[2]?.value ?? "0");
     const varianceVal = parseFloat(summary[3]?.value ?? "0");
     const pctVal = parseFloat(summary[4]?.value ?? "0");
 
@@ -461,7 +461,7 @@ function parseBudgetVsActualsReport(report: any, budgetName: string, className: 
       result.revenue = { actual: actualVal, budget: budgetVal, variance: varianceVal, percentUsed: pctVal };
       extractLineItems(row, "Income", result.lineItems);
     } else if (group === "Expenses") {
-      result.expenses = { actual: Math.abs(actualVal), budget: Math.abs(budgetVal), variance: varianceVal, percentUsed: pctVal };
+      result.expenses = { actual: actualVal, budget: budgetVal, variance: varianceVal, percentUsed: pctVal };
       extractLineItems(row, "Expenses", result.lineItems);
     } else if (group === "NetIncome") {
       result.net = { actual: actualVal, budget: budgetVal, variance: varianceVal, percentUsed: pctVal };
@@ -480,10 +480,11 @@ function extractLineItems(
   for (const sub of subRows) {
     if (sub.type === "Data" && sub.ColData) {
       const category = sub.ColData[0]?.value ?? "Other";
-      const budget = parseFloat(sub.ColData[1]?.value ?? "0");
-      const actual = parseFloat(sub.ColData[2]?.value ?? "0");
+      // Column order (matches n8n): [Name, Actual, Budget, Variance, %]
+      const actual = parseFloat(sub.ColData[1]?.value ?? "0");
+      const budget = parseFloat(sub.ColData[2]?.value ?? "0");
       const variance = parseFloat(sub.ColData[3]?.value ?? "0");
-      lineItems.push({ category, group, actual: Math.abs(actual), budget: Math.abs(budget), variance });
+      lineItems.push({ category, group, actual, budget, variance });
     } else if (sub.type === "Section" && sub.Rows) {
       // Recurse into sub-sections
       extractLineItems(sub, group, lineItems);

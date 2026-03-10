@@ -48,6 +48,8 @@ export const getStats = query({
 
     const byStage: Record<string, number> = {};
     let totalAwarded = 0;
+    let activeAwarded = 0;
+    let activeCount = 0;
     let upcomingReports = 0;
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -58,6 +60,10 @@ export const getStats = query({
       const normalizedStage = normalizeFundingStage(grant.fundingStage);
       if (normalizedStage === "active" || normalizedStage === "committed") {
         totalAwarded += grant.amountAwarded ?? 0;
+      }
+      if (normalizedStage === "active") {
+        activeAwarded += grant.amountAwarded ?? 0;
+        activeCount++;
       }
 
       // Count upcoming report dates (next 30 days)
@@ -88,6 +94,8 @@ export const getStats = query({
       total: allGrants.length,
       byStage,
       totalAwarded,
+      activeAwarded,
+      activeCount,
       upcomingReports,
       successRate: {
         byCount: successDenomCount > 0
